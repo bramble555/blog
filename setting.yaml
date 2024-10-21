@@ -3,9 +3,9 @@ system:
   port: 8080
   env: dev
 logger:                     
-  level: info        
+  level: debug        
   prefix: "gvb"     
-  director: "log"                        
+  file_path: logger                     
   show_line: true       
   file_name: "gvb.log"              
 

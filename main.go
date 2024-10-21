@@ -42,7 +42,7 @@ func main() {
 		return
 	}
 	// 注册路由
-	r := router.SetupRounter(global.Config.System.Env)
+	r := router.InitRounter(global.Config.System.Env)
 	// 优雅关机
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", global.Config.System.Port),

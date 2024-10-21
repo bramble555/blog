@@ -4,15 +4,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRounter(mode string) *gin.Engine {
+func InitRounter(mode string) *gin.Engine {
 	// 如果是发布模式
 	if mode == gin.ReleaseMode {
 		gin.SetMode(mode)
 	}
 	r := gin.Default()
-	r.GET("ping", func(ctx *gin.Context) {
-		ctx.String(200, "pong")
+	r.GET("ping", func(c *gin.Context) {
+		c.String(200, "pong")
 	})
-	
+	apiGroup := r.Group("/api")
+	InitBaseRoutes(apiGroup)
+	InitImageRoutes(apiGroup)
 	return r
 }

@@ -4,12 +4,11 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path"
-	"path/filepath"
 
 	"github.com/bramble555/blog/global"
+	"github.com/bramble555/blog/pkg"
 	"github.com/sirupsen/logrus"
 )
 
@@ -68,44 +67,10 @@ func (l *LogFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-// 判断log目录是否存在
-func pathExists(path string) bool {
-	_, err := os.Stat(path)
-	if err != nil {
-		if os.IsExist(err) {
-			return true
-		}
-		if os.IsNotExist(err) {
-			return false
-		}
-		log.Println(err)
-		return false
-	}
-	return true
-}
-func createLogFile() *os.File {
-	ok := pathExists("logger")
-	// 目录不存在就创建目录
-	if !ok {
-		err := os.MkdirAll("logger", 0777)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-	}
-
-	// 输出到哪
-	logFilePath := filepath.Join("logger", global.Config.Logger.FileName)
-	// 创建文件（如果不存在）
-	file, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	return file
-}
 func Init() (mLog *logrus.Logger, err error) {
 	mLog = logrus.New()
 	// 设置输出为控制台和文件
-	file := createLogFile()
+	file := pkg.CreateFile(global.Config.Logger.FilePath, global.Config.Logger.FileName)
 	mLog.SetOutput(io.MultiWriter(os.Stdout, file))
 	mLog.SetReportCaller(global.Config.Logger.ShowLine)
 	// 格式
