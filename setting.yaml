@@ -48,7 +48,7 @@ qq:
   redirect:
 
 qi_niu:
-  enable: True
+  enable: false
   access_key: 
   secret_key: 
   bucket: half-white
