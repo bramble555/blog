@@ -30,5 +30,5 @@ func DeleteBannerList(pdl *model.ParamDeleteList) (string, error) {
 	}
 	// DELETE FROM banner_list WHERE id IN (id1, id2, id3, ...);
 	global.DB.Delete(&bannerList)
-	return fmt.Sprintf("共删除%d图片", count), nil
+	return fmt.Sprintf("共删除%d张图片", count), nil
 }

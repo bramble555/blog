@@ -6,6 +6,6 @@ import (
 )
 
 func InitAdvertRoutes(r *gin.RouterGroup) gin.IRoutes {
-	r.POST("/", controller.CreateAdvertHandle)
+	r.POST("/adverts", controller.CreateAdvertHandle)
 	return r
 }
