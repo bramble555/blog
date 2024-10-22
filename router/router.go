@@ -15,6 +15,6 @@ func InitRounter(mode string) *gin.Engine {
 	})
 	apiGroup := r.Group("/api")
 	InitBaseRoutes(apiGroup)
-	InitImageRoutes(apiGroup)
+	InitBannerRoutes(apiGroup)
 	return r
 }
