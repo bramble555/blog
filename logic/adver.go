@@ -8,3 +8,7 @@ import (
 func CreateAdvert(ad *model.AdvertModel) (string, error) {
 	return advert.CreateAdvert(ad)
 }
+func GetAdvertList(pl *model.ParamList, isShow bool) ([]model.AdvertModel, error) {
+	return advert.GetAdvertList(pl, isShow)
+
+}

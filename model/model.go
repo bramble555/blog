@@ -10,3 +10,11 @@ type MODEL struct {
 type ParamDeleteList struct {
 	IDList []int64 `json:"id_list" binding:"required"`
 }
+type ParamList struct {
+	Page  int    `json:"page" form:"page"`
+	Size  int    `json:"size" form:"size"`
+	Order string `json:"order" form:"order"`
+}
+
+// 默认按照创建时间降序排序
+const OrderByTime = "create_time DESC"

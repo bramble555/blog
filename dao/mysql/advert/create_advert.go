@@ -29,3 +29,4 @@ func CreateAdvert(ad *model.AdvertModel) (string, error) {
 	}
 	return "创建广告成功", nil
 }
+

@@ -74,8 +74,8 @@ func UploadImages(c *gin.Context, fileList []*multipart.FileHeader) (*[]image.Fi
 	}
 	return resFileList, nil
 }
-func GetBannerList(il *image.ParamImageList) ([]model.BannerModel, error) {
-	return sqlba.GetBannerList(il)
+func GetBannerList(pl *model.ParamList) ([]model.BannerModel, error) {
+	return sqlba.GetBannerList(pl)
 }
 func DeleteBannerList(pdl *model.ParamDeleteList) (string, error) {
 	return sqlba.DeleteBannerList(pdl)

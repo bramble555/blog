@@ -28,32 +28,15 @@ func UploadBannerHandler(c *gin.Context) {
 	ResponseSucceed(c, data)
 }
 func GetBannerListHandler(c *gin.Context) {
-	// 绑定参数
-	il := &image.ParamImageList{
-		Page:  0,
-		Size:  10,
-		Order: image.OrderByTime,
-	}
-	err := c.ShouldBindQuery(&il)
+	pl, err := validateListParams(c)
 	if err != nil {
-		global.Log.Errorf("GetImageListHandler ShouldBindQuery err:%s\n", err.Error())
-		ResponseErrorWithData(c, CodeInvalidParam, err.Error())
+		global.Log.Errorf("controller GetBannerListHandler err:%s\n", err.Error())
+		ResponseError(c, CodeServerBusy)
 		return
 	}
-	// ParamPostList 默认值
-	// 参数校验
-	if il.Page < 0 {
-		il.Page = 0
-	}
-	if il.Size <= 0 {
-		il.Size = 10
-	}
-	if il.Order == "" {
-		il.Order = image.OrderByTime
-	}
-	data, err := logic.GetBannerList(il)
+	data, err := logic.GetBannerList(pl)
 	if err != nil {
-		global.Log.Error("Logic GetImageList error", err.Error())
+		global.Log.Errorf("Logic GetBannerListHandler err:%s\n", err.Error())
 		ResponseError(c, CodeServerBusy)
 		return
 	}

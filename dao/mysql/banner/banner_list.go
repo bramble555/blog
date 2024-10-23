@@ -3,20 +3,15 @@ package banner
 import (
 	"fmt"
 
+	"github.com/bramble555/blog/dao/mysql"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
-	"github.com/bramble555/blog/model/image"
 )
 
-func GetBannerList(il *image.ParamImageList) ([]model.BannerModel, error) {
-	var bml []model.BannerModel
-	offset := (il.Page - 1) * il.Size
-	// SELECT * FROM `banner_models` ORDER BY create_time DESC LIMIT X OFFSET Y
-	// 默认降序排列
-	err := global.DB.Table("banner_models").Order(il.Order).Limit(il.Size).
-		Offset(offset).Find(&bml).Error
+func GetBannerList(pl *model.ParamList) ([]model.BannerModel, error) {
+	bml, err := mysql.GetTableList[model.BannerModel]("banner_models", pl, "")
 	if err != nil {
-		global.Log.Errorf("global.DB.Table(banner_models) err:%s\n", err.Error())
+		global.Log.Errorf("banner global.DB.Table(banner_models) err:%s\n", err.Error())
 		return nil, err
 	}
 	return bml, nil
