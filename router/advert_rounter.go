@@ -8,5 +8,6 @@ import (
 func InitAdvertRoutes(r *gin.RouterGroup) gin.IRoutes {
 	r.POST("/adverts", controller.CreateAdvertHandle)
 	r.GET("/adverts", controller.GetAdvertListHandler)
+	r.DELETE("/adverts", controller.DeleteAdvertListHander)
 	return r
 }

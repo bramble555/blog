@@ -47,3 +47,20 @@ func GetAdvertListHandler(c *gin.Context) {
 	// 返回响应
 	ResponseSucceed(c, data)
 }
+func DeleteAdvertListHander(c *gin.Context) {
+	var pdl model.ParamDeleteList
+	err := c.ShouldBindJSON(&pdl)
+	if err != nil {
+		global.Log.Errorf("DeleteHanderListHander ShouldBindQuery err:%s\n", err.Error())
+		ResponseErrorWithData(c, CodeInvalidParam, err.Error())
+		return
+	}
+	var data string
+	data, err = logic.DeleteAdvertList(&pdl)
+	if err != nil {
+		global.Log.Errorf("logic DeleteAdvertList err:%s\n", err.Error())
+		ResponseErrorWithData(c, CodeServerBusy, err.Error())
+		return
+	}
+	ResponseSucceed(c, data)
+}
