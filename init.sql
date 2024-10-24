@@ -10,18 +10,33 @@ CREATE TABLE IF NOT EXISTS banner_models (
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     hash VARCHAR(32) COMMENT 'Hash 值',
     name VARCHAR(100) COMMENT '文件名',
-    image_type SMALLINT DEFAULT 1 COMMENT '图片类型,默认是本地',
+    image_type TINYINT(1) DEFAULT 1 COMMENT '图片类型,默认是本地',
     CHECK (image_type IN (1, 2))
 ) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
-
 -- DROP TABLE banner_models;
+
 CREATE TABLE IF NOT EXISTS advert_models (
     id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键',
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    title VARCHAR(50) NOT NULL COMMENT '标题',
+    title VARCHAR(50) NOT NULL UNIQUE COMMENT '标题',
     href VARCHAR(200) NOT NULL COMMENT '链接',
     images VARCHAR(200) NOT NULL COMMENT '图片',
-    is_show TINYINT(1) DEFAULT 1 COMMENT '是否显示,1为是,0为否'
+    is_show TINYINT(1) DEFAULT 1 COMMENT '是否显示,1为是,0为否',
+    UNIQUE KEY `idx_title` ( `title` ) USING BTREE
 ) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
+
+-- ALTER TABLE advert_models ADD CONSTRAINT idx_title UNIQUE (title);
+CREATE TABLE IF NOT EXISTS menu_models (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键',
+    title VARCHAR(32) NOT NULL COMMENT '菜单标题',
+    path VARCHAR(32) NOT NULL COMMENT '菜单路径',
+    slogan VARCHAR(64) NOT NULL COMMENT '菜单口号或标语',
+    abstract TEXT COMMENT '菜单简介',
+    abstract_time SMALLINT(2) DEFAULT 0 COMMENT '简介的切换时间，单位为秒',
+    banner_id BIGINT  NULL COMMENT '关联的横幅ID',
+    banner_time TINYINT(2) DEFAULT 0 COMMENT '菜单图片的切换时间,0表示不切换',
+    sort TINYINT(5) UNIQUE NOT NULL COMMENT '菜单的顺序,0表示最高优先级'
+) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
+-- DROP TABLE  menu_models;

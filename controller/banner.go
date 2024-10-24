@@ -4,7 +4,6 @@ import (
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/logic"
 	"github.com/bramble555/blog/model"
-	"github.com/bramble555/blog/model/image"
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,7 +19,7 @@ func UploadBannerHandler(c *gin.Context) {
 		global.Log.Errorf("Controller ImageHandler formFile[images] err:%s\n", err.Error())
 		ResponseErrorWithData(c, CodeInvalidParam, err.Error())
 	}
-	data := new([]image.FileUploadResponse)
+	data := new([]model.FileUploadResponse)
 	data, err = logic.UploadImages(c, fileList)
 	if err != nil {
 		global.Log.Errorf("Logic UploadImage  [images] err:%s\n", err.Error())
@@ -41,6 +40,15 @@ func GetBannerListHandler(c *gin.Context) {
 		return
 	}
 	// 返回响应
+	ResponseSucceed(c, data)
+}
+func GetBannerDetailHandler(c *gin.Context) {
+	data, err := logic.GetBannerDetail()
+	if err != nil {
+		global.Log.Errorf("controller GetBannerDetailHandler err:%s\n", err.Error())
+		ResponseError(c, CodeServerBusy)
+		return
+	}
 	ResponseSucceed(c, data)
 }
 func DeleteBannerListHander(c *gin.Context) {

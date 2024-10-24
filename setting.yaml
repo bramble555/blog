@@ -74,4 +74,4 @@ jwt:
 
 upload:
   size: 2
-  path: uploads/file
+  path: ./uploads/file

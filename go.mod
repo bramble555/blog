@@ -1,6 +1,6 @@
 module github.com/bramble555/blog
 
-go 1.22.2
+go 1.23.2
 
 require (
 	github.com/fsnotify/fsnotify v1.7.0

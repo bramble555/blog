@@ -14,6 +14,16 @@ func GetBannerList(pl *model.ParamList) ([]model.BannerModel, error) {
 	}
 	return bml, nil
 }
+func GetBannerDetail() ([]model.BannerDetaile, error) {
+	var bd []model.BannerDetaile
+	err := global.DB.Table("banner_models").Select("id, name").Scan(&bd).Error
+	if err != nil {
+		global.Log.Errorf("banner GetBannerDetail err:%s\n", err.Error())
+		return nil, err
+	}
+	return bd, nil
+
+}
 func DeleteBannerList(pdl *model.ParamDeleteList) (string, error) {
 	return mysql.DeleteTableList[model.BannerModel]("banner_models", pdl)
 }

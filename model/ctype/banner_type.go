@@ -2,19 +2,19 @@ package ctype
 
 import "encoding/json"
 
-type ImageType int
+type BannerType int
 
 const (
-	Local ImageType = 1
-	QiNiu ImageType = 2
+	Local BannerType = 1
+	QiNiu BannerType = 2
 )
 
 // 解析成 json 格式的时候还是 string类型
-func (s ImageType) MarshalJSON() ([]byte, error) {
+func (s BannerType) MarshalJSON() ([]byte, error) {
 	return json.Marshal(s.String())
 }
 
-func (s ImageType) String() string {
+func (s BannerType) String() string {
 	var str string
 	switch s {
 	case Local:

@@ -21,8 +21,9 @@
 # vendor/
 
 
+
 # env file
 .env
-
-.air.conf
+/tmp/
 /uploads/
+.air.toml

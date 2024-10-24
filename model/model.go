@@ -17,4 +17,4 @@ type ParamList struct {
 }
 
 // 默认按照创建时间降序排序
-const OrderByTime = "create_time DESC"
+const OrderByTime = "create_time DESC, id DESC"
