@@ -7,22 +7,25 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func UploadBannerHandler(c *gin.Context) {
+func UploadBannersHandler(c *gin.Context) {
 	// 获取图片并且对参数进行处理
 	form, err := c.MultipartForm()
 	if err != nil {
 		global.Log.Errorf("Controller ImageHandler err:%s\n", err.Error())
 		ResponseErrorWithData(c, CodeInvalidParam, err.Error())
+		return
 	}
 	fileList, ok := form.File["images"]
 	if !ok {
 		global.Log.Errorf("Controller ImageHandler formFile[images] err:%s\n", err.Error())
 		ResponseErrorWithData(c, CodeInvalidParam, err.Error())
+		return
 	}
 	data := new([]model.FileUploadResponse)
 	data, err = logic.UploadImages(c, fileList)
 	if err != nil {
 		global.Log.Errorf("Logic UploadImage  [images] err:%s\n", err.Error())
+		return
 	}
 	ResponseSucceed(c, data)
 }

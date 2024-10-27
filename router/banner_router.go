@@ -6,7 +6,7 @@ import (
 )
 
 func InitBannerRoutes(r *gin.RouterGroup) gin.IRoutes {
-	r.POST("/images", controller.UploadBannerHandler)
+	r.POST("/images", controller.UploadBannersHandler)
 	// 分页查询
 	r.GET("/images", controller.GetBannerListHandler)
 	// 不分页，并且不包含 create_time 等信息

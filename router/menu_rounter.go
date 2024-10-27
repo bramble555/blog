@@ -9,6 +9,7 @@ func InitMenuRoutes(r *gin.RouterGroup) gin.IRoutes {
 	r.POST("/menus", controller.UploadMenuHandler)
 	// 分页查询
 	r.GET("/menus", controller.GetMenuListHandler)
+	r.PUT("/menus/:id", controller.UpdateMenuHandler)
 	r.DELETE("/menus", controller.DeleteMenuListHander)
 	return r
 }

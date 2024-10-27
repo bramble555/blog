@@ -9,7 +9,7 @@ import (
 )
 
 type BannerModel struct {
-	MODEL
+	*MODEL
 	Hash      string           `json:"hash"`                        // 图片的hash值，用于判断重复图片
 	Name      string           `gorm:"size:38" json:"name"`         // 图片名称
 	ImageType ctype.BannerType `gorm:"default:1" json:"image_type"` // 图片类型，本地还是网上的,1 是本地
@@ -32,8 +32,8 @@ type FileUploadResponse struct {
 	IsSuccess bool   `json:"is_success"`
 	Msg       string `json:"msg"`
 }
-type BannerDetaile struct {
-	ID   uint   `json:"id"`
+type ResponseBanner struct {
+	ID   uint   `json:"id,string"`
 	Name string `gorm:"size:38" json:"name"`
 }
 

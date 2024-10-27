@@ -73,10 +73,10 @@ func UploadImages(c *gin.Context, fileList []*multipart.FileHeader) (*[]model.Fi
 	}
 	return resFileList, nil
 }
-func GetBannerList(pl *model.ParamList) ([]model.BannerModel, error) {
+func GetBannerList(pl *model.ParamList) (*[]model.BannerModel, error) {
 	return banner.GetBannerList(pl)
 }
-func GetBannerDetail() ([]model.BannerDetaile, error) {
+func GetBannerDetail() (*[]model.ResponseBanner, error) {
 	return banner.GetBannerDetail()
 }
 func DeleteBannerList(pdl *model.ParamDeleteList) (string, error) {
