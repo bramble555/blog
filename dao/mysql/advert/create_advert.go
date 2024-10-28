@@ -17,13 +17,13 @@ func CreateAdvert(ad *model.AdvertModel) (string, error) {
 	}
 	global.DB.Table("advert_models").Where("title = ?", ad.Title)
 	// 不存在就创建
-	count := global.DB.Create(&model.AdvertModel{
+	rows := global.DB.Create(&model.AdvertModel{
 		Title:  ad.Title,
 		Href:   ad.Href,
 		Images: ad.Images,
 		IsShow: ad.IsShow,
 	}).RowsAffected
-	if count != 1 {
+	if rows != 1 {
 		global.Log.Errorf("mysql global.DB.Create(&model.AdvertModel error")
 		return "", errors.New("mysql 创建广告失败")
 	}

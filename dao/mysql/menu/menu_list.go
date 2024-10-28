@@ -30,15 +30,11 @@ func GetMenuList() (*[]model.ResponseMenuBanner, error) {
 		}
 	}
 	n := len(mm)
-	bannerName := make([]string, n)
-	for i, b := range banners {
-		bannerName[i] = b.Name
-	}
 	// 组装 ResponseMenuBanner 数据
 	response := make([]model.ResponseMenuBanner, n)
 	for i := 0; i < n; i++ {
 		response[i].MenuModel = &mm[i]
-		response[i].Name = bannerName[i]
+		response[i].Name = banners[i].Name
 	}
 	return &response, nil
 }
