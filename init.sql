@@ -30,6 +30,8 @@ CREATE TABLE IF NOT EXISTS advert_models (
 -- ALTER TABLE advert_models ADD CONSTRAINT idx_title UNIQUE (title);
 CREATE TABLE IF NOT EXISTS menu_models (
     id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键',
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     title VARCHAR(32) UNIQUE NOT NULL COMMENT '菜单标题',
     path VARCHAR(32) UNIQUE NOT NULL COMMENT '菜单路径',
     slogan VARCHAR(64) NULL COMMENT '菜单口号或标语',
@@ -41,3 +43,53 @@ CREATE TABLE IF NOT EXISTS menu_models (
     UNIQUE KEY `idx_path` (`path`) USING BTREE
 ) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 -- DROP TABLE  menu_models;
+
+CREATE TABLE IF NOT EXISTS user_models (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '用户ID',
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    username VARCHAR(36) NOT NULL UNIQUE COMMENT '用户名，唯一标识',
+    password VARCHAR(72) NOT NULL COMMENT '用户密码',
+    avatar VARCHAR(256) COMMENT '用户头像URL',
+    email VARCHAR(128) NULL COMMENT '用户邮箱',
+    phone VARCHAR(18) NULL COMMENT '用户电话',
+    addr VARCHAR(64) NULL COMMENT '用户地址',
+    token VARCHAR(64) NULL COMMENT '用户身份令牌',
+    ip VARCHAR(20) DEFAULT '127.0.0.1' COMMENT '用户最后登录IP',
+    role SMALLINT(1) DEFAULT 1 COMMENT '用户角色,默认值为1',
+    sign_status SMALLINT(1) COMMENT '用户签到状态',
+    artcile_id BIGINT COMMENT '文章ID',
+    collect_id BIGINT COMMENT '收藏文章ID',
+    UNIQUE KEY `idx_username` (`username`) USING BTREE
+) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS article_models (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '文章ID',
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    title VARCHAR(32) NOT NULL COMMENT '文章标题',
+    abstract TEXT NOT NULL COMMENT  '文章简介',
+    content TEXT  NOT NULL COMMENT '文章内容',
+    look_count INT DEFAULT 0 COMMENT '浏览量',
+    comment_count INT DEFAULT 0 COMMENT '评论量',
+    digg_count INT DEFAULT 0 COMMENT '点赞量',
+    collects_count INT DEFAULT 0 COMMENT '收藏量',
+    category VARCHAR(20) NOT NULL COMMENT '文章分类',
+    source VARCHAR(255) COMMENT '文章来源',
+    link VARCHAR(255) COMMENT '原文链接',
+		user_id BIGINT NOT NULL COMMENT '用户ID',
+    banner_id BIGINT NOT NULL COMMENT  '文章封面ID',
+    tags TEXT COMMENT '文章标签（以逗号分隔）'
+) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
+CREATE TABLE IF NOT EXISTS comment_models (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '评论ID',
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    content VARCHAR(256) NOT NULL COMMENT '评论内容',
+    digg_count INT DEFAULT 0 COMMENT '点赞数',
+    comment_count INT DEFAULT 0 COMMENT '子评论数量',
+    parent_comment_id BIGINT COMMENT '父级评论ID', -- 用于层级评论
+    article_id BIGINT COMMENT '文章ID',
+    user_id BIGINT COMMENT '评论的用户ID'
+) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
+

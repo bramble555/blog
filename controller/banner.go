@@ -18,7 +18,7 @@ func UploadBannersHandler(c *gin.Context) {
 	fileList, ok := form.File["images"]
 	if !ok {
 		global.Log.Errorf("Controller ImageHandler formFile[images] err:%s\n", err.Error())
-		ResponseErrorWithData(c, CodeInvalidParam, err.Error())
+		ResponseErrorWithData(c, CodeInvalidParam, "参数应为 images")
 		return
 	}
 	data := new([]model.FileUploadResponse)

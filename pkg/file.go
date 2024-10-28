@@ -49,6 +49,5 @@ func CreateFile(filePath string, fileName string) *os.File {
 	if err != nil {
 		log.Fatalf("err:%s\n", err.Error())
 	}
-	log.Printf("file:%v\n", file)
 	return file
 }

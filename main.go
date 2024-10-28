@@ -12,6 +12,7 @@ import (
 
 	"github.com/bramble555/blog/dao/mysql"
 	"github.com/bramble555/blog/dao/redis"
+	"github.com/bramble555/blog/flag"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/logger"
 	"github.com/bramble555/blog/router"
@@ -41,6 +42,8 @@ func main() {
 		global.Log.Printf("Init redis failed, err:%v\n", err)
 		return
 	}
+	// 解析是否有命令行
+	flag.FlagUserParse()
 	// 注册路由
 	r := router.InitRounter(global.Config.System.Env)
 	// 优雅关机
