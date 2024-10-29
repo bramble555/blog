@@ -23,3 +23,14 @@ type ParamFlagUser struct {
 	Role     uint   `json:"role"`
 	Avatar   string `json:"avatar"`
 }
+type ParamEmailUser struct {
+	Username string `json:"username" binding:"required" msg:"请输入用户名"`
+	Password string `json:"password" binding:"required" msg:"请输入密码"`
+}
+
+// 返回响应
+type ResponseUserLogin struct {
+	Token    string
+	UserName string
+	Role     int
+}
