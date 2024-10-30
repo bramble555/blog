@@ -33,18 +33,18 @@ func QueryPassword(peu *model.ParamEmailUser) (bool, error) {
 	return true, nil
 }
 func GetToken(peu *model.ParamEmailUser) (string, error) {
-	type userModelDetail struct {
-		id   int
-		role int
+	type paramUserDetail struct {
+		ID   uint // 改为大写 否则不能 Scan 到
+		Role uint // 改为大写
 	}
-	var udd userModelDetail
+	var udd paramUserDetail
 	err := global.DB.Table("user_models").Where("username = ?", peu.Username).
 		Select("id, role").Scan(&udd).Error
 	if err != nil {
 		global.Log.Errorf("user GetToken select err:%s\n", err.Error())
 		return "", err
 	}
-	token, err := pkg.GenToken(udd.id, udd.role)
+	token, err := pkg.GenToken(udd.ID, udd.Role)
 	if err != nil {
 		global.Log.Errorf("pkg GetToken err:%s\n", err.Error())
 		return "", err

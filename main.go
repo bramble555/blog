@@ -47,13 +47,13 @@ func main() {
 	op := flag.FlagUserParse()
 
 	// 如果没有传递用户名参数，启动服务器
-	if op.Username == "" {
+	if op.Username == "" || op.Password == "" {
 		startServer()
 		return
 	}
 
 	// 如果有用户名参数，则尝试创建用户
-	flag.CreateUser()
+	flag.CreateUser(&op)
 }
 
 // 启动 Gin 服务器

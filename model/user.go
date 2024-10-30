@@ -8,7 +8,7 @@ type UserModel struct {
 	PassWord   string           `json:"-"`
 	Avatar     string           `json:"avatar"`
 	Email      string           `json:"email"`
-	Tel        string           `json:"tel"`
+	Phone      string           `json:"phone"`
 	Addr       string           `json:"addr"`
 	Token      string           `json:"token"`
 	IP         string           `json:"ip"`

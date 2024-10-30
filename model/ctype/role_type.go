@@ -5,10 +5,10 @@ import "encoding/json"
 type Role uint
 
 const (
-	PermissionAdmin       Role = 1 //管理员
-	PermissionUser        Role = 2 //普通用户
-	PermissionVisitor     Role = 3 //访客
-	PermissionDisableUser Role = 4 //被禁用户
+	PermissionAdmin       Role = 1 // 管理员
+	PermissionUser        Role = 2 // 普通用户
+	PermissionVisitor     Role = 3 // 访客
+	PermissionDisableUser Role = 4 // 被禁用户
 )
 
 // MarshalJSON 方法用于将 Role 类型转换为 JSON 格式。

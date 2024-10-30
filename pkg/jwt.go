@@ -2,7 +2,6 @@ package pkg
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/bramble555/blog/global"
@@ -10,24 +9,26 @@ import (
 )
 
 type MyClaims struct {
-	ID                 int `json:"id"`
-	Role               int `json:"role"`
-	jwt.StandardClaims     // 嵌入 jwt.StandardClaims
+	ID                 uint `json:"id"`
+	Role               uint `json:"role"`
+	jwt.StandardClaims      // 嵌入 jwt.StandardClaims
 }
 
-var TokeExpireDuration int64 = 2
-var mySecret = []byte("666")
+// 不能在调用函数之前直接初始化，否则会空指针异常
+// 因为函数执行顺序是 包级变量  函数
+var tokeExpireDuration int64
+var mySecret []byte
 
 // GenToken 生成JWT
-func GenToken(id int, role int) (string, error) {
+func GenToken(id uint, role uint) (string, error) {
+	tokeExpireDuration = global.Config.Jwt.Expries
+	mySecret = []byte(global.Config.Jwt.Secret)
 	// 创建一个我们自己的声明
-	fmt.Printf("Global Config: %+v\n", global.Config)
-
 	claims := MyClaims{
 		ID:   id, // 自定义字段
 		Role: role,
 		StandardClaims: jwt.StandardClaims{ // 明确指定字段名
-			ExpiresAt: time.Now().Add(time.Duration(TokeExpireDuration * int64(time.Hour))).Unix(),
+			ExpiresAt: time.Now().Add(time.Duration(tokeExpireDuration * int64(time.Hour))).Unix(),
 			Issuer:    global.Config.Jwt.Issuer, // 签发人
 		},
 	}

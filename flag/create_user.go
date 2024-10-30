@@ -28,17 +28,7 @@ func FlagUserParse() Option {
 		Password:   *password,
 	}
 }
-func CreateUser() {
-	op := FlagUserParse()
-	// 先验证用户信息
-	if op.Username == "" {
-		fmt.Println("请输入用户名")
-		os.Exit(1)
-	}
-	if op.Password == "" {
-		fmt.Println("请输入密码")
-		os.Exit(1)
-	}
+func CreateUser(op *Option) {
 	// 默认是用户
 	role := uint(ctype.PermissionUser)
 	// 如果是超级用户，那就 改为超级用户
@@ -49,6 +39,16 @@ func CreateUser() {
 		fmt.Println("-u 输入参数有误")
 		os.Exit(1)
 	}
+	// 验证用户信息
+	if op.Username == "" {
+		fmt.Println("请输入用户名")
+		os.Exit(1)
+	}
+	if op.Password == "" {
+		fmt.Println("请输入密码")
+		os.Exit(1)
+	}
+
 	// 用命令行创建用户
 	err := user.CreateFlagUser(role, op.Username, op.Password)
 	if err != nil {

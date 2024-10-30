@@ -52,13 +52,13 @@ CREATE TABLE IF NOT EXISTS user_models (
     password VARCHAR(72) NOT NULL COMMENT '用户密码',
     avatar VARCHAR(256) COMMENT '用户头像URL',
     email VARCHAR(128) NULL COMMENT '用户邮箱',
-    phone VARCHAR(18) NULL COMMENT '用户电话',
+    phone VARCHAR(18) NULL COMMENT '用户电话', 
     addr VARCHAR(64) NULL COMMENT '用户地址',
     token VARCHAR(64) NULL COMMENT '用户身份令牌',
     ip VARCHAR(20) DEFAULT '127.0.0.1' COMMENT '用户最后登录IP',
     role SMALLINT(1) DEFAULT 1 COMMENT '用户角色,默认值为1',
     sign_status SMALLINT(1) COMMENT '用户签到状态',
-    artcile_id BIGINT COMMENT '文章ID',
+    article_id BIGINT COMMENT '文章ID',
     collect_id BIGINT COMMENT '收藏文章ID',
     UNIQUE KEY `idx_username` (`username`) USING BTREE
 ) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS article_models (
     category VARCHAR(20) NOT NULL COMMENT '文章分类',
     source VARCHAR(255) COMMENT '文章来源',
     link VARCHAR(255) COMMENT '原文链接',
-		user_id BIGINT NOT NULL COMMENT '用户ID',
+	user_id BIGINT NOT NULL COMMENT '用户ID',
     banner_id BIGINT NOT NULL COMMENT  '文章封面ID',
     tags TEXT COMMENT '文章标签（以逗号分隔）'
 ) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
