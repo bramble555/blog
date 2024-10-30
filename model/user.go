@@ -29,8 +29,8 @@ type ParamEmailUser struct {
 }
 
 // 返回响应
-type ResponseUserLogin struct {
-	Token    string
-	UserName string
-	Role     int
-}
+// type ResponseUserLogin struct {
+// 	Token    string
+// 	UserName string
+// 	Role     int
+// }

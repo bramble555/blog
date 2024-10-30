@@ -2,14 +2,12 @@ package pkg
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/bramble555/blog/global"
 	"github.com/dgrijalva/jwt-go"
 )
-
-var TokeExpireDuration int64 = global.Config.Jwt.Expries
-var mySecret = []byte(global.Config.Jwt.Secret)
 
 type MyClaims struct {
 	ID                 int `json:"id"`
@@ -17,9 +15,14 @@ type MyClaims struct {
 	jwt.StandardClaims     // 嵌入 jwt.StandardClaims
 }
 
+var TokeExpireDuration int64 = 2
+var mySecret = []byte("666")
+
 // GenToken 生成JWT
 func GenToken(id int, role int) (string, error) {
 	// 创建一个我们自己的声明
+	fmt.Printf("Global Config: %+v\n", global.Config)
+
 	claims := MyClaims{
 		ID:   id, // 自定义字段
 		Role: role,
