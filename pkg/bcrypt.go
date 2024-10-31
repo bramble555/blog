@@ -13,9 +13,5 @@ func HashPassword(password string) (string, error) {
 }
 func ComparePasswords(hashedPassword, inputPassword string) error {
 	// 使用 bcrypt 库的 CompareHashAndPassword 函数比较密码
-	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(inputPassword))
-	if err != nil {
-		
-	}
-	return err
+	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(inputPassword))
 }

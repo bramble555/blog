@@ -1,24 +1,58 @@
 package user
 
 import (
+	"errors"
+
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
 	"github.com/bramble555/blog/pkg"
 )
 
-// CheckUserExist 检查用户是否存在
-func CheckUserExist(name string) (bool, error) {
+// CheckUserExistByName 检查用户是否存在
+func CheckUserExistByName(name string) (bool, error) {
 	var count int64
 	err := global.DB.Table("user_models").Where("username = ?", name).Count(&count).Error
 	if err != nil {
-		global.Log.Errorf("user CheckUserExist err:%s\n", err.Error())
+		global.Log.Errorf("user CheckUserExistByName err:%s\n", err.Error())
+		return false, err
+	}
+	return count == 1, nil
+}
+func CheckUserExistByID(id uint) (bool, error) {
+	var count int64
+	err := global.DB.Table("user_models").Where("id = ?", id).Count(&count).Error
+	if err != nil {
+		global.Log.Errorf("user CheckUserExistByID err:%s\n", err.Error())
 		return false, err
 	}
 	return count == 1, nil
 }
 
-// QueryPassword 检验密码是否正确
-func QueryPassword(peu *model.ParamEmailUser) (bool, error) {
+// CheckPwdExistByID 传入 ID，检查密码是否正确
+func CheckPwdExistByID(id uint, pwd string) (bool, error) {
+	var encryPassword string
+	err := global.DB.Table("user_models").Where("id = ?", id).
+		Select("password").Scan(&encryPassword).Error
+	if err != nil {
+		global.Log.Errorf("user QueryPassword err: %v\n", err)
+		return false, err
+	}
+
+	// 如果密码为空，用户不存在
+	if encryPassword == "" {
+		return false, errors.New("用户不存在")
+	}
+
+	// 比较密码
+	err = pkg.ComparePasswords(encryPassword, pwd)
+	if err != nil {
+		return false, errors.New("密码不正确")
+	}
+	return true, nil
+}
+
+// QueryPasswordByUsername 传入username 和 密码 检验密码是否正确，实现登录功能
+func QueryPasswordByUsername(peu *model.ParamEmailUser) (bool, error) {
 	var encryPassword string
 	err := global.DB.Table("user_models").Where("username = ?", peu.Username).
 		Select("password").Scan(&encryPassword).Error // 使用 Scan 将结果绑定到 password
