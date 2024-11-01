@@ -7,6 +7,7 @@ import (
 	"github.com/bramble555/blog/model"
 )
 
+// DeleteTableList 获取列表
 func GetTableList[T any](tableName string, pl *model.ParamList, where string, args ...any) ([]T, error) {
 	var results []T
 	if pl != nil {
@@ -21,8 +22,14 @@ func GetTableList[T any](tableName string, pl *model.ParamList, where string, ar
 	}
 	// 如果 pl 是 nil, 那就查询所有，不是分页查询
 	err := global.DB.Table(tableName).Where(where, args...).Find(&results).Error
-	return results, err
+	if err != nil {
+		global.Log.Errorf("查询时候出错: err:%v\n", err.Error())
+		return nil, err
+	}
+	return results, nil
 }
+
+// DeleteTableList 删除列表
 func DeleteTableList[T any](tableName string, pdl *model.ParamDeleteList) (string, error) {
 	var records []T
 	// 查找记录

@@ -19,5 +19,6 @@ func InitRounter(mode string) *gin.Engine {
 	InitAdvertRoutes(apiGroup)
 	InitMenuRoutes(apiGroup)
 	InitUserRoutes(apiGroup)
+	InitMessageRoutes(apiGroup)
 	return r
 }

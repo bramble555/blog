@@ -20,12 +20,12 @@ func UploadImages(c *gin.Context, fileList []*multipart.FileHeader) (*[]model.Fi
 		// 检验扩展名
 		fileExt := strings.Split(file.Filename, ".")
 		if len(fileExt) != 2 {
-			global.Log.Errorf("上传的文件%s没有扩展名", file.Filename)
+			global.Log.Errorf("上传的文件%s没有扩展名\n", file.Filename)
 			continue
 		}
 		// 检查扩展名是否在白名单中
 		if _, exists := model.WhiteImageExtList[fileExt[1]]; !exists {
-			global.Log.Errorf("上传的文件%s的扩展名不被支持,文件名是%s", fileExt[1], file.Filename)
+			global.Log.Errorf("上传的文件%s的扩展名不被支持,文件名是%s\n", fileExt[1], file.Filename)
 			continue
 		}
 		size := float64(file.Size) / 1024 / 1024
@@ -33,7 +33,7 @@ func UploadImages(c *gin.Context, fileList []*multipart.FileHeader) (*[]model.Fi
 			*resFileList = append(*resFileList, model.FileUploadResponse{
 				FileName:  file.Filename,
 				IsSuccess: false,
-				Msg:       fmt.Sprintf("图片太大了,是%.2fMB,图片大小需要缩小到%dMB", size, global.Config.Upload.Size),
+				Msg:       fmt.Sprintf("图片太大了,是%.2fMB,图片大小需要缩小到%dMB\n", size, global.Config.Upload.Size),
 			})
 			continue
 		}

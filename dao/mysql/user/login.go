@@ -3,6 +3,7 @@ package user
 import (
 	"errors"
 
+	"github.com/bramble555/blog/dao/mysql/code"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
 	"github.com/bramble555/blog/pkg"
@@ -62,7 +63,8 @@ func QueryPasswordByUsername(peu *model.ParamEmailUser) (bool, error) {
 	}
 	err = pkg.ComparePasswords(encryPassword, peu.Password)
 	if err != nil {
-		return false, err
+		global.Log.Errorf("user pkg.ComparePassword serr: %v\n", err)
+		return false, code.ErrorPasswordWrong
 	}
 	return true, nil
 }

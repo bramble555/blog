@@ -18,13 +18,13 @@ func UploadBannersHandler(c *gin.Context) {
 	fileList, ok := form.File["images"]
 	if !ok {
 		global.Log.Errorf("Controller ImageHandler formFile[images] err:%s\n", err.Error())
-		ResponseErrorWithData(c, CodeInvalidParam, "参数应为 images")
+		ResponseError(c, CodeInvalidParam)
 		return
 	}
 	data := new([]model.FileUploadResponse)
 	data, err = logic.UploadImages(c, fileList)
 	if err != nil {
-		global.Log.Errorf("Logic UploadImage  [images] err:%s\n", err.Error())
+		ResponseError(c, CodeServerBusy)
 		return
 	}
 	ResponseSucceed(c, data)
@@ -32,8 +32,7 @@ func UploadBannersHandler(c *gin.Context) {
 func GetBannerListHandler(c *gin.Context) {
 	pl, err := validateListParams(c)
 	if err != nil {
-		global.Log.Errorf("controller GetBannerListHandler err:%s\n", err.Error())
-		ResponseError(c, CodeServerBusy)
+		ResponseError(c, CodeInvalidParam)
 		return
 	}
 	data, err := logic.GetBannerList(pl)
@@ -65,7 +64,6 @@ func DeleteBannerListHander(c *gin.Context) {
 	var data string
 	data, err = logic.DeleteBannerList(&pdl)
 	if err != nil {
-		global.Log.Errorf("logic DeleteBannerList err:%s\n", err.Error())
 		ResponseErrorWithData(c, CodeServerBusy, err.Error())
 		return
 	}

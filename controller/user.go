@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/bramble555/blog/dao/mysql/code"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/logic"
 	"github.com/bramble555/blog/model"
@@ -23,11 +24,10 @@ func EmailLoginHandler(c *gin.Context) {
 	// 业务处理
 	token, err := logic.UsernameLogin(&peu)
 	if err != nil {
-		global.Log.Errorf("Login with invaild params:%s\n", err.Error())
-		if err == errors.New("用户名不存在") {
-			ResponseErrorWithData(c, CodeUserExist, err)
+		if errors.Is(err, code.ErrorUserNotExit) {
+			ResponseErrorWithData(c, CodeUserNotExist, err)
 			return
-		} else if err == errors.New("密码错误") {
+		} else if errors.Is(err, code.ErrorPasswordWrong) {
 			ResponseErrorWithData(c, CodeInvalidPassword, err)
 			return
 		} else {
@@ -43,20 +43,15 @@ func GetUserListHandler(c *gin.Context) {
 	claims := _claims.(*pkg.MyClaims)
 	role := claims.Role
 	// ParamList 默认值
-	var pl = model.ParamList{
-		Page:  1,
-		Size:  10,
-		Order: model.OrderByTime,
-	}
-	err := c.ShouldBind(&pl)
+	pl, err := validateListParams(c)
 	if err != nil {
-		global.Log.Errorf("controller GetUserListHandler err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
-	data, err := logic.GetUserList(role, &pl)
+	data, err := logic.GetUserList(role, pl)
 	if err != nil {
 		ResponseError(c, CodeServerBusy)
+		return
 	}
 	ResponseSucceed(c, data)
 }
@@ -72,6 +67,9 @@ func UpdateUserRoleHandler(c *gin.Context) {
 	}
 	data, err := logic.UpdateUserRole(&puur)
 	if err != nil {
+		if errors.Is(err, code.ErrorIDNotExit) {
+			ResponseErrorWithData(c, CodeUserNotExist, code.ErrorIDNotExit)
+		}
 		ResponseError(c, CodeServerBusy)
 		return
 	}
@@ -128,5 +126,9 @@ func DeleteUserListHander(c *gin.Context) {
 	}
 	var data string
 	data, err = logic.DeleteUserList(&pdl)
+	if err != nil {
+		ResponseError(c, CodeServerBusy)
+		return
+	}
 	ResponseSucceed(c, data)
 }

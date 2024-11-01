@@ -1,8 +1,7 @@
 package menu
 
 import (
-	"fmt"
-
+	"github.com/bramble555/blog/dao/mysql/code"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
 )
@@ -25,7 +24,7 @@ func UpdateMenu(id uint, mm *model.MenuModel) (string, error) {
 
 	// 检查是否有行被更新
 	if result.RowsAffected == 0 {
-		return "更新失败", fmt.Errorf("未找到 ID 为 %d 的记录", id)
+		return "更新失败", code.ErrorIDNotExit
 	}
 	return "更新成功", nil
 }

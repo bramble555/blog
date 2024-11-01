@@ -2,7 +2,6 @@ package advert
 
 import (
 	"github.com/bramble555/blog/dao/mysql"
-	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
 )
 
@@ -18,7 +17,6 @@ func GetAdvertList(pl *model.ParamList, isShow bool) ([]model.AdvertModel, error
 	// 调用 GetTableList 时，只有在 condition 不为空时才传递条件和参数
 	ad, err := mysql.GetTableList[model.AdvertModel]("advert_models", pl, condition, args...)
 	if err != nil {
-		global.Log.Errorf("获取广告列表时出错: %s\n", err.Error())
 		return nil, err
 	}
 	return ad, nil

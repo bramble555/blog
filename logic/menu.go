@@ -2,6 +2,7 @@ package logic
 
 import (
 	"github.com/bramble555/blog/dao/mysql/banner"
+	"github.com/bramble555/blog/dao/mysql/code"
 	"github.com/bramble555/blog/dao/mysql/menu"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
@@ -15,8 +16,8 @@ func UploadMenu(mm *model.MenuModel) (string, error) {
 			global.Log.Errorf("banner GetBannerByID err:%s\n", err.Error())
 			return "", err
 		}
+		return "", code.ErrorIDNotExit
 	}
-	global.Log.Debugf("banner_id:%d", mm.BannerID)
 	return menu.UploadMenu(mm)
 }
 func GetMenuList() (*[]model.ResponseMenuBanner, error) {

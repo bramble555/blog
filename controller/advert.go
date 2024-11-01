@@ -19,17 +19,18 @@ func CreateAdvertHandle(c *gin.Context) {
 	}
 	data, err := logic.CreateAdvert(&ad)
 	if err != nil {
-		global.Log.Errorf("logic CreateAdvertHandle ShouldBindQuery err:%s\n", err.Error())
 		ResponseErrorWithData(c, CodeInvalidParam, err.Error())
 		return
 	}
 	ResponseSucceed(c, data)
 }
+
+// GetAdvertListHandler 管理员可以获取广告列表
 func GetAdvertListHandler(c *gin.Context) {
 	pl, err := validateListParams(c)
 	if err != nil {
 		global.Log.Errorf("controller GetAdvertListHandler err:%s\n", err.Error())
-		ResponseError(c, CodeServerBusy)
+		ResponseError(c, CodeInvalidParam)
 		return
 	}
 	// 判断 referer 是否包含 admin，如果是，返回，如果不是，就不返回了
@@ -40,25 +41,23 @@ func GetAdvertListHandler(c *gin.Context) {
 	}
 	data, err := logic.GetAdvertList(pl, isShow)
 	if err != nil {
-		global.Log.Errorf("Logic GetImageList err:%s\n", err.Error())
 		ResponseError(c, CodeServerBusy)
 		return
 	}
 	// 返回响应
 	ResponseSucceed(c, data)
 }
-func DeleteAdvertListHander(c *gin.Context) {
+func DeleteAdvertListHandler(c *gin.Context) {
 	var pdl model.ParamDeleteList
 	err := c.ShouldBindJSON(&pdl)
 	if err != nil {
 		global.Log.Errorf("DeleteHanderListHander ShouldBindQuery err:%s\n", err.Error())
-		ResponseErrorWithData(c, CodeInvalidParam, err.Error())
+		ResponseError(c, CodeInvalidParam)
 		return
 	}
 	var data string
 	data, err = logic.DeleteAdvertList(&pdl)
 	if err != nil {
-		global.Log.Errorf("logic DeleteAdvertList err:%s\n", err.Error())
 		ResponseErrorWithData(c, CodeServerBusy, err.Error())
 		return
 	}

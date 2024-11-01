@@ -1,10 +1,10 @@
 package banner
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/bramble555/blog/dao/mysql"
+	"github.com/bramble555/blog/dao/mysql/code"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
 	"gorm.io/gorm"
@@ -13,7 +13,6 @@ import (
 func GetBannerList(pl *model.ParamList) (*[]model.BannerModel, error) {
 	bml, err := mysql.GetTableList[model.BannerModel]("banner_models", pl, "")
 	if err != nil {
-		global.Log.Errorf("banner global.DB.Table(banner_models) err:%s\n", err.Error())
 		return nil, err
 	}
 	return &bml, nil
@@ -22,7 +21,6 @@ func GetBannerDetail() (*[]model.ResponseBanner, error) {
 	var bd []model.ResponseBanner
 	err := global.DB.Table("banner_models").Select("id, name").Scan(&bd).Error
 	if err != nil {
-		global.Log.Errorf("banner GetBannerDetail err:%s\n", err.Error())
 		return nil, err
 	}
 	return &bd, nil
@@ -32,7 +30,7 @@ func GetBannerByID(id *uint) (*model.ResponseBanner, error) {
 	err := global.DB.Table("banner_models").Select("id, name").Where("id = ?", id).First(&bd).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, errors.New("id 不存在") // 可以返回 nil 而不是错误，表示未找到
+			return nil, code.ErrorIDExit
 		}
 		global.Log.Errorf("banner GetBannerDetail err:%s\n", err.Error())
 		return nil, err
@@ -61,7 +59,7 @@ func DeleteBannerList(pdl *model.ParamDeleteList) (string, error) {
 	if resultB.Error != nil {
 		t.Rollback()
 		global.Log.Errorf("删除 banner_models 时出错:%v\n", resultB.Error)
-		return "删除 banner_models 时出错", fmt.Errorf("要删除的 ID 列表 %v 不存在", pdl.IDList)
+		return "删除 banner_models 时出错", code.ErrorIDNotExit
 	}
 
 	// 删除 menu_models

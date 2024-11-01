@@ -7,7 +7,7 @@ import (
 )
 
 func GetMenuList() (*[]model.ResponseMenuBanner, error) {
-	// 获取菜单列表
+	// 获取菜单列表全部
 	mm, err := mysql.GetTableList[model.MenuModel]("menu_models", nil, "")
 	if err != nil {
 		global.Log.Errorf("menu GetMenuList err: %s\n", err.Error())

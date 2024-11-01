@@ -1,9 +1,9 @@
 package logic
 
 import (
-	"errors"
 	"time"
 
+	"github.com/bramble555/blog/dao/mysql/code"
 	"github.com/bramble555/blog/dao/mysql/user"
 	"github.com/bramble555/blog/dao/redis"
 	"github.com/bramble555/blog/model"
@@ -16,18 +16,18 @@ func UsernameLogin(peu *model.ParamEmailUser) (string, error) {
 	// 判断用户名是否存在
 	ok, err := user.CheckUserExistByName(peu.Username)
 	if err != nil {
-		return "", errors.New("用户名不存在")
+		return "", err
 	}
 	if !ok {
-		return "", errors.New("用户名不存在")
+		return "", code.ErrorUserNotExit
 	}
 	// 判断密码是否错误
 	ok, err = user.QueryPasswordByUsername(peu)
 	if err != nil {
-		return "", errors.New("密码错误")
+		return "", err
 	}
 	if !ok {
-		return "", errors.New("密码错误")
+		return "", code.ErrorPasswordWrong
 	}
 	return user.GetToken(peu)
 }
@@ -58,7 +58,7 @@ func UpdateUserRole(puur *model.ParamUpdateUserRole) (string, error) {
 		return "", err
 	}
 	if !ok {
-		return "用户ID不存在", errors.New("用户ID不存在")
+		return "", code.ErrorIDNotExit
 	}
 	return user.UpdateUserRole(puur)
 }

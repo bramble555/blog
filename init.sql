@@ -92,4 +92,15 @@ CREATE TABLE IF NOT EXISTS comment_models (
     article_id BIGINT COMMENT '文章ID',
     user_id BIGINT COMMENT '评论的用户ID'
 ) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
+CREATE TABLE IF NOT EXISTS message_models (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '消息 ID',
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    send_user_id BIGINT NOT NULL COMMENT '发送人 ID',
+    rev_user_id BIGINT NOT NULL COMMENT '接收人 ID',
+    is_read BOOLEAN DEFAULT FALSE COMMENT '接收方是否查看',
+    content TEXT COMMENT '消息内容'
+) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
+
+
 

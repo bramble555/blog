@@ -21,7 +21,6 @@ func UploadMenuHandler(c *gin.Context) {
 	}
 	data, err := logic.UploadMenu(&mm)
 	if err != nil {
-		global.Log.Errorf("logic UploadMenuHandler UploadMenu err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
@@ -31,7 +30,6 @@ func UploadMenuHandler(c *gin.Context) {
 func GetMenuListHandler(c *gin.Context) {
 	data, err := logic.GetMenuList()
 	if err != nil {
-		global.Log.Errorf("logic UploadMenu GetMenuList err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
@@ -73,8 +71,6 @@ func DeleteMenuListHander(c *gin.Context) {
 	var data string
 	data, err = logic.DeleteMenuList(&pdl)
 	if err != nil {
-		global.Log.Errorf("logic DeleteMenuListHander ShouldBindJSON err:%s\n", err.Error())
-		ResponseError(c, CodeServerBusy)
 		return
 	}
 	ResponseSucceed(c, data)
