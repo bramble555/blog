@@ -3,6 +3,7 @@ package user
 import (
 	"fmt"
 
+	"github.com/bramble555/blog/dao/mysql"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
 	"github.com/bramble555/blog/pkg"
@@ -33,4 +34,11 @@ func UpdateUserPwd(puup *model.ParamUpdateUserPwd, id uint) (string, error) {
 		return "", err
 	}
 	return fmt.Sprintf("修改用户 %d 密码成功", id), nil
+}
+
+// DeleteUserList 删除用户列表
+func DeleteUserList(pdl *model.ParamDeleteList) (string, error) {
+	// 其实还要删除许多关联的表，后面再删除
+	// to do
+	return mysql.DeleteTableList[model.UserModel]("user_models", pdl)
 }

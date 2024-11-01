@@ -116,3 +116,17 @@ func LogoutHandler(c *gin.Context) {
 	}
 	ResponseSucceed(c, "注销成功")
 }
+
+// DeleteUserListHander admin 删除用户
+func DeleteUserListHander(c *gin.Context) {
+	pdl := model.ParamDeleteList{}
+	err := c.ShouldBindJSON(&pdl)
+	if err != nil {
+		global.Log.Errorf("controller DeleteUserListHander err:%s\n", err.Error())
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+	var data string
+	data, err = logic.DeleteUserList(&pdl)
+	ResponseSucceed(c, data)
+}

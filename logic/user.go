@@ -79,3 +79,6 @@ func UpdateUserPwd(puup *model.ParamUpdateUserPwd, id uint) (string, error) {
 func Logout(token string, diff time.Duration) error {
 	return redis.Logout(token, diff)
 }
+func DeleteUserList(pdl *model.ParamDeleteList) (string, error) {
+	return user.DeleteUserList(pdl)
+}
