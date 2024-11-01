@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/bramble555/blog/global"
+	"github.com/go-redis/redis"
 )
 
 func Logout(token string, diff time.Duration) error {
@@ -23,11 +24,15 @@ func Logout(token string, diff time.Duration) error {
 
 // CheckLogout 检查 token 是否存在于用户注销的 redis 里面
 func CheckLogout(token string) bool {
-	keys := global.Redis.Keys(getKeyName(token)).Val()
-	for _, v := range keys {
-		if v == token {
-			return true
-		}
+	_, err := global.Redis.Get(getKeyName(token)).Result()
+	if err == redis.Nil {
+		// 键不存在
+		return false
+	} else if err != nil {
+		// 其他错误
+		global.Log.Errorf("redis CheckLogout err: %s\n", err.Error())
+		return false
 	}
-	return false
+	// 存在
+	return true
 }

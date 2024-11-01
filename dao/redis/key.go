@@ -8,6 +8,7 @@ const (
 	KeyZSetPostScore   = "post:score"  // 帖子及投票分数
 	KeyZSetPostVotedPF = "post:voted:" // 记录用户及投票类型；参数是post_id
 	KeySetCommuntiyPF  = "community:"  // 记录社区的post列表；参数是communtiy_id
+	KeySetToken        = "token"
 )
 
 func getKeyName(key string) string {

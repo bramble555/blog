@@ -16,7 +16,7 @@ func UsernameLogin(peu *model.ParamEmailUser) (string, error) {
 	// 判断用户名是否存在
 	ok, err := user.CheckUserExistByName(peu.Username)
 	if err != nil {
-		return "", err
+		return "", errors.New("用户名不存在")
 	}
 	if !ok {
 		return "", errors.New("用户名不存在")
@@ -24,7 +24,7 @@ func UsernameLogin(peu *model.ParamEmailUser) (string, error) {
 	// 判断密码是否错误
 	ok, err = user.QueryPasswordByUsername(peu)
 	if err != nil {
-		return "", err
+		return "", errors.New("密码错误")
 	}
 	if !ok {
 		return "", errors.New("密码错误")

@@ -25,13 +25,13 @@ func EmailLoginHandler(c *gin.Context) {
 	if err != nil {
 		global.Log.Errorf("Login with invaild params:%s\n", err.Error())
 		if err == errors.New("用户名不存在") {
-			ResponseError(c, CodeUserExist)
+			ResponseErrorWithData(c, CodeUserExist, err)
 			return
 		} else if err == errors.New("密码错误") {
-			ResponseError(c, CodeInvalidPassword)
+			ResponseErrorWithData(c, CodeInvalidPassword, err)
 			return
 		} else {
-			ResponseErrorWithData(c, CodeInvalidParam, err.Error())
+			ResponseError(c, CodeInvalidParam)
 			return
 		}
 	}

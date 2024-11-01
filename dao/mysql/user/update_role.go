@@ -5,11 +5,12 @@ import (
 
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
+	"github.com/bramble555/blog/pkg"
 )
 
 func UpdateUserRole(puur *model.ParamUpdateUserRole) (string, error) {
-	err := global.DB.Table("user_models").Update("role", puur.Role).
-		Where("id = ?", puur.UserID).Error
+	global.Log.Debugf("id:%d", puur.UserID)
+	err := global.DB.Table("user_models").Where("id = ?", puur.UserID).Update("role", puur.Role).Error
 	if err != nil {
 		global.Log.Errorf("user UpdateUserRole err:%s\n", err.Error())
 		return "", err
@@ -19,8 +20,14 @@ func UpdateUserRole(puur *model.ParamUpdateUserRole) (string, error) {
 
 // UpdateUserPwd 负责更新用户密码
 func UpdateUserPwd(puup *model.ParamUpdateUserPwd, id uint) (string, error) {
-	err := global.DB.Table("user_models").Where("id = ?", id).
-		Update("password", puup.Pwd).Error
+	// 先把先密码加密
+	pwd, err := pkg.HashPassword(puup.Pwd)
+	if err != nil {
+		global.Log.Errorf("HashPassword err:%s\n", err.Error())
+		return "", err
+	}
+	err = global.DB.Table("user_models").Where("id = ?", id).
+		Update("password", pwd).Error
 	if err != nil {
 		global.Log.Errorf("user UpdateUserPwd err: %s\n", err.Error())
 		return "", err
