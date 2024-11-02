@@ -8,6 +8,6 @@ type CommentModel struct {
 	ParentCommentID    *int            `json:"parent_comment_id"` // 父级评论ID
 	SubComments        []*CommentModel `json:"sub_comments"`      // 子评论列表
 	ParentCommentModel *CommentModel   `json:"parent_comment"`    // 父级评论
-	ArticleID          uint            `json:"article_id"`        // 文章ID
-	UserID             uint            `json:"user_id"`           // 评论的用户ID
+	ArticleID          uint            `json:"article_id,string"` // 文章ID
+	UserID             uint            `json:"user_id,string"`    // 评论的用户ID
 }

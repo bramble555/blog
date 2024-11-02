@@ -97,10 +97,15 @@ CREATE TABLE IF NOT EXISTS message_models (
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     send_user_id BIGINT NOT NULL COMMENT '发送人 ID',
+    send_username VARCHAR(100) COMMENT '发送人用户名',
+    send_user_avatar VARCHAR(255) COMMENT '发送人头像',
     rev_user_id BIGINT NOT NULL COMMENT '接收人 ID',
+    rev_username VARCHAR(100) COMMENT '接收人用户名',
+    rev_user_avatar VARCHAR(255) COMMENT '接收人头像',
     is_read BOOLEAN DEFAULT FALSE COMMENT '接收方是否查看',
     content TEXT COMMENT '消息内容'
-) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 
 
 

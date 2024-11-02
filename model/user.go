@@ -28,12 +28,17 @@ type ParamEmailUser struct {
 	Password string `json:"password" binding:"required" msg:"请输入密码"`
 }
 type ParamUpdateUserRole struct {
-	UserID uint       `json:"user_id"`
+	UserID uint       `json:"user_id,string"`
 	Role   ctype.Role `json:"role"`
 }
 type ParamUpdateUserPwd struct {
 	OldPwd string `json:"old_pwd"`
 	Pwd    string `json:"pwd"`
+}
+type UserDetail struct {
+	ID       uint   `json:"id,string"`
+	Username string `json:"username"`
+	Avatar   string `json:"avatar"`
 }
 
 // 返回响应

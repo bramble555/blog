@@ -14,3 +14,12 @@ func GetUserList(pl *model.ParamList) (*[]model.UserModel, error) {
 	}
 	return &udl, nil
 }
+func GetUserDetail(id uint) (*model.UserDetail, error) {
+	ud := model.UserDetail{}
+	err := global.DB.Table("user_models").Where("id = ?", id).Scan(&ud).Error
+	if err != nil {
+		global.Log.Errorf("user GetUserDetail err:%s\n", err.Error())
+		return nil, err
+	}
+	return &ud, nil
+}
