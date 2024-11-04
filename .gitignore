@@ -26,4 +26,5 @@
 .env
 /tmp/
 /uploads/
+/testdata/
 .air.toml

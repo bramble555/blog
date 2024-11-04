@@ -67,9 +67,9 @@ CREATE TABLE IF NOT EXISTS article_models (
     id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '文章ID',
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    title VARCHAR(32) NOT NULL COMMENT '文章标题',
-    abstract TEXT NOT NULL COMMENT  '文章简介',
-    content TEXT  NOT NULL COMMENT '文章内容',
+    title VARCHAR(255) NOT NULL COMMENT '文章标题', -- 调整了长度，以适应更长的标题
+    abstract TEXT NOT NULL COMMENT '文章简介',
+    content TEXT NOT NULL COMMENT '文章内容',
     look_count INT DEFAULT 0 COMMENT '浏览量',
     comment_count INT DEFAULT 0 COMMENT '评论量',
     digg_count INT DEFAULT 0 COMMENT '点赞量',
@@ -77,10 +77,14 @@ CREATE TABLE IF NOT EXISTS article_models (
     category VARCHAR(20) NOT NULL COMMENT '文章分类',
     source VARCHAR(255) COMMENT '文章来源',
     link VARCHAR(255) COMMENT '原文链接',
-	user_id BIGINT NOT NULL COMMENT '用户ID',
-    banner_id BIGINT NOT NULL COMMENT  '文章封面ID',
-    tags TEXT COMMENT '文章标签（以逗号分隔）'
+    tags TEXT COMMENT '文章标签（以逗号分隔）',
+    banner_id BIGINT NOT NULL COMMENT '文章封面ID',
+    banner_url VARCHAR(255) COMMENT '封面图片链接', -- 添加了封面图片链接
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    username VARCHAR(255) COMMENT '用户名', -- 添加了用户名
+    user_avatar VARCHAR(255) COMMENT '用户头像' -- 添加了用户头像
 ) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
+
 CREATE TABLE IF NOT EXISTS comment_models (
     id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '评论ID',
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',

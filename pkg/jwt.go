@@ -9,9 +9,10 @@ import (
 )
 
 type MyClaims struct {
-	ID                 uint `json:"id"`
-	Role               uint `json:"role"`
-	jwt.StandardClaims      // 嵌入 jwt.StandardClaims
+	ID                 uint   `json:"id"`
+	Role               uint   `json:"role"`
+	Username           string `json:"user_name"`
+	jwt.StandardClaims        // 嵌入 jwt.StandardClaims
 }
 
 // 不能在调用函数之前直接初始化，否则会空指针异常
@@ -20,13 +21,14 @@ var tokeExpireDuration int64
 var mySecret []byte
 
 // GenToken 生成JWT
-func GenToken(id uint, role uint) (string, error) {
+func GenToken(id uint, role uint, username string) (string, error) {
 	tokeExpireDuration = global.Config.Jwt.Expries
 	mySecret = []byte(global.Config.Jwt.Secret)
 	// 创建一个我们自己的声明
 	claims := MyClaims{
-		ID:   id, // 自定义字段
-		Role: role,
+		ID:       id, // 自定义字段
+		Role:     role,
+		Username: username,
 		StandardClaims: jwt.StandardClaims{ // 明确指定字段名
 			ExpiresAt: time.Now().Add(time.Duration(tokeExpireDuration * int64(time.Hour))).Unix(),
 			Issuer:    global.Config.Jwt.Issuer, // 签发人

@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/bramble555/blog/dao/es"
 	"github.com/bramble555/blog/dao/mysql"
 	"github.com/bramble555/blog/dao/redis"
 	"github.com/bramble555/blog/flag"
@@ -21,28 +22,33 @@ import (
 
 func main() {
 	var err error
-	// 初始化config
+	// 初始化 config
 	if err = setting.Init(); err != nil {
 		fmt.Printf("Init settings failed, err:%v\n", err)
 		return
 	}
-	// 初始化logger
+	// 初始化 logger
 	if global.Log, err = logger.Init(); err != nil {
 		fmt.Printf("Init logger failed, err:%v\n", err)
 		return
 	}
-	// 初始化db
+	// 初始化 db
 	if global.DB, err = mysql.Init(); err != nil {
 		global.Log.Errorf("Init mysql failed, err:%v\n", err)
 		return
 	}
-	// 初始化redis
+	// 初始化 redis
 	global.Redis, err = redis.Init()
 	if err != nil {
 		global.Log.Printf("Init redis failed, err:%v\n", err)
 		return
 	}
-
+	// 初始化 ES
+	global.ES, err = es.Init()
+	if err != nil {
+		global.Log.Errorf("es init err:%s\n", err.Error())
+		return
+	}
 	// 解析命令行参数
 	op := flag.FlagUserParse()
 
