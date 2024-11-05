@@ -8,13 +8,21 @@ import (
 	md "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/bramble555/blog/dao/es"
+	"github.com/bramble555/blog/dao/mysql/code"
 	"github.com/bramble555/blog/dao/mysql/user"
+	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
 	"github.com/bramble555/blog/pkg"
 	"github.com/russross/blackfriday"
 )
 
 func UploadArticles(claims *pkg.MyClaims, pa *model.ParamArticle) (string, error) {
+	// 判断标题是否存在
+	exist := model.ArticleModel{}.IsExistTitle(pa.Title)
+	if exist {
+		global.Log.Errorf("title 已存在")
+		return "", code.ErrorTitleExit
+	}
 	userID := claims.ID
 	username := claims.Username
 	// 查询用户头像
@@ -83,4 +91,7 @@ func UploadArticles(claims *pkg.MyClaims, pa *model.ParamArticle) (string, error
 }
 func GetArticlesList(pl *model.ParamList) (*[]model.ResponseArticle, error) {
 	return es.GetArticlesList(pl)
+}
+func GetArticlesDetail(id string) (*model.ArticleModel, error) {
+	return es.GetArticlesDetail(id)
 }

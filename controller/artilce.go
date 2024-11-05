@@ -1,6 +1,9 @@
 package controller
 
 import (
+	"errors"
+
+	"github.com/bramble555/blog/dao/mysql/code"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/logic"
 	"github.com/bramble555/blog/model"
@@ -21,6 +24,10 @@ func UploadArticlesHandler(c *gin.Context) {
 
 	data, err := logic.UploadArticles(claims, &pa)
 	if err != nil {
+		if errors.Is(err, code.ErrorTitleExit) {
+			ResponseError(c, CodeTitleExist)
+			return
+		}
 		ResponseError(c, CodeServerBusy)
 		return
 	}
@@ -38,4 +45,14 @@ func GetArticlesListHandler(c *gin.Context) {
 		return
 	}
 	ResponseSucceed(c, data)
+}
+func GetArticlesDetailHandler(c *gin.Context) {
+	id := c.Param("id")
+	data, err := logic.GetArticlesDetail(id)
+	if err != nil {
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+	ResponseSucceed(c, data)
+
 }

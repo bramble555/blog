@@ -16,7 +16,9 @@ func GetArticlesList(pl *model.ParamList) (*[]model.ResponseArticle, error) {
 	// 构建搜索请求
 	resp, err := global.ES.Search().
 		Index(a.Index()).Query(elastic.NewBoolQuery()).
-		FetchSourceContext(elastic.NewFetchSourceContext(true)).
+		FetchSourceContext(
+			elastic.NewFetchSourceContext(true).Exclude("source", "link"),
+		).
 		From(page).
 		Size(pl.Size).
 		Do(context.Background())
@@ -36,4 +38,18 @@ func GetArticlesList(pl *model.ParamList) (*[]model.ResponseArticle, error) {
 		articles = append(articles, article)
 	}
 	return &articles, nil
+}
+func GetArticlesDetail(id string) (*model.ArticleModel, error) {
+	a := model.ArticleModel{}
+	res, err := global.ES.Get().Index(model.ArticleModel{}.Index()).Id(id).Do(context.Background())
+	if err != nil {
+		global.Log.Errorf("global.ES.Get() err:%s\n", err.Error())
+		return nil, err
+	}
+	err = json.Unmarshal(res.Source, &a)
+	if err != nil {
+		global.Log.Errorf("json.Unmarshal err:%s\n", err.Error())
+		return nil, err
+	}
+	return &a, nil
 }

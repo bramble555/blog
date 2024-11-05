@@ -24,6 +24,7 @@ const (
 	CodeInvalidAuth
 
 	CodeInvalidID
+	CodeTitleExist
 )
 
 var codeMsgMap = map[resCode]string{
@@ -36,6 +37,7 @@ var codeMsgMap = map[resCode]string{
 	CodeNeedLogin:       "用户请登录",
 	CodeInvalidAuth:     "token无效",
 	CodeInvalidID:       "无效ID",
+	CodeTitleExist:      "主题已存在",
 }
 
 type ResponseData struct {

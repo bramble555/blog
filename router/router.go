@@ -20,6 +20,6 @@ func InitRounter(mode string) *gin.Engine {
 	InitMenuRoutes(apiGroup)
 	InitUserRoutes(apiGroup)
 	InitMessageRoutes(apiGroup)
-	InitArtilceRoutes(apiGroup)
+	InitArticleRoutes(apiGroup)
 	return r
 }

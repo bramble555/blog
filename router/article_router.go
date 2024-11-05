@@ -6,8 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func InitArtilceRoutes(r *gin.RouterGroup) gin.IRoutes {
+func InitArticleRoutes(r *gin.RouterGroup) gin.IRoutes {
 	r.POST("/articles", middleware.JWTAuthorMiddleware(), controller.UploadArticlesHandler)
 	r.GET("/articles", controller.GetArticlesListHandler)
+	r.GET("/articles/:id", controller.GetArticlesDetailHandler)
 	return r
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/bramble555/blog/dao/mysql/code"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model/ctype"
+	"github.com/olivere/elastic/v7"
 )
 
 type ArticleModel struct {
@@ -62,6 +63,21 @@ type ResponseArticle struct {
 	UserAvatar string `json:"user_avatar"`
 }
 
+// IsExistTitle 判断 title 是否存在
+func (a ArticleModel) IsExistTitle(title string) bool {
+	boolSearch := elastic.NewBoolQuery().Must(elastic.NewMatchQuery("title", title))
+	res, err := global.ES.Search(a.Index()).Query(boolSearch).
+		Size(1).
+		Do(context.Background())
+	if err != nil {
+		global.Log.Errorf("IsExistTitle err:%s\n", err.Error())
+		return true
+	}
+	if res.Hits.TotalHits.Value > 0 {
+		return true
+	}
+	return false
+}
 func (a *ArticleModel) CreateIndex() error {
 	exist := a.IndexExists()
 	// 创建索引
