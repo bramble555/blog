@@ -10,6 +10,7 @@
 文章标签(简单，但是需要文章)
 命令行 添加 index  或者删除 index
 由于数据只在 es 里面，所以暂时不能手动添加 es，后续数据 同步到 sql 里面的时候 在修改 命令行。
+GetArticlesCalendar 日历不会搞
 ### 学到的内容
 - es
 - md 转 html，使用 blackfriday 模块

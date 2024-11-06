@@ -10,9 +10,9 @@ import (
 )
 
 type ArticleModel struct {
-	ID            string      `json:"id,string"` // ES 中 ID
+	ID            uint        `gorm:"primaryKey" json:"id,string"`
 	CreateTime    string      `json:"create_time"`
-	UpdateTime    string      `json:"update_time"`
+	UpdateTime    string      `json:"-"`
 	Title         string      `json:"title"`          // 文章标题
 	Abstract      string      `json:"abstract"`       // 文章简介
 	Content       string      `json:"content"`        // 文章内容
@@ -128,11 +128,11 @@ func (ArticleModel) Mapping() string {
         "type": "keyword"
       },
       "create_time": {
-        "type": "date",
+         "type": "date",
         "format": "yyyy-MM-dd HH:mm:ss||epoch_millis"
       },
       "update_time": {
-        "type": "date",
+         "type": "date",
         "format": "yyyy-MM-dd HH:mm:ss||epoch_millis"
       },
       "title": {

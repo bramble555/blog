@@ -54,5 +54,13 @@ func GetArticlesDetailHandler(c *gin.Context) {
 		return
 	}
 	ResponseSucceed(c, data)
-
 }
+
+// func GetArticlesCalendarHandler(c *gin.Context) {
+// 	data, err := logic.GetArticlesCalendar()
+// 	if err != nil {
+// 		ResponseError(c, CodeServerBusy)
+// 		return
+// 	}
+// 	ResponseSucceed(c, data)
+// }

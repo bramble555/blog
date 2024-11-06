@@ -16,6 +16,7 @@ import (
 	"github.com/bramble555/blog/flag"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/logger"
+	"github.com/bramble555/blog/model"
 	"github.com/bramble555/blog/router"
 	"github.com/bramble555/blog/setting"
 )
@@ -49,6 +50,15 @@ func main() {
 		global.Log.Errorf("es init err:%s\n", err.Error())
 		return
 	}
+	// 创建文章索引
+	a := model.ArticleModel{}
+	err = a.CreateIndex()
+	if err != nil {
+		global.Log.Errorf("es index init err:%s\n", err.Error())
+		return
+	}
+	// a.DeleteIndex()
+
 	// 解析命令行参数
 	op := flag.FlagUserParse()
 

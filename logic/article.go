@@ -7,10 +7,9 @@ import (
 
 	md "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/PuerkitoBio/goquery"
-	"github.com/bramble555/blog/dao/es"
+	"github.com/bramble555/blog/dao/mysql/article"
 	"github.com/bramble555/blog/dao/mysql/code"
 	"github.com/bramble555/blog/dao/mysql/user"
-	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
 	"github.com/bramble555/blog/pkg"
 	"github.com/russross/blackfriday"
@@ -18,9 +17,11 @@ import (
 
 func UploadArticles(claims *pkg.MyClaims, pa *model.ParamArticle) (string, error) {
 	// 判断标题是否存在
-	exist := model.ArticleModel{}.IsExistTitle(pa.Title)
-	if exist {
-		global.Log.Errorf("title 已存在")
+	ok, err := article.TitleIsExist(pa.Title)
+	if err != nil {
+		return "", err
+	}
+	if ok {
 		return "", code.ErrorTitleExit
 	}
 	userID := claims.ID
@@ -70,10 +71,7 @@ func UploadArticles(claims *pkg.MyClaims, pa *model.ParamArticle) (string, error
 	pa.BannerID = IDList[randomIndex]
 	bannerUrl := (*rb)[randomIndex].Name
 	// 组装数据
-	now := time.Now().Format("2006-01-02 15:04:05")
-	article := model.ArticleModel{
-		CreateTime: now,
-		UpdateTime: now,
+	am := model.ArticleModel{
 		Title:      pa.Title,
 		Abstract:   pa.Abstract,
 		Content:    pa.Content,
@@ -87,11 +85,30 @@ func UploadArticles(claims *pkg.MyClaims, pa *model.ParamArticle) (string, error
 		Username:   username,
 		UserAvatar: ud.Avatar,
 	}
-	return es.UploadArticles(article)
+	return article.UploadArticles(&am)
 }
 func GetArticlesList(pl *model.ParamList) (*[]model.ResponseArticle, error) {
-	return es.GetArticlesList(pl)
+	return article.GetArticlesList(pl)
 }
 func GetArticlesDetail(id string) (*model.ArticleModel, error) {
-	return es.GetArticlesDetail(id)
+	return article.GetArticlesDetail(id)
 }
+
+// func GetArticlesCalendar() (any, error) {
+// 	now := time.Now()
+// 	yearAgo := now.AddDate(-1, 0, 0)
+// 	format := "2006-01-02 15:04:05"
+// 	query := elastic.NewRangeQuery("create_time").
+// 		Gte(yearAgo.Format(format)).Lte(now.Format(format))
+// 	agg := elastic.NewDateHistogramAggregation().Field("create_time").CalendarInterval("day")
+// 	res, err := global.ES.Search(model.ArticleModel{}.Index()).
+// 		Query(query).Aggregation("calendar", agg).
+// 		Size(0).
+// 		Do(context.Background())
+// 	if err != nil {
+// 		global.Log.Errorf("查询失败:err:%s\n", err.Error())
+// 		return nil, err
+// 	}
+// 	fmt.Println(res)
+// 	return res, nil
+// }
