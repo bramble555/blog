@@ -14,6 +14,7 @@ func GetAdvertList(pl *model.ParamList) ([]model.TagModel, error) {
 	return tml, nil
 }
 
+// DeleteTagsList 删除 tags 列表，但是这里没有实现同步删除文章
 func DeleteTagsList(pdl *model.ParamDeleteList) (string, error) {
 	return mysql.DeleteTableList[model.TagModel]("tag_models", pdl)
 }
