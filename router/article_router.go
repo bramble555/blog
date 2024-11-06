@@ -10,6 +10,6 @@ func InitArticleRoutes(r *gin.RouterGroup) gin.IRoutes {
 	r.POST("/articles", middleware.JWTAuthorMiddleware(), controller.UploadArticlesHandler)
 	r.GET("/articles", controller.GetArticlesListHandler)
 	r.GET("/articles/:id", controller.GetArticlesDetailHandler)
-	// r.GET("/articles/calendar", controller.GetArticlesCalendarHandler)
+	r.GET("/articles/calendar", controller.GetArticlesCalendarHandler)
 	return r
 }

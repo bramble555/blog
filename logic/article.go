@@ -94,21 +94,6 @@ func GetArticlesDetail(id string) (*model.ArticleModel, error) {
 	return article.GetArticlesDetail(id)
 }
 
-// func GetArticlesCalendar() (any, error) {
-// 	now := time.Now()
-// 	yearAgo := now.AddDate(-1, 0, 0)
-// 	format := "2006-01-02 15:04:05"
-// 	query := elastic.NewRangeQuery("create_time").
-// 		Gte(yearAgo.Format(format)).Lte(now.Format(format))
-// 	agg := elastic.NewDateHistogramAggregation().Field("create_time").CalendarInterval("day")
-// 	res, err := global.ES.Search(model.ArticleModel{}.Index()).
-// 		Query(query).Aggregation("calendar", agg).
-// 		Size(0).
-// 		Do(context.Background())
-// 	if err != nil {
-// 		global.Log.Errorf("查询失败:err:%s\n", err.Error())
-// 		return nil, err
-// 	}
-// 	fmt.Println(res)
-// 	return res, nil
-// }
+func GetArticlesCalendar() (*map[string]int, error) {
+	return article.GetArticlesCalendar()
+}

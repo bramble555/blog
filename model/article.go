@@ -62,6 +62,10 @@ type ResponseArticle struct {
 	Username   string `json:"username"`
 	UserAvatar string `json:"user_avatar"`
 }
+type CalendarCount struct {
+	Date  string `json:"data"`
+	Count int    `json:"count"`
+}
 
 // IsExistTitle 判断 title 是否存在
 func (a ArticleModel) IsExistTitle(title string) bool {
