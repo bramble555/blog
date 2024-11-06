@@ -1,23 +1,21 @@
 package controller
 
 import (
-	"strings"
-
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/logic"
 	"github.com/bramble555/blog/model"
 	"github.com/gin-gonic/gin"
 )
 
-func CreateAdvertHandle(c *gin.Context) {
-	var ad model.AdvertModel
-	err := c.ShouldBindJSON(&ad)
+func CreateTagsHandle(c *gin.Context) {
+	var tm model.TagModel
+	err := c.ShouldBindJSON(&tm)
 	if err != nil {
-		global.Log.Errorf("controller CreateAdvertHandle ShouldBindQuery err:%s\n", err.Error())
+		global.Log.Errorf("controller CreateTagsHandle ShouldBindQuery err:%s\n", err.Error())
 		ResponseErrorWithData(c, CodeInvalidParam, err.Error())
 		return
 	}
-	data, err := logic.CreateAdvert(&ad)
+	data, err := logic.CreateTags(&tm)
 	if err != nil {
 		ResponseErrorWithData(c, CodeServerBusy, err.Error())
 		return
@@ -25,21 +23,14 @@ func CreateAdvertHandle(c *gin.Context) {
 	ResponseSucceed(c, data)
 }
 
-// GetAdvertListHandler 管理员可以获取广告列表
-func GetAdvertListHandler(c *gin.Context) {
+func GetTagsListHandler(c *gin.Context) {
 	pl, err := validateListParams(c)
 	if err != nil {
 		global.Log.Errorf("controller GetAdvertListHandler err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
-	// 判断 referer 是否包含 admin，如果是，返回，如果不是，就不返回了
-	referer := c.GetHeader("referer")
-	isShow := false
-	if strings.Contains(referer, "admin") {
-		isShow = true
-	}
-	data, err := logic.GetAdvertList(pl, isShow)
+	data, err := logic.GetTagsList(pl)
 	if err != nil {
 		ResponseError(c, CodeServerBusy)
 		return
@@ -47,16 +38,17 @@ func GetAdvertListHandler(c *gin.Context) {
 	// 返回响应
 	ResponseSucceed(c, data)
 }
-func DeleteAdvertListHandler(c *gin.Context) {
+
+func DeleteTagsListHandler(c *gin.Context) {
 	var pdl model.ParamDeleteList
 	err := c.ShouldBindJSON(&pdl)
 	if err != nil {
-		global.Log.Errorf("DeleteHanderListHander ShouldBindQuery err:%s\n", err.Error())
+		global.Log.Errorf("DeleteTagsListHandler ShouldBindQuery err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
 	var data string
-	data, err = logic.DeleteAdvertList(&pdl)
+	data, err = logic.DeleteTagsList(&pdl)
 	if err != nil {
 		ResponseErrorWithData(c, CodeServerBusy, err.Error())
 		return
