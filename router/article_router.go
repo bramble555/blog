@@ -11,5 +11,6 @@ func InitArticleRoutes(r *gin.RouterGroup) gin.IRoutes {
 	r.GET("/articles", controller.GetArticlesListHandler)
 	r.GET("/articles/:id", controller.GetArticlesDetailHandler)
 	r.GET("/articles/calendar", controller.GetArticlesCalendarHandler)
+	r.GET("/articles/tags", controller.GetArticlesTagsListHandler)
 	return r
 }

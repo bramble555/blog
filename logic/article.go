@@ -97,3 +97,6 @@ func GetArticlesDetail(id string) (*model.ArticleModel, error) {
 func GetArticlesCalendar() (*map[string]int, error) {
 	return article.GetArticlesCalendar()
 }
+func GetArticlesTagsList(pl *model.ParamList) (*[]model.ResponseArticleTags, error) {
+	return article.GetArticlesTagsList(pl)
+}

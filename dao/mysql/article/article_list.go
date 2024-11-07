@@ -72,3 +72,23 @@ func GetArticlesCalendar() (*map[string]int, error) {
 	}
 	return &dateStrings, nil
 }
+func GetArticlesTagsList(pl *model.ParamList) (*[]model.ResponseArticleTags, error) {
+	offset := (pl.Page - 1) * pl.Size
+	res := []model.ResponseArticleTags{}
+
+	// 查询每个标签的文章数量以及文章标题列表
+	err := global.DB.Table("article_tag_models").
+		Select("tag_title, COUNT(article_title) AS count, GROUP_CONCAT(article_title ORDER BY article_title ASC) AS article_title_list, MIN(create_time) AS create_time").
+		Group("tag_title").        // 按 tag_title 分组
+		Order("count DESC"). // 根据请求的排序方式排序
+		Limit(pl.Size).            // 限制返回的条目数
+		Offset(offset).            // 分页偏移量
+		Scan(&res).Error           // 执行查询并将结果扫描到 res 中
+
+	if err != nil {
+		global.Log.Errorf("select err:%s\n", err.Error())
+		return nil, err
+	}
+
+	return &res, nil
+}

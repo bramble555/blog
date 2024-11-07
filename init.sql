@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS message_models (
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE IF NOT EXISTS tag_models (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '消息 ID',
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '标签 ID',
     title VARCHAR(100) NOT NULL,
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -120,11 +120,11 @@ CREATE TABLE IF NOT EXISTS tag_models (
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE IF NOT EXISTS article_tag_models (
-    article_id BIGINT NOT NULL COMMENT '文章 ID',
-    tag_id BIGINT NOT NULL COMMENT '标签 ID',
+    article_title VARCHAR(255) NOT NULL  COMMENT '文章主题',
+    tag_title VARCHAR(255) NOT NULL  COMMENT '标签名字',
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    PRIMARY KEY (article_id, tag_id) COMMENT '复合主键，确保每一对 (article_id, tag_id) 是唯一的'
+    PRIMARY KEY (article_title, tag_title) COMMENT '复合主键，确保每一对 (article_title, tag_title) 是唯一的'
 )ENGINE=INNODB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 

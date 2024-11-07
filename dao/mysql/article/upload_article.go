@@ -62,25 +62,16 @@ func UploadArticles(am *model.ArticleModel) (string, error) {
 	// 获取标签并查询标签 ID
 	tagsStrList := []string(am.Tags)
 	n := len(am.Tags)
-	idList := make([]uint, n)
 	if n == 0 {
 		tx.Commit() // 如果没有标签，直接提交事务
 		return code.CreateSucceed, nil
 	}
-	err = tx.Table("tag_models").Select("id").Where("title IN (?)", tagsStrList).
-		Scan(&idList).Error
-	if err != nil {
-		tx.Rollback() // 如果查询标签 ID 失败，回滚事务
-		global.Log.Errorf("article  select tags id err:%s\n", err.Error())
-		return "", err
-	}
-	global.Log.Debugf("idlist:%+v", idList)
 	// 插入 ArticleTagModel 表
-	for _, id := range idList {
+	for i := range tagsStrList {
 		err = tx.Table("article_tag_models").
 			Create(&model.ArticleTagModel{
-				ArticleID: am.ID,
-				TagID:     id,
+				ArticleTitle: am.Title,
+				TagTitle:     tagsStrList[i],
 			}).Error
 		if err != nil {
 			tx.Rollback() // 如果插入 ArticleTagModel 失败，回滚事务

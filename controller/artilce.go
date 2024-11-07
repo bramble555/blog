@@ -64,3 +64,16 @@ func GetArticlesCalendarHandler(c *gin.Context) {
 	}
 	ResponseSucceed(c, data)
 }
+func GetArticlesTagsListHandler(c *gin.Context) {
+	pl, err := validateListParams(c)
+	if err != nil {
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+	data, err := logic.GetArticlesTagsList(pl)
+	if err != nil {
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	ResponseSucceed(c, data)
+}
