@@ -59,17 +59,25 @@ func UploadArticles(am *model.ArticleModel) (string, error) {
 		global.Log.Errorf("article  UploadArticles err:%s\n", err.Error())
 		return "", err
 	}
-	// 获取标签并查询标签 ID
+	// 获取插入后的 ID（如果自动填充失败）
+	var lastInsertID uint
+	err = tx.Raw("SELECT LAST_INSERT_ID()").Scan(&lastInsertID).Error
+	if err != nil {
+		tx.Rollback()
+		global.Log.Errorf("Failed to get last insert ID: %s", err.Error())
+		return "", err
+	}
 	tagsStrList := []string(am.Tags)
 	n := len(am.Tags)
 	if n == 0 {
 		tx.Commit() // 如果没有标签，直接提交事务
-		return code.CreateSucceed, nil
+		return code.StrCreateSucceed, nil
 	}
 	// 插入 ArticleTagModel 表
 	for i := range tagsStrList {
 		err = tx.Table("article_tag_models").
 			Create(&model.ArticleTagModel{
+				ArticleID:    lastInsertID,
 				ArticleTitle: am.Title,
 				TagTitle:     tagsStrList[i],
 			}).Error
@@ -87,5 +95,5 @@ func UploadArticles(am *model.ArticleModel) (string, error) {
 		return "", err
 	}
 
-	return code.CreateSucceed, nil
+	return code.StrCreateSucceed, nil
 }

@@ -120,6 +120,7 @@ CREATE TABLE IF NOT EXISTS tag_models (
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE IF NOT EXISTS article_tag_models (
+    article_id BIGINT NOT NULL COMMENT "文章 ID",
     article_title VARCHAR(255) NOT NULL  COMMENT '文章主题',
     tag_title VARCHAR(255) NOT NULL  COMMENT '标签名字',
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',

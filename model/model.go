@@ -16,5 +16,7 @@ type ParamList struct {
 	Order string `json:"order" form:"order"`
 }
 
+type UpdatedFields map[string]interface{}
+
 // 默认按照创建时间降序排序
 const OrderByTime = "create_time DESC, id DESC"

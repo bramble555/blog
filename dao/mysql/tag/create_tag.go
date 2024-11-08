@@ -14,5 +14,5 @@ func CreateTags(ad *model.TagModel) (string, error) {
 		global.Log.Errorf("mysql CreateAdvert err:%s\n", err.Error())
 		return "", err
 	}
-	return code.CreateSucceed, nil
+	return code.StrCreateSucceed, nil
 }

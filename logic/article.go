@@ -100,3 +100,6 @@ func GetArticlesCalendar() (*map[string]int, error) {
 func GetArticlesTagsList(pl *model.ParamList) (*[]model.ResponseArticleTags, error) {
 	return article.GetArticlesTagsList(pl)
 }
+func UpdateArticles(id uint, uf model.UpdatedFields) (string, error) {
+	return article.UpdateArticles(id, uf)
+}

@@ -10,7 +10,7 @@ import (
 )
 
 type ArticleModel struct {
-	ID            uint        `gorm:"primaryKey" json:"id,string"`
+	ID            uint        `gorm:"primaryKey,autoIncrement" json:"id,string"`
 	CreateTime    string      `json:"create_time"`
 	UpdateTime    string      `json:"-"`
 	Title         string      `json:"title"`          // 文章标题

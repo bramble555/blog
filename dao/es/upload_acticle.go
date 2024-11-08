@@ -14,5 +14,5 @@ func UploadArticles(article model.ArticleModel) (string, error) {
 		global.Log.Errorf("es UploadArticles err:%s\n", err.Error())
 		return "", nil
 	}
-	return code.CreateSucceed, nil
+	return code.StrCreateSucceed, nil
 }

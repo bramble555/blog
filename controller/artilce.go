@@ -2,6 +2,7 @@ package controller
 
 import (
 	"errors"
+	"strconv"
 
 	"github.com/bramble555/blog/dao/mysql/code"
 	"github.com/bramble555/blog/global"
@@ -71,6 +72,31 @@ func GetArticlesTagsListHandler(c *gin.Context) {
 		return
 	}
 	data, err := logic.GetArticlesTagsList(pl)
+	if err != nil {
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	ResponseSucceed(c, data)
+}
+func UpdateArticlesHandler(c *gin.Context) {
+	// http://localhost:8080/article/1
+	articleID := c.Param("id")
+	// 将 articleID 转换为整型
+	id, err := strconv.Atoi(articleID)
+	if err != nil {
+		global.Log.Errorf("id 有误 err:%s\n", err.Error())
+		ResponseError(c, CodeInvalidID)
+		return
+	}
+	uf := model.UpdatedFields{}
+	// 绑定 JSON 请求体到 updatedFields
+	if err := c.ShouldBindJSON(&uf); err != nil {
+		global.Log.Errorf("ShouldBindJSON err:%s\n", err.Error())
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+	// 调用更新函数
+	data, err := logic.UpdateArticles(uint(id), uf)
 	if err != nil {
 		ResponseError(c, CodeServerBusy)
 		return

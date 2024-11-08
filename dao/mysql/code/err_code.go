@@ -11,8 +11,10 @@ var (
 	ErrorPasswordWrong = errors.New("密码错误")
 	ErrorTitleExit     = errors.New("主题已存在") // 广告主题
 
-	ErrorCreateWrong = errors.New("创建错误")
+	ErrorCreateWrong     = errors.New("创建错误")
+	ErrorAssertionFailed = errors.New("断言失败")
 )
 var (
-	CreateSucceed = "创建成功"
+	StrCreateSucceed = "创建成功"
+	StrUpdateSucceed = "更新成功"
 )

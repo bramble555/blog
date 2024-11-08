@@ -26,5 +26,5 @@ func CreateAdvert(ad *model.AdvertModel) (string, error) {
 		global.Log.Errorf("mysql global.DB.Create&model.AdvertModel err:%s\n", err.Error())
 		return "", err
 	}
-	return code.CreateSucceed, nil
+	return code.StrCreateSucceed, nil
 }
