@@ -96,7 +96,7 @@ func UpdateArticlesHandler(c *gin.Context) {
 	}
 	data, err := logic.UpdateArticles(uint(id), uf)
 	if err != nil {
-		ResponseError(c, CodeServerBusy)
+		ResponseErrorWithData(c, CodeServerBusy, err.Error())
 		return
 	}
 	ResponseSucceed(c, data)

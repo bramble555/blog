@@ -101,6 +101,13 @@ func GetArticlesTagsList(pl *model.ParamList) (*[]model.ResponseArticleTags, err
 	return article.GetArticlesTagsList(pl)
 }
 func UpdateArticles(id uint, uf model.UpdatedFields) (string, error) {
+	ok, err := article.IDExist(id)
+	if err != nil {
+		return "", err
+	}
+	if !ok {
+		return "", code.ErrorIDNotExit
+	}
 	return article.UpdateArticles(id, uf)
 }
 func DeleteArticlesList(pdl *model.ParamDeleteList) (string, error) {

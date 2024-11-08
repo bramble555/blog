@@ -13,6 +13,7 @@ var (
 
 	ErrorCreateWrong     = errors.New("创建错误")
 	ErrorAssertionFailed = errors.New("断言失败")
+	ErrorTagNotExit      = errors.New("tag 不存在")
 )
 var (
 	StrCreateSucceed = "创建成功"

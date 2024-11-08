@@ -10,12 +10,21 @@ import (
 
 func IDListExist(pdl *model.ParamDeleteList) (bool, error) {
 	var count int64
-	err := global.DB.Table("article_models").Where("id In ?", pdl.IDList).Count(&count).Error
+	err := global.DB.Table("article_models").Where("id IN ?", pdl.IDList).Count(&count).Error
 	if err != nil {
-		global.Log.Errorf("Error checking if title exists: %v\n", err)
+		global.Log.Errorf("Error IDListExist: %v\n", err)
 		return false, code.ErrorIDNotExit
 	}
 	return int(count) == len(pdl.IDList), nil
+}
+func IDExist(id uint) (bool, error) {
+	var count int64
+	err := global.DB.Table("article_models").Where("id = ?", id).Count(&count).Error
+	if err != nil {
+		global.Log.Errorf("Error IDExist: %v\n", err)
+		return false, code.ErrorIDNotExit
+	}
+	return count > 0, nil
 }
 func GetArticlesList(pl *model.ParamList) (*[]model.ResponseArticle, error) {
 	offset := (pl.Page - 1) * pl.Size
