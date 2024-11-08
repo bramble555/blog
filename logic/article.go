@@ -108,5 +108,13 @@ func DeleteArticlesList(pdl *model.ParamDeleteList) (string, error) {
 	if len(pdl.IDList) == 0 {
 		return "", code.ErrorIDNotExit
 	}
+	// 查询 IDList 是否存在
+	ok, err := article.IDListExist(pdl)
+	if err != nil {
+		return "", err
+	}
+	if !ok {
+		return "", code.ErrorIDNotExit
+	}
 	return article.DeleteArticlesList(pdl)
 }

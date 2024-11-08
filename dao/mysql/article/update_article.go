@@ -6,7 +6,7 @@ import (
 	"github.com/bramble555/blog/model"
 )
 
-// UpdateArticles 不允许更新 tag
+// UpdateArticles
 func UpdateArticles(id uint, uf model.UpdatedFields) (string, error) {
 	tx := global.DB.Begin()
 	updates := make(map[string]interface{})
@@ -14,21 +14,21 @@ func UpdateArticles(id uint, uf model.UpdatedFields) (string, error) {
 	if content, exists := (uf)["content"]; exists {
 		updates["content"] = content
 	}
-	// 处理 title 字段
-	if title, exists := (uf)["title"]; exists {
-		updates["title"] = title
-	}
-	// 更新 article_models 表
-	err := tx.Table("article_models").Where("id = ?", id).Updates(updates).Error
-	if err != nil {
-		global.Log.Errorf("article_models update err:%s\n", err.Error())
-		tx.Rollback()
-		return "", err
-	}
+	// // 处理 title 字段
+	// if title, exists := (uf)["title"]; exists {
+	// 	updates["title"] = title
+	// }
+	// // 更新 article_models 表
+	// err := tx.Table("article_models").Where("id = ?", id).Updates(updates).Error
+	// if err != nil {
+	// 	global.Log.Errorf("article_models update err:%s\n", err.Error())
+	// 	tx.Rollback()
+	// 	return "", err
+	// }
 	var articleTitle string
 	// 查看是否有 article_title
 	if title, exists := (uf)["title"]; exists {
-		err = tx.Table("article_tag_models").Where("article_id = ?", id).
+		err := tx.Table("article_tag_models").Where("article_id = ?", id).
 			Updates(map[string]interface{}{
 				"article_title": title,
 			}).Error
@@ -75,7 +75,7 @@ func UpdateArticles(id uint, uf model.UpdatedFields) (string, error) {
 			return "", err
 		}
 	}
-	err = tx.Commit().Error
+	err := tx.Commit().Error
 	if err != nil {
 		global.Log.Errorf("tx.Commit().Error err: %s\n", err.Error())
 		tx.Rollback() // 回滚事务

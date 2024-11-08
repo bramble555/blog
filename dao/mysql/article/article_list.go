@@ -3,10 +3,20 @@ package article
 import (
 	"time"
 
+	"github.com/bramble555/blog/dao/mysql/code"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
 )
 
+func IDListExist(pdl *model.ParamDeleteList) (bool, error) {
+	var count int64
+	err := global.DB.Table("article_models").Where("id In ?", pdl.IDList).Count(&count).Error
+	if err != nil {
+		global.Log.Errorf("Error checking if title exists: %v\n", err)
+		return false, code.ErrorIDNotExit
+	}
+	return int(count) == len(pdl.IDList), nil
+}
 func GetArticlesList(pl *model.ParamList) (*[]model.ResponseArticle, error) {
 	offset := (pl.Page - 1) * pl.Size
 	res := []model.ResponseArticle{}

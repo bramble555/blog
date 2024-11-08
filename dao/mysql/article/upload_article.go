@@ -12,13 +12,11 @@ func TitleIsExist(title string) (bool, error) {
 	var count int64
 	err := global.DB.Table("article_models").Where("title = ?", title).Count(&count).Error
 	if err != nil {
-		// 记录错误日志
 		global.Log.Errorf("Error checking if title exists: %v\n", err)
 		return false, code.ErrorTitleExit
 	}
 	return count > 0, nil
 }
-
 func UploadArticles(am *model.ArticleModel) (string, error) {
 	// 开始事务
 	tx := global.DB.Begin()
