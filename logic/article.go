@@ -100,7 +100,7 @@ func GetArticlesCalendar() (*map[string]int, error) {
 func GetArticlesTagsList(pl *model.ParamList) (*[]model.ResponseArticleTags, error) {
 	return article.GetArticlesTagsList(pl)
 }
-func UpdateArticles(id uint, uf model.UpdatedFields) (string, error) {
+func UpdateArticles(id uint, uf map[string]any) (string, error) {
 	ok, err := article.IDExist(id)
 	if err != nil {
 		return "", err

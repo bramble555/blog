@@ -88,7 +88,7 @@ func UpdateArticlesHandler(c *gin.Context) {
 		ResponseError(c, CodeInvalidID)
 		return
 	}
-	uf := model.UpdatedFields{}
+	uf := make(map[string]any)
 	if err := c.ShouldBindJSON(&uf); err != nil {
 		global.Log.Errorf("ShouldBindJSON err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
