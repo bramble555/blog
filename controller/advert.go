@@ -51,7 +51,7 @@ func DeleteAdvertListHandler(c *gin.Context) {
 	var pdl model.ParamDeleteList
 	err := c.ShouldBindJSON(&pdl)
 	if err != nil {
-		global.Log.Errorf("DeleteHanderListHander ShouldBindQuery err:%s\n", err.Error())
+		global.Log.Errorf("DeleteAdvertListHandler ShouldBindQuery err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
 		return
 	}

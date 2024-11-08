@@ -103,3 +103,19 @@ func UpdateArticlesHandler(c *gin.Context) {
 	}
 	ResponseSucceed(c, data)
 }
+func DeleteArticlesListHandler(c *gin.Context) {
+	var pdl model.ParamDeleteList
+	err := c.ShouldBindJSON(&pdl)
+	if err != nil {
+		global.Log.Errorf("DeleteArticlesListHandler ShouldBindQuery err:%s\n", err.Error())
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+	var data string
+	data, err = logic.DeleteArticlesList(&pdl)
+	if err != nil {
+		ResponseErrorWithData(c, CodeServerBusy, err.Error())
+		return
+	}
+	ResponseSucceed(c, data)
+}

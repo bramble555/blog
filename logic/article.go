@@ -103,3 +103,10 @@ func GetArticlesTagsList(pl *model.ParamList) (*[]model.ResponseArticleTags, err
 func UpdateArticles(id uint, uf model.UpdatedFields) (string, error) {
 	return article.UpdateArticles(id, uf)
 }
+func DeleteArticlesList(pdl *model.ParamDeleteList) (string, error) {
+	// 检查 IDList 是否为空
+	if len(pdl.IDList) == 0 {
+		return "", code.ErrorIDNotExit
+	}
+	return article.DeleteArticlesList(pdl)
+}
