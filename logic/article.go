@@ -7,6 +7,7 @@ import (
 
 	md "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/bramble555/blog/dao/es"
 	"github.com/bramble555/blog/dao/mysql/article"
 	"github.com/bramble555/blog/dao/mysql/code"
 	"github.com/bramble555/blog/dao/mysql/user"
@@ -87,8 +88,8 @@ func UploadArticles(claims *pkg.MyClaims, pa *model.ParamArticle) (string, error
 	}
 	return article.UploadArticles(&am)
 }
-func GetArticlesList(pl *model.ParamList) (*[]model.ResponseArticle, error) {
-	return article.GetArticlesList(pl)
+func GetArticlesList(paq *model.ParamArticleQuery) (*[]model.ResponseArticle, error) {
+	return es.GetArticlesList(paq)
 }
 func GetArticlesDetail(id string) (*model.ArticleModel, error) {
 	return article.GetArticlesDetail(id)
@@ -97,8 +98,8 @@ func GetArticlesDetail(id string) (*model.ArticleModel, error) {
 func GetArticlesCalendar() (*map[string]int, error) {
 	return article.GetArticlesCalendar()
 }
-func GetArticlesTagsList(pl *model.ParamList) (*[]model.ResponseArticleTags, error) {
-	return article.GetArticlesTagsList(pl)
+func GetArticlesTagsList(paq *model.ParamList) (*[]model.ResponseArticleTags, error) {
+	return article.GetArticlesTagsList(paq)
 }
 func UpdateArticles(id uint, uf map[string]any) (string, error) {
 	ok, err := article.IDExist(id)

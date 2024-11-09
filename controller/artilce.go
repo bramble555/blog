@@ -34,13 +34,26 @@ func UploadArticlesHandler(c *gin.Context) {
 	}
 	ResponseSucceed(c, data)
 }
+
+// GetArticlesListHandler 获取文章列表，如果有 title ，page 等字段也会根据其进行搜索
 func GetArticlesListHandler(c *gin.Context) {
-	pl, err := validateListParams(c)
+	paq := new(model.ParamArticleQuery)
+	err := c.ShouldBindQuery(paq)
 	if err != nil {
+		global.Log.Errorf("ShouldBindQuery err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
-	data, err := logic.GetArticlesList(pl)
+	if paq.Order == "" {
+		paq.Order = model.OrderByTime
+	}
+	if paq.Page <= 0 {
+		paq.Page = 1
+	}
+	if paq.Size <= 0 {
+		paq.Size = 10
+	}
+	data, err := logic.GetArticlesList(paq)
 	if err != nil {
 		ResponseError(c, CodeServerBusy)
 		return

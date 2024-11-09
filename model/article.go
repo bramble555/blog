@@ -43,7 +43,7 @@ type ParamArticle struct {
 	BannerID uint        `json:"banner_id,string"`           // 文章封面 ID
 }
 type ResponseArticle struct {
-	ID            string      `json:"id,string"` // ES 中 ID
+	ID            uint        `json:"id"`
 	CreateTime    string      `json:"create_time"`
 	UpdateTime    string      `json:"update_time"`
 	Title         string      `json:"title"`          // 文章标题
@@ -55,16 +55,36 @@ type ResponseArticle struct {
 	Category      string      `json:"category"`       // 文章分类
 	Tags          ctype.Array `json:"tags"`           // 文章标签
 
-	BannerID  uint   `json:"banner_id,string"` // 文章封面 ID
+	BannerID  uint   `json:"banner_id"` // 文章封面 ID
 	BannerUrl string `json:"banner_url"`
 
-	UserID     uint   `json:"user_id,string"` // 用户 ID
+	UserID     uint   `json:"user_id"` // 用户 ID
 	Username   string `json:"username"`
 	UserAvatar string `json:"user_avatar"`
 }
+
+// func (ra *ResponseArticle) ParseTags() ([]string, error) {
+// 	var tags []string
+// 	if err := json.Unmarshal(ra.Tags, &tags); err != nil {
+// 		// 如果是字符串而不是数组，尝试将其解析为单一字符串
+// 		var tag string
+// 		if err := json.Unmarshal(ra.Tags, &tag); err != nil {
+// 			return nil, err
+// 		}
+// 		tags = []string{tag}
+// 	}
+// 	return tags, nil
+// }
+
 type CalendarCount struct {
 	Date  string `json:"data"`
 	Count int    `json:"count"`
+}
+type ParamArticleQuery struct {
+	ParamList
+	Title   string `json:"title" form:"title"`
+	Tags    string `json:"tags" form:"tags"`
+	Content string `json:"content" form:"content"`
 }
 
 // IsExistTitle 判断 title 是否存在
@@ -133,11 +153,11 @@ func (ArticleModel) Mapping() string {
       },
       "create_time": {
          "type": "date",
-        "format": "yyyy-MM-dd HH:mm:ss||epoch_millis"
+        "format": "strict_date_optional_time||epoch_millis"
       },
       "update_time": {
-         "type": "date",
-        "format": "yyyy-MM-dd HH:mm:ss||epoch_millis"
+        "type": "date",
+        "format": "strict_date_optional_time||epoch_millis"
       },
       "title": {
         "type": "text"

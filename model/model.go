@@ -8,7 +8,7 @@ type MODEL struct {
 	UpdateTime time.Time `gorm:"default:CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP" json:"-"`
 }
 type ParamDeleteList struct {
-	IDList []int64 `json:"id_list" binding:"required"`
+	IDList []uint `json:"id_list" binding:"required"`
 }
 type ParamList struct {
 	Page  int    `json:"page" form:"page"`
