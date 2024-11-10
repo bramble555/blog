@@ -128,5 +128,14 @@ CREATE TABLE IF NOT EXISTS article_tag_models (
     PRIMARY KEY (article_title, tag_title) COMMENT '复合主键，确保每一对 (article_title, tag_title) 是唯一的'
 )ENGINE=INNODB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+CREATE TABLE IF NOT EXISTS user_collect_models (
+    user_id BIGINT NOT NULL COMMENT '用户 ID',
+    article_id BIGINT NOT NULL COMMENT '文章 ID',
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (user_id, article_id) COMMENT '复合主键，确保每个用户和每篇文章的收藏记录是唯一的'
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
 
 

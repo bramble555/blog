@@ -130,3 +130,68 @@ func DeleteArticlesListHandler(c *gin.Context) {
 	}
 	ResponseSucceed(c, data)
 }
+func PostArticleCollectHandler(c *gin.Context) {
+	_claims, _ := c.Get("claims")
+	claims := _claims.(*pkg.MyClaims)
+	uID := claims.ID
+	pi := model.ParamID{}
+	err := c.ShouldBindJSON(&pi)
+	if err != nil {
+		global.Log.Errorf("ShouldBindJSON err%s\n", err.Error())
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+	var data string
+	data, err = logic.PostArticleCollect(uID, pi.ID)
+	if err != nil {
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	ResponseSucceed(c, data)
+}
+func GetArticleCollectHandler(c *gin.Context) {
+	_claims, _ := c.Get("claims")
+	claims := _claims.(*pkg.MyClaims)
+	uID := claims.ID
+	data, err := logic.GetArticleCollect(uID)
+	if err != nil {
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	ResponseSucceed(c, data)
+}
+func DeleteArticleCollectHandler(c *gin.Context) {
+	_claims, _ := c.Get("claims")
+	claims := _claims.(*pkg.MyClaims)
+	uID := claims.ID
+	var pdl model.ParamDeleteList
+	err := c.ShouldBindJSON(&pdl)
+	if err != nil {
+		global.Log.Errorf("DeleteArticleCollectHandler ShouldBindQuery err:%s\n", err.Error())
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+	var data string
+	data, err = logic.DeleteArticleCollect(uID, &pdl)
+	if err != nil {
+		ResponseErrorWithData(c, CodeServerBusy, err.Error())
+		return
+	}
+	ResponseSucceed(c, data)
+}
+func PostArticleDigHandler(c *gin.Context) {
+	pi := model.ParamID{}
+	err := c.ShouldBindJSON(&pi)
+	if err != nil {
+		global.Log.Errorf("ShouldBindJSON err:%s\n", err.Error())
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+	var data string
+	data, err = logic.PostArticleDig(pi.ID)
+	if err != nil {
+		ResponseErrorWithData(c, CodeServerBusy, err.Error())
+		return
+	}
+	ResponseSucceed(c, data)
+}

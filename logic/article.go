@@ -11,6 +11,7 @@ import (
 	"github.com/bramble555/blog/dao/mysql/article"
 	"github.com/bramble555/blog/dao/mysql/code"
 	"github.com/bramble555/blog/dao/mysql/user"
+	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
 	"github.com/bramble555/blog/pkg"
 	"github.com/russross/blackfriday"
@@ -125,4 +126,31 @@ func DeleteArticlesList(pdl *model.ParamDeleteList) (string, error) {
 		return "", code.ErrorIDNotExit
 	}
 	return article.DeleteArticlesList(pdl)
+}
+func PostArticleCollect(uID uint, articleID uint) (string, error) {
+	// 查询 articleID 是否存在
+	ok, err := article.IDExist(articleID)
+	if err != nil {
+		return "", err
+	}
+	if !ok {
+		global.Log.Errorf("文章 ID:%d不存在\n", articleID)
+		return "", code.ErrorIDExit
+	}
+	return article.PostArticleCollect(uID, articleID)
+}
+func GetArticleCollect(uID uint) ([]model.ResponseArticle, error) {
+	return article.GetArticleCollect(uID)
+}
+func DeleteArticleCollect(uID uint, pdl *model.ParamDeleteList) (string, error) {
+	// 检查用户已经收藏的文章
+	count, err := article.GetUserCollectsCount(uID, pdl.IDList)
+	if err != nil {
+		return "", nil
+	}
+	if int(count) != len(pdl.IDList) {
+		global.Log.Errorf("IDList 不存在")
+		return "", code.ErrorIDExit
+	}
+	return article.DeleteArticleCollect(uID, pdl.IDList)
 }

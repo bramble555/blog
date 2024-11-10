@@ -101,3 +101,57 @@ func UpdateArticles(id uint, uf map[string]any) (string, error) {
 
 	return code.StrUpdateSucceed, nil
 }
+func PostArticleCollect(uID uint, articleID uint) (string, error) {
+	tx := global.DB.Begin()
+
+	// 检查是否已经收藏
+	var count int64
+	if err := tx.Table("user_collect_models").
+		Where("article_id = ? and user_id = ?", articleID, uID).Count(&count).Error; err != nil {
+		global.Log.Errorf("user_collect_models count err: %s\n", err.Error())
+		tx.Rollback()
+		return "", err
+	}
+	if count > 0 {
+		return "已收藏", nil
+	}
+
+	// 创建收藏记录
+	if err := tx.Create(&model.UserCollectModel{
+		UserID:    uID,
+		ArticleID: articleID,
+	}).Error; err != nil {
+		global.Log.Errorf("UserCollectModel create err: %s\n", err.Error())
+		tx.Rollback()
+		return "", err
+	}
+
+	// 查询当前的 collects_count
+	var currentCount int64
+	if err := tx.Table("article_models").
+		Select("collects_count").
+		Where("id = ?", articleID).
+		Scan(&currentCount).Error; err != nil {
+		tx.Rollback()
+		global.Log.Errorf("article_models select err: %s\n", err.Error())
+		return "", err
+	}
+
+	// 原子更新收藏计数
+	if err := tx.Table("article_models").
+		Where("id = ?", articleID).
+		Update("collects_count", currentCount+1).Error; err != nil {
+		tx.Rollback()
+		global.Log.Errorf("article_models update err: %s\n", err.Error())
+		return "", err
+	}
+
+	// 提交事务
+	if err := tx.Commit().Error; err != nil {
+		global.Log.Errorf("tx.Commit() error: %s\n", err.Error())
+		tx.Rollback()
+		return "", err
+	}
+
+	return "收藏成功", nil
+}

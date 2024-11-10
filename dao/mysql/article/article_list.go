@@ -42,17 +42,40 @@ func GetArticlesList(pl *model.ParamList) (*[]model.ResponseArticle, error) {
 	return &res, nil
 }
 func GetArticlesDetail(id string) (*model.ArticleModel, error) {
-	am := model.ArticleModel{}
-	err := global.DB.Table("article_models").
-		Where("id = ?", id).
-		First(&am).Error
+	// 开始事务
+	tx := global.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
 
-	if err != nil {
-		// 错误处理，输出日志
+	// 获取文章详情
+	am := &model.ArticleModel{}
+	if err := tx.Table("article_models").
+		Where("id = ?", id).
+		First(am).Error; err != nil {
+		tx.Rollback()
 		global.Log.Errorf("select err:%s\n", err.Error())
 		return nil, err
 	}
-	return &am, nil
+
+	// 更新文章的浏览次数
+	if err := tx.Table("article_models").
+		Where("id = ?", id).
+		UpdateColumn("look_count", am.LookCount+1).Error; err != nil {
+		tx.Rollback()
+		global.Log.Errorf("article_models Update err:%s\n", err.Error())
+		return nil, err
+	}
+
+	// 提交事务
+	if err := tx.Commit().Error; err != nil {
+		global.Log.Errorf("Transaction commit failed: %s\n", err.Error())
+		return nil, err
+	}
+
+	return am, nil
 }
 func GetArticlesCalendar() (*map[string]int, error) {
 	// 想要包含今天，那就 + 1 天
@@ -128,4 +151,88 @@ func DeleteArticlesList(pdl *model.ParamDeleteList) (string, error) {
 		return "", err
 	}
 	return "删除成功", nil
+}
+func GetArticleCollect(uID uint) ([]model.ResponseArticle, error) {
+	// 查询用户收藏的 article_id
+	var articleIDList []uint
+	if err := global.DB.Table("user_collect_models").
+		Where("user_id = ?", uID).
+		Select("article_id").
+		Scan(&articleIDList).Error; err != nil {
+		global.Log.Errorf("GetArticleCollect query err: %s\n", err.Error())
+		return nil, err
+	}
+
+	// 根据 article_id 列表查询文章详情
+	var articles []model.ResponseArticle
+	if len(articleIDList) > 0 {
+		if err := global.DB.Table("article_models").
+			Where("id IN (?)", articleIDList).
+			Find(&articles).Error; err != nil {
+			global.Log.Errorf("GetArticleCollect find articles err: %s\n", err.Error())
+			return nil, err
+		}
+	}
+	return articles, nil
+}
+
+// GetUserCollectsCount 获取用户收藏的文章数量
+func GetUserCollectsCount(uID uint, articleIDs []uint) (int64, error) {
+	var count int64
+	if err := global.DB.Table("user_collect_models").
+		Where("user_id = ? AND article_id IN (?)", uID, articleIDs).
+		Count(&count).Error; err != nil {
+		global.Log.Errorf("GetUserCollectsCount err:%s\n", err.Error())
+		return 0, err
+	}
+	return count, nil
+}
+func DeleteArticleCollect(uID uint, articleIDs []uint) (string, error) {
+	tx := global.DB.Begin()
+
+	// 封装回滚操作
+	rollbackOnError := func(err error) error {
+		tx.Rollback()
+		return err
+	}
+
+	// 删除指定的文章收藏记录
+	if err := tx.Table("user_collect_models").
+		Where("user_id = ? AND article_id IN (?)", uID, articleIDs).
+		Delete(&model.UserCollectModel{}).Error; err != nil {
+		global.Log.Errorf("user_collect_models Delete err:%s\n", err.Error())
+		return "", rollbackOnError(err)
+	}
+
+	// 更新每个文章的收藏数量
+	for _, articleID := range articleIDs {
+		// 查询当前文章的收藏数量
+		var currentCount int64
+		if err := tx.Table("article_models").
+			Where("id = ?", articleID).
+			Select("collects_count").
+			Row().
+			Scan(&currentCount); err != nil {
+			global.Log.Errorf("article_models Select err:%s\n", err.Error())
+			return "", rollbackOnError(err)
+		}
+
+		// 递减收藏数量
+		newCount := currentCount - 1
+
+		// 更新文章的收藏数量
+		if err := tx.Table("article_models").
+			Where("id = ?", articleID).
+			Update("collects_count", newCount).Error; err != nil {
+			global.Log.Errorf("article_models Update err:%s\n", err.Error())
+			return "", rollbackOnError(err)
+		}
+	}
+
+	// 提交事务
+	if err := tx.Commit().Error; err != nil {
+		return "", rollbackOnError(err)
+	}
+
+	return "取消收藏成功", nil
 }

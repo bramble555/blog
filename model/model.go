@@ -15,6 +15,9 @@ type ParamList struct {
 	Size  int    `json:"size" form:"size"`
 	Order string `json:"order" form:"order"`
 }
+type ParamID struct {
+	ID uint `json:"id,string" binding:"required"`
+}
 
 // 默认按照创建时间降序排序
 const OrderByTime = "create_time DESC, id DESC"
