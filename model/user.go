@@ -36,7 +36,7 @@ type ParamUpdateUserPwd struct {
 	Pwd    string `json:"pwd"`
 }
 type UserDetail struct {
-	ID       uint   `json:"id,string"`
+	ID       uint   `json:"user_id,string"`
 	Username string `json:"username"`
 	Avatar   string `json:"avatar"`
 }

@@ -22,5 +22,6 @@ func InitRounter(mode string) *gin.Engine {
 	InitMessageRoutes(apiGroup)
 	InitArticleRoutes(apiGroup)
 	InitTagRoutes(apiGroup)
+	InitCommentRoutes(apiGroup)
 	return r
 }

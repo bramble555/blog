@@ -93,9 +93,9 @@ CREATE TABLE IF NOT EXISTS comment_models (
     content VARCHAR(256) NOT NULL COMMENT '评论内容',
     digg_count INT DEFAULT 0 COMMENT '点赞数',
     comment_count INT DEFAULT 0 COMMENT '子评论数量',
-    parent_comment_id BIGINT COMMENT '父级评论ID', -- 用于层级评论
-    article_id BIGINT COMMENT '文章ID',
-    user_id BIGINT COMMENT '评论的用户ID'
+    parent_comment_id BIGINT COMMENT '父级评论ID 根评论的父级评论为 -1',
+    article_id BIGINT NOT NULL COMMENT '文章ID',
+    user_id BIGINT NOT NULL COMMENT '评论的用户ID',
 ) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 CREATE TABLE IF NOT EXISTS message_models (
     id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '消息 ID',

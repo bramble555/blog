@@ -10,6 +10,7 @@
 文章标签(简单，但是需要文章)
 命令行 添加 index  或者删除 index
 DeleteTagsList 删除 tags 列表，但是这里没有实现同步删除文章
+全文搜索实现跳转 p111 - 117
 ### 学到的内容
 - es
 - md 转 html，使用 blackfriday 模块
