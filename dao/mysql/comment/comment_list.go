@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/bramble555/blog/dao/mysql/user"
+	"github.com/bramble555/blog/dao/redis"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
 )
@@ -159,4 +160,16 @@ func getSubComments(parentCommentID uint, articleID uint) ([]model.ResponseComme
 	}
 
 	return responseSubComments, nil
+}
+func DeleteArticleComments(uID uint, pi *model.ParamID) (string, error) {
+	err := global.DB.Where("id = ?", pi.ID).Delete(&model.CommentModel{}).Error
+	if err != nil {
+		global.Log.Errorf("Delete err:%s\n", err.Error())
+		return "", err
+	}
+	err = redis.DeleteArticleComments(uID, pi)
+	if err != nil {
+		return "", err
+	}
+	return "删除成功", nil
 }

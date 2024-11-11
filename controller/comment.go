@@ -43,3 +43,21 @@ func GetArticleCommentsHandler(c *gin.Context) {
 	}
 	ResponseSucceed(c, data)
 }
+func DeleteArticleCommentsHandler(c *gin.Context) {
+	_claims, _ := c.Get("claims")
+	claims := _claims.(*pkg.MyClaims)
+	uID := claims.ID
+	pid := model.ParamID{}
+	err := c.ShouldBindJSON(&pid)
+	if err != nil {
+		global.Log.Errorf("ShouldBindJSON err:%s\n", err.Error())
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+	data, err := logic.DeleteArticleComments(uID, &pid)
+	if err != nil {
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	ResponseSucceed(c, data)
+}

@@ -179,19 +179,4 @@ func DeleteArticleCollectHandler(c *gin.Context) {
 	}
 	ResponseSucceed(c, data)
 }
-func PostArticleDigHandler(c *gin.Context) {
-	pi := model.ParamID{}
-	err := c.ShouldBindJSON(&pi)
-	if err != nil {
-		global.Log.Errorf("ShouldBindJSON err:%s\n", err.Error())
-		ResponseError(c, CodeInvalidParam)
-		return
-	}
-	var data string
-	data, err = logic.PostArticleDig(pi.ID)
-	if err != nil {
-		ResponseErrorWithData(c, CodeServerBusy, err.Error())
-		return
-	}
-	ResponseSucceed(c, data)
-}
+

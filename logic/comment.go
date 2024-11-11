@@ -44,3 +44,15 @@ func GetArticleComments(pcl *model.ParamCommentList) ([]model.ResponseCommentLis
 	}
 	return comment.GetArticleComments(pcl)
 }
+func DeleteArticleComments(uID uint, pi *model.ParamID) (string, error) {
+	// 检查 id 是否存在
+	ok, err := comment.IDExist(pi.ID)
+	if err != nil {
+		return "", err
+	}
+	if !ok {
+		global.Log.Errorf("id:%d不存在", pi.ID)
+		return "", code.ErrorIDExit
+	}
+	return comment.DeleteArticleComments(uID, pi)
+}
