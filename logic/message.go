@@ -23,11 +23,11 @@ func SendMessage(pm *model.ParamMessage) (string, error) {
 	if !ok {
 		return "", errcode.ErrorUserNotExit
 	}
-	sud, err := user.GetUserDetail(pm.SendUserID)
+	sud, err := user.GetUserDetailByID(pm.SendUserID)
 	if err != nil {
 		return "", err
 	}
-	rud, err := user.GetUserDetail(pm.RevUserID)
+	rud, err := user.GetUserDetailByID(pm.RevUserID)
 	udl := make([]*model.UserDetail, 2)
 	udl[0] = sud
 	udl[1] = rud

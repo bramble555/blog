@@ -29,7 +29,7 @@ func UploadArticles(claims *pkg.MyClaims, pa *model.ParamArticle) (string, error
 	userID := claims.ID
 	username := claims.Username
 	// 查询用户头像
-	ud, err := user.GetUserDetail(userID)
+	ud, err := user.GetUserDetailByID(userID)
 	if err != nil {
 		return "", err
 	}
