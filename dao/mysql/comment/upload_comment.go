@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func IDExist(id uint) (bool, error) {
+func CheckIDExist(id uint) (bool, error) {
 	var count int64
 	err := global.DB.Table("comment_models").Where("id = ?", id).Count(&count).Error
 	if err != nil {
@@ -52,6 +52,16 @@ func PostArticleComments(uID uint, pc *model.ParamPostComment) (string, error) {
 		return "", err
 	}
 	return "评论成功", nil
+}
+func GetArticleIDByID(id uint) (uint, error) {
+	var articleID uint
+	err := global.DB.Table("comment_models").Where("id = ?", id).
+		Select("article_id").Scan(&articleID).Error
+	if err != nil {
+		global.Log.Errorf("Error IDExist: %v\n", err)
+		return 0, err
+	}
+	return articleID, nil
 }
 
 // updateParentCommentCount 递归更新父级评论的 CommentCount

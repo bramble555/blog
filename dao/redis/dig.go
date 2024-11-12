@@ -47,9 +47,15 @@ func PostArticleCommentDig(id uint) (string, error) {
 
 	return "点赞成功", nil
 }
-func DeleteArticleComments(uID uint, pi *model.ParamID) error {
-	idStr := strconv.Itoa(int(pi.ID)) // 将 uint 转换为 string
-	err := global.Redis.HDel(getKeyName(KeyZSetCommentDigg), idStr).Err()
+func DeleteArticleComments(uID uint, deleteCommentIDList []uint) error {
+	// 将所有 uint ID 转换为字符串切片，以便用于 Redis 删除
+	var idStrList []string
+	for _, id := range deleteCommentIDList {
+		idStrList = append(idStrList, strconv.Itoa(int(id)))
+	}
+
+	// 批量删除 Redis 中的键
+	err := global.Redis.HDel(getKeyName(KeyZSetCommentDigg), idStrList...).Err()
 	if err != nil {
 		global.Log.Errorf("HDel redis err:%s\n", err.Error())
 		return err

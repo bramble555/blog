@@ -22,7 +22,7 @@ func PostArticleComments(uID uint, pc *model.ParamPostComment) (string, error) {
 		return comment.PostArticleComments(uID, pc)
 	}
 	// 查看父评论是否存在
-	ok, err = comment.IDExist(uint(pc.ParentCommentID))
+	ok, err = comment.CheckIDExist(uint(pc.ParentCommentID))
 	if err != nil {
 		return "", err
 	}
@@ -46,7 +46,7 @@ func GetArticleComments(pcl *model.ParamCommentList) ([]model.ResponseCommentLis
 }
 func DeleteArticleComments(uID uint, pi *model.ParamID) (string, error) {
 	// 检查 id 是否存在
-	ok, err := comment.IDExist(pi.ID)
+	ok, err := comment.CheckIDExist(pi.ID)
 	if err != nil {
 		return "", err
 	}
@@ -54,5 +54,9 @@ func DeleteArticleComments(uID uint, pi *model.ParamID) (string, error) {
 		global.Log.Errorf("id:%d不存在", pi.ID)
 		return "", code.ErrorIDExit
 	}
-	return comment.DeleteArticleComments(uID, pi)
+	articleID, err := comment.GetArticleIDByID(pi.ID)
+	if err != nil {
+		return "", err
+	}
+	return comment.DeleteArticleComments(uID, pi, articleID)
 }

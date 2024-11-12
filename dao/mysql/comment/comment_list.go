@@ -7,6 +7,7 @@ import (
 	"github.com/bramble555/blog/dao/redis"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
+	"gorm.io/gorm"
 )
 
 var userMap map[uint]model.UserDetail
@@ -161,15 +162,87 @@ func getSubComments(parentCommentID uint, articleID uint) ([]model.ResponseComme
 
 	return responseSubComments, nil
 }
-func DeleteArticleComments(uID uint, pi *model.ParamID) (string, error) {
-	err := global.DB.Where("id = ?", pi.ID).Delete(&model.CommentModel{}).Error
-	if err != nil {
+func DeleteArticleComments(uID uint, pi *model.ParamID, articleID uint) (string, error) {
+	// 创建一个局部变量来存储需要删除的评论 ID 列表
+	var deleteCommentIDList []uint
+
+	// 从给定的评论 ID 开始递归收集所有需要删除的评论
+	if err := RecursiveCollectComments(pi.ID, &deleteCommentIDList); err != nil {
 		global.Log.Errorf("Delete err:%s\n", err.Error())
 		return "", err
 	}
-	err = redis.DeleteArticleComments(uID, pi)
-	if err != nil {
+
+	// 将根评论 ID 添加到删除列表中
+	deleteCommentIDList = append(deleteCommentIDList, pi.ID)
+
+	// 计算需要递减的评论数量
+	deleteCount := len(deleteCommentIDList)
+
+	// 更新根评论的父评论计数，根据删除数量递减
+	if err := decrementParentCommentCount(pi.ID, deleteCount); err != nil {
 		return "", err
 	}
+
+	// 更新文章的评论计数
+	if err := decrementArticleCommentCount(articleID, deleteCount); err != nil {
+		return "", err
+	}
+
+	// 删除所有收集到的评论
+	if err := global.DB.Where("id IN (?)", deleteCommentIDList).Delete(&model.CommentModel{}).Error; err != nil {
+		return "", err
+	}
+
+	// 删除 Redis 中的评论缓存
+	if err := redis.DeleteArticleComments(uID, deleteCommentIDList); err != nil {
+		return "", err
+	}
+
 	return "删除成功", nil
+}
+
+// RecursiveCollectComments 递归收集评论及其所有子评论的 ID
+func RecursiveCollectComments(commentID uint, deleteCommentIDList *[]uint) error {
+	// 查询当前评论的子评论
+	var subComments []model.CommentModel
+	if err := global.DB.Where("parent_comment_id = ?", commentID).Find(&subComments).Error; err != nil {
+		return err
+	}
+
+	// 递归收集每个子评论的 ID
+	for _, subComment := range subComments {
+		*deleteCommentIDList = append(*deleteCommentIDList, subComment.ID)
+		if err := RecursiveCollectComments(subComment.ID, deleteCommentIDList); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// decrementParentCommentCount 递减父评论的 CommentCount
+func decrementParentCommentCount(commentID uint, deleteCount int) error {
+	// 获取当前评论的父评论 ID
+	var parentID int
+	if err := global.DB.Model(&model.CommentModel{}).
+		Where("id = ?", commentID).
+		Select("parent_comment_id").
+		Scan(&parentID).Error; err != nil {
+		return err
+	}
+
+	// 递减父评论的 CommentCount
+	if parentID != -1 {
+		return global.DB.Model(&model.CommentModel{}).
+			Where("id = ?", parentID).
+			UpdateColumn("comment_count", gorm.Expr("comment_count - ?", deleteCount)).Error
+	}
+	return nil
+}
+
+// decrementArticleCommentCount 递减 article_models 表中的 comment_count
+func decrementArticleCommentCount(articleID uint, count int) error {
+	return global.DB.Model(&model.ArticleModel{}).
+		Where("id = ?", articleID).
+		UpdateColumn("comment_count", gorm.Expr("comment_count - ?", count)).Error
 }

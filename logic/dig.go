@@ -20,7 +20,7 @@ func PostArticleDig(id uint) (string, error) {
 }
 func PostArticleCommentDig(id uint) (string, error) {
 	// 查询 id 是否存在
-	ok, err := comment.IDExist(id)
+	ok, err := comment.CheckIDExist(id)
 	if err != nil {
 		return "", err
 	}
