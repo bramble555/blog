@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -74,7 +75,8 @@ func main() {
 
 // 启动 Gin 服务器
 func startServer() {
-	r := router.InitRounter(global.Config.System.Env)
+	wg := sync.WaitGroup{}
+	r := router.InitRouter(global.Config.System.Env, &wg)
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", global.Config.System.Port),
 		Handler: r,
@@ -92,10 +94,12 @@ func startServer() {
 	<-quit
 	global.Log.Info("Shutdown Server ...")
 
+	// 等待所有后台任务完成
+	wg.Wait()
+
 	// 创建一个5秒超时的context
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-
 	// 优雅关闭服务
 	if err := srv.Shutdown(ctx); err != nil {
 		global.Log.Fatal("Server Shutdown: ", err.Error())
