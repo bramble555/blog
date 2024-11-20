@@ -16,6 +16,7 @@ func InitRouter(mode string, wg *sync.WaitGroup) *gin.Engine {
 	r.GET("ping", func(c *gin.Context) {
 		c.String(200, "pong")
 	})
+	r.Use(middleware.CORS())
 	// 如果强制退出，必须要把正在执行的任务处理完才退出
 	r.Use(middleware.WaitGroupMiddleware(wg))
 	apiGroup := r.Group("/api")
@@ -28,5 +29,6 @@ func InitRouter(mode string, wg *sync.WaitGroup) *gin.Engine {
 	InitArticleRoutes(apiGroup)
 	InitTagRoutes(apiGroup)
 	InitCommentRoutes(apiGroup)
+	InitChatGroupRouters(apiGroup)
 	return r
 }

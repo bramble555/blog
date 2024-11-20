@@ -136,6 +136,18 @@ CREATE TABLE IF NOT EXISTS user_collect_models (
     PRIMARY KEY (user_id, article_id) COMMENT '复合主键，确保每个用户和每篇文章的收藏记录是唯一的'
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+CREATE TABLE IF NOT EXISTS chat_models (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '聊天记录ID',
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    nick_name VARCHAR(64) NOT NULL COMMENT '用户昵称',
+    avatar VARCHAR(256) COMMENT '用户头像URL',
+    content TEXT NOT NULL COMMENT '聊天内容',
+    ip VARCHAR(20)  COMMENT '用户IP地址',
+    addr VARCHAR(64) COMMENT '用户地址',
+    msg_type TINYINT NOT NULL COMMENT '消息类型',
+    UNIQUE KEY `idx_nick_name` (`nick_name`) USING BTREE
+) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
 
 
