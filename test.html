@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>JWT & 邮箱绑定测试</title>
+</head>
+
+<body>
+      <h1>JWT 验证和邮箱绑定测试页面</h1>
+
+      <div>
+            <h2>设置 JWT Token</h2>
+            <label for="jwt">JWT Token:</label>
+            <input type="text" id="jwt" placeholder="输入有效的 JWT Token">
+            <button onclick="setToken()">设置 Token</button>
+      </div>
+      <hr>
+
+      <div>
+            <h2>绑定邮箱</h2>
+            <form id="emailForm">
+                  <label for="email">邮箱:</label>
+                  <input type="email" id="email" name="email" required>
+                  <br><br>
+                  <label for="code">验证码 (可选):</label>
+                  <input type="text" id="code" name="code">
+                  <br><br>
+                  <button type="submit">提交</button>
+            </form>
+      </div>
+      <br>
+      <div id="response" style="white-space: pre-wrap; color: green;"></div>
+      <div id="error" style="white-space: pre-wrap; color: red;"></div>
+
+      <script>
+            let token = ''; // 用于存储设置的 JWT Token
+
+            function setToken() {
+                  token = document.getElementById('jwt').value;
+                  alert('Token 设置成功!');
+            }
+
+            const form = document.getElementById('emailForm');
+            const responseDiv = document.getElementById('response');
+            const errorDiv = document.getElementById('error');
+
+            form.addEventListener('submit', async (e) => {
+                  e.preventDefault(); // 阻止表单默认行为
+                  responseDiv.textContent = '';
+                  errorDiv.textContent = '';
+
+                  if (!token) {
+                        alert("请先设置 JWT Token！");
+                        return;
+                  }
+
+                  // 获取表单数据
+                  const email = document.getElementById('email').value;
+                  const code = document.getElementById('code').value;
+
+                  // 构造请求体
+                  const requestBody = {
+                        email: email,
+                        code: code || null // 如果没有输入 code，则设置为 null
+                  };
+
+                  try {
+                        // 发起 POST 请求
+                        const res = await fetch('http://127.0.0.1:8080/api/user_bind_email', {
+                              method: 'POST',
+                              headers: {
+                                    'Content-Type': 'application/json',
+                                    'token': token, // 通过请求头携带 Token
+                              },
+                              body: JSON.stringify(requestBody),
+                              credentials: 'include' // 确保发送 Cookie
+                        });
+
+                        if (!res.ok) {
+                              throw new Error(`HTTP 错误! 状态码: ${res.status}`);
+                        }
+
+                        // 解析响应
+                        const result = await res.json();
+                        responseDiv.textContent = `接口响应: \n${JSON.stringify(result, null, 2)}`;
+                  } catch (error) {
+                        errorDiv.textContent = `接口调用失败: \n${error.message}`;
+                  }
+            });
+      </script>
+</body>
+
+</html>

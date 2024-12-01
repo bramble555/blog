@@ -6,13 +6,26 @@ import (
 	"github.com/bramble555/blog/dao/mysql/code"
 	"github.com/bramble555/blog/dao/mysql/user"
 	"github.com/bramble555/blog/dao/redis"
+	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
 	"github.com/bramble555/blog/model/ctype"
 	"github.com/bramble555/blog/pkg"
 )
 
+func PostBindEmail(ID uint, email string) error {
+	err := global.DB.Table("user_models").Where("id = ?", ID).Updates(map[string]interface{}{
+		"email": email,
+	}).Error
+
+	if err != nil {
+		global.Log.Errorf("update email err:%s\n", err.Error())
+		return err
+	}
+	return nil
+}
+
 // 用户名或者邮箱登录
-func UsernameLogin(peu *model.ParamEmailUser) (string, error) {
+func UsernameLogin(peu *model.ParamUsername) (string, error) {
 	// 判断用户名是否存在
 	ok, err := user.CheckUserExistByName(peu.Username)
 	if err != nil {
@@ -28,6 +41,10 @@ func UsernameLogin(peu *model.ParamEmailUser) (string, error) {
 	}
 	if !ok {
 		return "", code.ErrorPasswordWrong
+	}
+	err = user.PostLogin(peu.Username)
+	if err != nil {
+		return "", err
 	}
 	return user.GetToken(peu)
 }
@@ -82,3 +99,4 @@ func Logout(token string, diff time.Duration) error {
 func DeleteUserList(pdl *model.ParamDeleteList) (string, error) {
 	return user.DeleteUserList(pdl)
 }
+

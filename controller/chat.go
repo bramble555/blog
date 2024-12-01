@@ -71,6 +71,7 @@ func GetChatGroupHandler(c *gin.Context) {
 		response := model.ResponseChatGroup{
 			ParamChatGroup: pcg,
 			Date:           time.Now(),
+			OnlineCount:    len(logic.ConnGroupMap),
 		}
 		global.Log.Debugf("response:%+v", response)
 		// 根据消息类型处理
@@ -80,6 +81,8 @@ func GetChatGroupHandler(c *gin.Context) {
 		} else if pcg.MsgType == ctype.InRoomMsg {
 			// 处理进入消息
 			response.ParamChatGroup.Content = fmt.Sprintf("欢迎%s来到聊天室", pcg.NickName)
+			logic.SendGroupMsg(&response)
+		} else if pcg.MsgType == ctype.OutRoomMsg {
 			logic.SendGroupMsg(&response)
 		} else {
 			// 处理未知消息类型

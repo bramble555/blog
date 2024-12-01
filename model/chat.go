@@ -23,5 +23,6 @@ type ParamChatGroup struct {
 }
 type ResponseChatGroup struct {
 	ParamChatGroup
-	Date time.Time `json:"date"`
+	Date        time.Time `json:"date"`
+	OnlineCount int       `json:"online_count"`
 }

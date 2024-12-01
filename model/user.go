@@ -1,6 +1,10 @@
 package model
 
-import "github.com/bramble555/blog/model/ctype"
+import (
+	"time"
+
+	"github.com/bramble555/blog/model/ctype"
+)
 
 type UserModel struct {
 	*MODEL
@@ -23,9 +27,13 @@ type ParamFlagUser struct {
 	Role     uint   `json:"role"`
 	Avatar   string `json:"avatar"`
 }
-type ParamEmailUser struct {
+type ParamUsername struct {
 	Username string `json:"username" binding:"required" msg:"请输入用户名"`
 	Password string `json:"password" binding:"required" msg:"请输入密码"`
+}
+type ParamBindEmail struct {
+	Email string  `json:"email" binding:"required" msg:"邮箱非法"`
+	Code  *string `json:"code"`
 }
 type ParamUpdateUserRole struct {
 	UserID uint       `json:"user_id,string"`
@@ -39,6 +47,11 @@ type UserDetail struct {
 	ID       uint   `json:"user_id,string"`
 	Username string `json:"username"`
 	Avatar   string `json:"avatar"`
+	Email    string `json:"-"`
+}
+type DailyLoginCount struct {
+	LoginDate  time.Time `json:"login_date"`  // 登录日期
+	LoginCount int       `json:"login_count"` // 登录次数
 }
 
 // 返回响应

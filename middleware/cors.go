@@ -11,11 +11,11 @@ import (
 func CORS() gin.HandlerFunc {
 	// 创建 CORS 处理
 	corsHandler := cors.New(cors.Options{
-		AllowedOrigins:   []string{"*"},
+		AllowedOrigins:   []string{"http://127.0.0.1:8080", "null"},
 		AllowedMethods:   []string{"PUT", "PATCH", "GET", "POST", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"*"},
-		AllowCredentials: false,
-		MaxAge:           int(12 * time.Hour / time.Second), // 转换为秒
+		AllowedHeaders:   []string{"Content-Type", "Authorization", "token"},
+		AllowCredentials: true,
+		MaxAge:           int(1 * time.Hour / time.Second), // 转换为秒
 	})
 
 	return func(c *gin.Context) {

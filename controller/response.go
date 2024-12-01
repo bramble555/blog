@@ -18,6 +18,7 @@ const (
 	CodeUserExist
 	CodeUserNotExist
 	CodeInvalidPassword
+	CodeInvalidVerification
 	CodeServerBusy // 连接不上数据库
 
 	CodeNeedLogin
@@ -28,16 +29,17 @@ const (
 )
 
 var codeMsgMap = map[resCode]string{
-	CodeSucceed:         "succeed",
-	CodeInvalidParam:    "请求参数错误",
-	CodeUserExist:       "用户已存在",
-	CodeUserNotExist:    "用户不存在",
-	CodeInvalidPassword: "用户名或者密码错误",
-	CodeServerBusy:      "服务器繁忙",
-	CodeNeedLogin:       "用户请登录",
-	CodeInvalidAuth:     "token无效",
-	CodeInvalidID:       "无效ID",
-	CodeTitleExist:      "主题已存在",
+	CodeSucceed:             "succeed",
+	CodeInvalidParam:        "请求参数错误",
+	CodeUserExist:           "用户已存在",
+	CodeUserNotExist:        "用户不存在",
+	CodeInvalidPassword:     "用户名或者密码错误",
+	CodeInvalidVerification: "验证码错误",
+	CodeServerBusy:          "服务器繁忙",
+	CodeNeedLogin:           "用户请登录",
+	CodeInvalidAuth:         "token无效",
+	CodeInvalidID:           "无效ID",
+	CodeTitleExist:          "主题已存在",
 }
 
 type ResponseData struct {

@@ -75,6 +75,7 @@ func main() {
 
 // 启动 Gin 服务器
 func startServer() {
+
 	wg := sync.WaitGroup{}
 	r := router.InitRouter(global.Config.System.Env, &wg)
 	srv := &http.Server{

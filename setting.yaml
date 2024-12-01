@@ -60,12 +60,11 @@ qi_niu:
 
 email:
   host: "smtp.qq.com"
-  port: 465
-  user: 1323185760@qq.com
-  password: 
-  default_from_eamil:
-  use_ssl:
-  user_tls:
+  port: 587
+  user: "3478034982@qq.com"
+  password: "icjpmfmuesssdbah"
+  default_from_eamil: "3478034982@qq.com"
+
 
 jwt:
   secret: xep

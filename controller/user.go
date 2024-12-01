@@ -2,19 +2,96 @@ package controller
 
 import (
 	"errors"
+	"strconv"
 	"time"
 
 	"github.com/bramble555/blog/dao/mysql/code"
+	"github.com/bramble555/blog/dao/mysql/user"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/logic"
 	"github.com/bramble555/blog/model"
 	"github.com/bramble555/blog/pkg"
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
-// EmailLoginHandler 用户 用 email 或者用户名登录
-func EmailLoginHandler(c *gin.Context) {
-	var peu model.ParamEmailUser
+func PostBindEmailHandler(c *gin.Context) {
+	var pbe model.ParamBindEmail
+	// 获取 MyClaims
+	_claims, _ := c.Get("claims")
+	claims := _claims.(*pkg.MyClaims)
+
+	// 参数绑定
+	err := c.ShouldBindJSON(&pbe)
+	if err != nil {
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+
+	// 初始化 session
+	session := sessions.Default(c)
+	if pbe.Code == nil {
+		// --- 发送验证码流程 ---
+		code, err := pkg.SendEmail(pbe.Email)
+		if err != nil {
+			global.Log.Errorf("邮件发送失败:%s", err.Error())
+			ResponseError(c, CodeServerBusy)
+			return
+		}
+
+		// 设置 session 值
+		session.Set("valid_email", pbe.Email)
+		session.Set("code", strconv.Itoa(code))
+		// 保存 session
+		session.Save()
+		ResponseSucceed(c, "验证码发送成功")
+		return
+	}
+
+	// --- 校验验证码流程 ---
+	storedEmail := session.Get("valid_email")
+	storedCode := session.Get("code")
+	// 验证 email 是否一致
+	if storedEmail != pbe.Email {
+		global.Log.Errorf("邮箱不一致\n")
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+
+	// 验证 code 是否正确
+	if storedCode != *pbe.Code {
+		global.Log.Errorf("验证码不一致")
+		ResponseError(c, CodeInvalidVerification)
+		return
+	}
+
+	// 检查是否需要修改邮箱
+	ud, err := user.GetUserDetailByID(claims.ID)
+	if err != nil {
+		global.Log.Errorf("查询当前邮箱失败: %s", err.Error())
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	// 检查是否与当前邮箱一致
+	if ud.Email == pbe.Email {
+		ResponseSucceed(c, "邮箱无需修改")
+		return
+	}
+
+	// 更新邮箱（绑定或修改）
+	err = logic.PostBindEmail(claims.ID, pbe.Email)
+	if err != nil {
+		global.Log.Errorf("更新邮箱失败: %s", err.Error())
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+
+	ResponseSucceed(c, "邮箱修改成功")
+}
+
+// UsernameLoginHandler 用户用用户名登录
+func UsernameLoginHandler(c *gin.Context) {
+	var peu model.ParamUsername
 	err := c.ShouldBindJSON(&peu)
 	if err != nil {
 		global.Log.Errorf("controller EmailLoginHandler ShouldBindJSON err:%s\n", err.Error())
@@ -115,8 +192,8 @@ func LogoutHandler(c *gin.Context) {
 	ResponseSucceed(c, "注销成功")
 }
 
-// DeleteUserListHander admin 删除用户
-func DeleteUserListHander(c *gin.Context) {
+// DeleteUserListHandler admin 删除用户
+func DeleteUserListHandler(c *gin.Context) {
 	pdl := model.ParamDeleteList{}
 	err := c.ShouldBindJSON(&pdl)
 	if err != nil {
@@ -132,3 +209,4 @@ func DeleteUserListHander(c *gin.Context) {
 	}
 	ResponseSucceed(c, data)
 }
+
