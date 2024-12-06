@@ -48,6 +48,7 @@ type ResponseArticle struct {
 	UpdateTime    string      `json:"update_time"`
 	Title         string      `json:"title"`          // 文章标题
 	Abstract      string      `json:"abstract"`       // 文章简介
+	Content       string      `json:"content"`        // 文章内容
 	LookCount     uint        `json:"look_count"`     // 浏览量
 	CommentCount  uint        `json:"comment_count"`  // 评论量
 	DiggCount     uint        `json:"digg_count"`     // 点赞量

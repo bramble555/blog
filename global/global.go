@@ -11,9 +11,9 @@ import (
 )
 
 var (
-	Config   *config.Config //配置文件
-	DB       *gorm.DB       //数据库文件
-	Log      *logrus.Logger //日志文件
+	Config   *config.Config // 配置文件
+	DB       *gorm.DB       // 数据库文件
+	Log      *logrus.Logger // 日志文件
 	MysqlLog logger.Interface
 	Redis    *redis.Client
 	ES       *elastic.Client

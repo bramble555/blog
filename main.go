@@ -46,19 +46,21 @@ func main() {
 		return
 	}
 	// 初始化 ES
-	global.ES, err = es.Init()
-	if err != nil {
-		global.Log.Errorf("es init err:%s\n", err.Error())
-		return
+	if global.Config.ES.Enable {
+		global.ES, err = es.Init()
+		if err != nil {
+			global.Log.Errorf("es init err:%s\n", err.Error())
+			return
+		}
+		// 创建文章索引
+		a := model.ArticleModel{}
+		err = a.CreateIndex()
+		if err != nil {
+			global.Log.Errorf("es index init err:%s\n", err.Error())
+			return
+		}
+		// a.DeleteIndex()
 	}
-	// 创建文章索引
-	a := model.ArticleModel{}
-	err = a.CreateIndex()
-	if err != nil {
-		global.Log.Errorf("es index init err:%s\n", err.Error())
-		return
-	}
-	// a.DeleteIndex()
 
 	// 解析命令行参数
 	op := flag.FlagUserParse()

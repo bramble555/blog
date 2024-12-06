@@ -1,6 +1,7 @@
 package article
 
 import (
+	"strings"
 	"time"
 
 	"github.com/bramble555/blog/dao/mysql/code"
@@ -41,6 +42,68 @@ func GetArticlesList(pl *model.ParamList) (*[]model.ResponseArticle, error) {
 	}
 	return &res, nil
 }
+
+type MySQLArticleQueryService struct{}
+
+func (q *MySQLArticleQueryService) GetArticlesListByParam(paq *model.ParamArticleQuery) (*[]model.ResponseArticle, error) {
+	// 构造动态查询条件
+	query := "SELECT id, title, content, tags FROM article_models WHERE 1=1"
+	args := []interface{}{}
+
+	// 如果传递了 title 参数，构造全文搜索条件
+	if paq.Title != "" {
+		query += " AND title LIKE ?"
+		args = append(args, "%"+paq.Title+"%")
+	}
+
+	// 如果传递了 tags 参数
+	if paq.Tags != "" {
+		query += " AND tags LIKE ?"
+		args = append(args, "%"+paq.Tags+"%")
+	}
+
+	// 如果传递了 content 参数
+	if paq.Content != "" {
+		query += " AND content LIKE ?"
+		args = append(args, "%"+paq.Content+"%")
+	}
+
+	// 添加分页逻辑
+	offset := (paq.Page - 1) * paq.Size
+	query += " LIMIT ? OFFSET ?"
+	args = append(args, paq.Size, offset)
+
+	// 使用 gorm 的 Raw 方法执行 SQL 查询
+	rows, err := global.DB.Table("article_models").Raw(query, args...).Rows()
+	if err != nil {
+		global.Log.Errorf("failed to execute query: %v", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	// 解析结果
+	var articles []model.ResponseArticle
+	for rows.Next() {
+		var article model.ResponseArticle
+		var tags string
+		if err := rows.Scan(&article.ID, &article.Title, &article.Content, &tags); err != nil {
+			global.Log.Errorf("failed to scan row: %v", err)
+			return nil, err
+		}
+		// 如果 tags 字段包含 `\n` 分割的多个值，进行拆分
+		article.Tags = strings.Split(tags, "\n")
+		articles = append(articles, article)
+	}
+
+	// 检查是否有错误
+	if err := rows.Err(); err != nil {
+		global.Log.Errorf("rows iteration error: %v", err)
+		return nil, err
+	}
+
+	return &articles, nil
+}
+
 func GetArticlesDetail(id string) (*model.ArticleModel, error) {
 	// 开始事务
 	tx := global.DB.Begin()

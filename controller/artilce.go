@@ -53,7 +53,10 @@ func GetArticlesListHandler(c *gin.Context) {
 	if paq.Size <= 0 {
 		paq.Size = 10
 	}
-	data, err := logic.GetArticlesList(paq)
+	queryService := logic.GetArticlesListByParam()
+
+	// 使用返回的查询服务获取文章列表
+	data, err := queryService.GetArticlesListByParam(paq)
 	if err != nil {
 		ResponseError(c, CodeServerBusy)
 		return
@@ -179,4 +182,3 @@ func DeleteArticleCollectHandler(c *gin.Context) {
 	}
 	ResponseSucceed(c, data)
 }
-

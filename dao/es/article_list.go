@@ -10,7 +10,9 @@ import (
 	"github.com/olivere/elastic/v7"
 )
 
-func GetArticlesList(paq *model.ParamArticleQuery) (*[]model.ResponseArticle, error) {
+type ESArticleQueryService struct{}
+
+func (e *ESArticleQueryService) GetArticlesListByParam(paq *model.ParamArticleQuery) (*[]model.ResponseArticle, error) {
 	a := model.ArticleModel{}
 	// 设置分页参数
 	page := (paq.Page - 1) * paq.Size

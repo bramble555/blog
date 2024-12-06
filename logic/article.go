@@ -7,6 +7,7 @@ import (
 
 	md "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/bramble555/blog/dao"
 	"github.com/bramble555/blog/dao/es"
 	"github.com/bramble555/blog/dao/mysql/article"
 	"github.com/bramble555/blog/dao/mysql/code"
@@ -89,8 +90,14 @@ func UploadArticles(claims *pkg.MyClaims, pa *model.ParamArticle) (string, error
 	}
 	return article.UploadArticles(&am)
 }
-func GetArticlesList(paq *model.ParamArticleQuery) (*[]model.ResponseArticle, error) {
-	return es.GetArticlesList(paq)
+
+
+
+func GetArticlesListByParam() dao.ArticleQueryService {
+	if global.Config.ES.Enable {
+		return &es.ESArticleQueryService{} // 返回 Elasticsearch 查询服务
+	}
+	return &article.MySQLArticleQueryService{} // 返回 MySQL 查询服务
 }
 func GetArticlesDetail(id string) (*model.ArticleModel, error) {
 	return article.GetArticlesDetail(id)
