@@ -99,4 +99,3 @@ func Logout(token string, diff time.Duration) error {
 func DeleteUserList(pdl *model.ParamDeleteList) (string, error) {
 	return user.DeleteUserList(pdl)
 }
-

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	_ "database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,7 +13,7 @@ import (
 	"time"
 
 	"github.com/bramble555/blog/dao/es"
-	"github.com/bramble555/blog/dao/mysql"
+	dao_mysql "github.com/bramble555/blog/dao/mysql"
 	"github.com/bramble555/blog/dao/redis"
 	"github.com/bramble555/blog/flag"
 	"github.com/bramble555/blog/global"
@@ -20,6 +21,10 @@ import (
 	"github.com/bramble555/blog/model"
 	"github.com/bramble555/blog/router"
 	"github.com/bramble555/blog/setting"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/mysql"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
 func main() {
@@ -34,11 +39,35 @@ func main() {
 		fmt.Printf("Init logger failed, err:%v\n", err)
 		return
 	}
+
 	// 初始化 db
-	if global.DB, err = mysql.Init(); err != nil {
+	if global.DB, err = dao_mysql.Init(); err != nil {
 		global.Log.Errorf("Init mysql failed, err:%v\n", err)
 		return
 	}
+
+	// 迁移数据库
+	db, _ := global.DB.DB()
+	migrationDriver, err := mysql.WithInstance(db, &mysql.Config{}) // 使用 migrate 的 mysql 驱动
+	if err != nil {
+		global.Log.Errorf("migration Driver failed, err:%v\n", err)
+		return
+	}
+	migrator, err := migrate.NewWithDatabaseInstance(
+		"file://migration",     // 迁移脚本路径
+		global.Config.Mysql.DB, // 数据库名
+		migrationDriver,        // 迁移驱动
+	)
+	if err != nil {
+		global.Log.Errorf("migration failed, err:%v\n", err)
+		return
+	}
+	err = migrator.Up()
+	if err != nil {
+		global.Log.Errorf("migration up failed, err:%v\n", err)
+		return
+	}
+
 	// 初始化 redis
 	global.Redis, err = redis.Init()
 	if err != nil {

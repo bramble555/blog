@@ -91,8 +91,6 @@ func UploadArticles(claims *pkg.MyClaims, pa *model.ParamArticle) (string, error
 	return article.UploadArticles(&am)
 }
 
-
-
 func GetArticlesListByParam() dao.ArticleQueryService {
 	if global.Config.ES.Enable {
 		return &es.ESArticleQueryService{} // 返回 Elasticsearch 查询服务

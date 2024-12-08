@@ -39,5 +39,6 @@ func InitRouter(mode string, wg *sync.WaitGroup) *gin.Engine {
 	InitTagRoutes(apiGroup)
 	InitCommentRoutes(apiGroup)
 	InitChatGroupRouters(apiGroup)
+	InitMetricsRoutes(apiGroup)
 	return r
 }

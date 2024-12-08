@@ -209,4 +209,3 @@ func DeleteUserListHandler(c *gin.Context) {
 	}
 	ResponseSucceed(c, data)
 }
-

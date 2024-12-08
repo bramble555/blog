@@ -55,4 +55,3 @@ func MessageList(id uint) ([]model.RespondMessage, error) {
 	}
 	return messageRespond, nil // 返回结果和 nil 错误
 }
-

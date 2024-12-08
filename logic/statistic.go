@@ -50,7 +50,7 @@ func GetDataSum() (*model.DataSumResponse, error) {
 	// 统计今天登录用户人数
 	today := time.Now().Format("2006-01-02") // 获取当天的日期字符串
 	err = global.DB.Table("login_models").
-		Where("DATE(create_time) = ?", today). 
+		Where("DATE(create_time) = ?", today).
 		Count(&count).Error
 	if err != nil {
 		global.Log.Errorf("login_models select err: %s\n", err.Error())

@@ -7,4 +7,3 @@ type Email struct {
 	Password         string `json:"password" mapstructure:"password"`
 	DefaultFromEmail string `json:"default_from_email" mapstructure:"default_from_email"`
 }
-  
