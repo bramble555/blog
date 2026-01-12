@@ -11,7 +11,7 @@ import (
 func CORS() gin.HandlerFunc {
 	// 创建 CORS 处理
 	corsHandler := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://127.0.0.1:8080", "null"},
+		AllowedOrigins:   []string{"http://127.0.0.1:8080", "http://localhost:5173", "http://localhost:5174", "null"},
 		AllowedMethods:   []string{"PUT", "PATCH", "GET", "POST", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization", "token"},
 		AllowCredentials: true,

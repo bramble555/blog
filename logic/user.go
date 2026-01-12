@@ -42,10 +42,6 @@ func UsernameLogin(peu *model.ParamUsername) (string, error) {
 	if !ok {
 		return "", code.ErrorPasswordWrong
 	}
-	err = user.PostLogin(peu.Username)
-	if err != nil {
-		return "", err
-	}
 	return user.GetToken(peu)
 }
 func GetUserList(role uint, pl *model.ParamList) (*[]model.UserModel, error) {

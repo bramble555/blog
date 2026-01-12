@@ -1,0 +1,150 @@
+import { createRouter, createWebHistory } from 'vue-router'
+
+// Layouts
+import PortalLayout from '../layouts/PortalLayout.vue'
+import AdminLayout from '../layouts/AdminLayout.vue'
+
+// Portal Views
+import HomeView from '../portal/HomeView.vue'
+import ArticleDetail from '../portal/ArticleDetail.vue'
+import AuthView from '../portal/AuthView.vue'
+
+// Admin Views
+import ArticleList from '../views/ArticleList.vue'
+import ArticleEditor from '../views/ArticleEditor.vue'
+import UserList from '../views/UserList.vue'
+import BannerList from '../views/BannerList.vue'
+import AdvertList from '../views/AdvertList.vue'
+import TagList from '../views/TagList.vue'
+import CommentList from '../views/CommentList.vue'
+import MessageList from '../views/MessageList.vue'
+import ChatView from '../views/ChatView.vue'
+
+const routes = [
+    // Portal Routes
+    {
+        path: '/',
+        component: PortalLayout,
+        children: [
+            {
+                path: '',
+                name: 'Home',
+                component: HomeView,
+                meta: { title: 'Home' }
+            },
+            {
+                path: 'article/:id',
+                name: 'ArticleDetail',
+                component: ArticleDetail,
+                meta: { title: 'Article Detail' }
+            }
+        ]
+    },
+    // Auth Routes
+    {
+        path: '/login',
+        name: 'Login',
+        component: AuthView,
+        meta: { title: 'Login' }
+    },
+    {
+        path: '/register',
+        name: 'Register',
+        component: AuthView,
+        meta: { title: 'Register' }
+    },
+    // Admin Routes
+    {
+        path: '/admin',
+        component: AdminLayout,
+        redirect: '/admin/articles',
+        children: [
+            {
+                path: 'articles',
+                name: 'AdminArticles',
+                component: ArticleList,
+                meta: { title: 'Article Management', requiresAuth: true, role: 2 }
+            },
+            {
+                path: 'create',
+                name: 'AdminArticleCreate',
+                component: ArticleEditor,
+                meta: { title: 'New Article', requiresAuth: true, role: 2 }
+            },
+            {
+                path: 'edit/:id',
+                name: 'AdminArticleEdit',
+                component: ArticleEditor,
+                meta: { title: 'Edit Article', requiresAuth: true, role: 2 }
+            },
+            {
+                path: 'users',
+                name: 'AdminUsers',
+                component: UserList,
+                meta: { title: 'User Management', requiresAuth: true, role: 2 }
+            },
+            {
+                path: 'banners',
+                name: 'AdminBanners',
+                component: BannerList,
+                meta: { title: 'Banner Management', requiresAuth: true, role: 2 }
+            },
+            {
+                path: 'adverts',
+                name: 'AdminAdverts',
+                component: AdvertList,
+                meta: { title: 'Advert Management', requiresAuth: true, role: 2 }
+            },
+            {
+                path: 'tags',
+                name: 'AdminTags',
+                component: TagList,
+                meta: { title: 'Tag Management', requiresAuth: true, role: 2 }
+            },
+            {
+                path: 'comments',
+                name: 'AdminComments',
+                component: CommentList,
+                meta: { title: 'Comment Management', requiresAuth: true, role: 2 }
+            },
+            {
+                path: 'messages',
+                name: 'AdminMessages',
+                component: MessageList,
+                meta: { title: 'Messages', requiresAuth: true, role: 2 }
+            },
+            {
+                path: 'chat',
+                name: 'AdminChat',
+                component: ChatView,
+                meta: { title: 'System Chat', requiresAuth: true, role: 2 }
+            }
+        ]
+    },
+    // Fallback
+    {
+        path: '/:pathMatch(.*)*',
+        redirect: '/'
+    }
+]
+
+const router = createRouter({
+    history: createWebHistory(),
+    routes
+})
+
+// Simple Route Guard
+router.beforeEach((to, from, next) => {
+    const title = to.meta?.title ? `${to.meta.title} | GVB Blog` : 'GVB Blog'
+    document.title = title
+
+    // TODO: Implement real auth check
+    const token = localStorage.getItem('token')
+    if (to.meta.requiresAuth && !token) {
+        next('/login')
+    } else {
+        next()
+    }
+})
+
+export default router

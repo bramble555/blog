@@ -9,7 +9,8 @@ import (
 func InitUserRoutes(r *gin.RouterGroup) gin.IRoutes {
 
 	// 配置路由
-	r.POST("/username", controller.UsernameLoginHandler)
+	// Change the username to  api/email_login
+	r.POST("/email_login", controller.UsernameLoginHandler)
 	r.GET("/users", middleware.JWTAuthorMiddleware(), controller.GetUserListHandler)
 	r.PUT("/user_role", middleware.JWTAdminMiddleware(), controller.UpdateUserRoleHandler)
 	r.PUT("/user_password", middleware.JWTAuthorMiddleware(), controller.UpdateUserPwdHandler)

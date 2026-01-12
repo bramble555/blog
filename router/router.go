@@ -32,7 +32,6 @@ func InitRouter(mode string, wg *sync.WaitGroup) *gin.Engine {
 	InitBaseRoutes(apiGroup)
 	InitBannerRoutes(apiGroup)
 	InitAdvertRoutes(apiGroup)
-	InitMenuRoutes(apiGroup)
 	InitUserRoutes(apiGroup)
 	InitMessageRoutes(apiGroup)
 	InitArticleRoutes(apiGroup)

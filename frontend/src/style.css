@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+@theme {
+  --color-vscode-bg: #1a1b26;
+  --color-vscode-text: #a9b1d6;
+  --color-vscode-primary: #7aa2f7;
+  --color-vscode-sidebar: #16161e;
+  --color-vscode-border: #292e42;
+}
+
+/* Element Plus Dark Mode Overrides */
+html.dark {
+  --el-bg-color: #1a1b26;
+  --el-bg-color-overlay: #16161e;
+  --el-text-color-primary: #a9b1d6;
+  --el-mask-color: rgba(0, 0, 0, 0.7);
+  --el-border-color-lighter: #292e42;
+}
+
+body {
+  @apply bg-vscode-bg text-vscode-text;
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--color-vscode-bg);
+  color: var(--color-vscode-text);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: var(--color-vscode-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-vscode-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-vscode-primary);
+}

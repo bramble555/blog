@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -22,8 +23,6 @@ import (
 	"github.com/bramble555/blog/router"
 	"github.com/bramble555/blog/setting"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
@@ -46,27 +45,45 @@ func main() {
 		return
 	}
 
+	// 自动执行 init.sql
+	sqlFileByte, err := os.ReadFile("init.sql")
+	if err != nil {
+		global.Log.Warnf("Read init.sql failed: %v", err)
+	} else {
+		sqlStatements := strings.Split(string(sqlFileByte), ";")
+		for _, sql := range sqlStatements {
+			sql = strings.TrimSpace(sql)
+			if sql == "" {
+				continue
+			}
+			if err := global.DB.Exec(sql).Error; err != nil {
+				global.Log.Warnf("Execute init.sql statement error: %v, sql: %s", err, sql)
+			}
+		}
+		global.Log.Info("Executed init.sql")
+	}
+
 	// 迁移数据库
-	db, _ := global.DB.DB()
-	migrationDriver, err := mysql.WithInstance(db, &mysql.Config{}) // 使用 migrate 的 mysql 驱动
-	if err != nil {
-		global.Log.Errorf("migration Driver failed, err:%v\n", err)
-		return
-	}
-	migrator, err := migrate.NewWithDatabaseInstance(
-		"file://migration",     // 迁移脚本路径
-		global.Config.Mysql.DB, // 数据库名
-		migrationDriver,        // 迁移驱动
-	)
-	if err != nil {
-		global.Log.Errorf("migration failed, err:%v\n", err)
-		return
-	}
-	err = migrator.Up()
-	if err != nil {
-		global.Log.Errorf("migration up failed, err:%v\n", err)
-		return
-	}
+	// db, _ := global.DB.DB()
+	// migrationDriver, err := mysql.WithInstance(db, &mysql.Config{}) // 使用 migrate 的 mysql 驱动
+	// if err != nil {
+	// 	global.Log.Errorf("migration Driver failed, err:%v\n", err)
+	// 	return
+	// }
+	// migrator, err := migrate.NewWithDatabaseInstance(
+	// 	"file://migration",     // 迁移脚本路径
+	// 	global.Config.Mysql.DB, // 数据库名
+	// 	migrationDriver,        // 迁移驱动
+	// )
+	// if err != nil {
+	// 	global.Log.Errorf("migration failed, err:%v\n", err)
+	// 	return
+	// }
+	// err = migrator.Up()
+	// if err != nil {
+	// 	global.Log.Errorf("migration up failed, err:%v\n", err)
+	// 	return
+	// }
 
 	// 初始化 redis
 	global.Redis, err = redis.Init()

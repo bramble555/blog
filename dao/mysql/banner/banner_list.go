@@ -62,25 +62,6 @@ func DeleteBannerList(pdl *model.ParamDeleteList) (string, error) {
 		return "删除 banner_models 时出错", code.ErrorIDNotExit
 	}
 
-	// 删除 menu_models
-	var mm []model.MenuModel
-	resultM := t.Where("banner_id IN ?", pdl.IDList).Find(&mm)
-	if resultM.Error != nil {
-		t.Rollback()
-		global.Log.Errorf("查询 menu_models 时出错:%s\n", resultM.Error)
-		return "查询 menu_models 时出错", resultM.Error
-	}
-
-	if resultM.RowsAffected > 0 {
-		// 使用条件直接删除，而不是删除切片
-		if err := t.Where("banner_id IN ?", pdl.IDList).Delete(&model.MenuModel{}).Error; err != nil {
-			t.Rollback()
-			global.Log.Errorf("删除 menu_models 时出错:%v\n", err)
-			return "删除 menu_models 时出错", err
-		}
-	}
-
 	t.Commit()
-	return fmt.Sprintf("banner_models 共删除 %d 行, menu_models 共删除 %d 行",
-		resultB.RowsAffected, resultM.RowsAffected), nil
+	return fmt.Sprintf("banner_models 共删除 %d 行", resultB.RowsAffected), nil
 }

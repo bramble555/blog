@@ -28,21 +28,6 @@ CREATE TABLE IF NOT EXISTS advert_models (
 ) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
 -- ALTER TABLE advert_models ADD CONSTRAINT idx_title UNIQUE (title);
-CREATE TABLE IF NOT EXISTS menu_models (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键',
-    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    title VARCHAR(32) UNIQUE NOT NULL COMMENT '菜单标题',
-    path VARCHAR(32) UNIQUE NOT NULL COMMENT '菜单路径',
-    slogan VARCHAR(64) NULL COMMENT '菜单口号或标语',
-    abstract VARCHAR(100) NULL COMMENT'菜单简介',
-    abstract_time SMALLINT(2) DEFAULT 0 COMMENT '简介的切换时间，单位为秒',
-    banner_id BIGINT COMMENT '关联的横幅ID',
-    sort TINYINT(5) UNIQUE NOT NULL COMMENT '菜单的顺序,0表示最高优先级',
-    UNIQUE KEY `idx_title` (`title`) USING BTREE,
-    UNIQUE KEY `idx_path` (`path`) USING BTREE
-) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
--- DROP TABLE  menu_models;
 
 CREATE TABLE IF NOT EXISTS user_models (
     id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '用户ID',
@@ -145,10 +130,8 @@ CREATE TABLE IF NOT EXISTS chat_models (
     content TEXT NOT NULL COMMENT '聊天内容',
     ip VARCHAR(20)  COMMENT '用户IP地址',
     addr VARCHAR(64) COMMENT '用户地址',
-    msg_type TINYINT NOT NULL COMMENT '消息类型',
-    UNIQUE KEY `idx_nick_name` (`nick_name`) USING BTREE
+    msg_type TINYINT NOT NULL COMMENT '消息类型'
 ) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
-
 
 CREATE TABLE IF NOT EXISTS login_models (
     id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键',
