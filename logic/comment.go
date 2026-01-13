@@ -1,6 +1,8 @@
 package logic
 
 import (
+	"errors"
+
 	"github.com/bramble555/blog/dao/mysql/article"
 	"github.com/bramble555/blog/dao/mysql/code"
 	"github.com/bramble555/blog/dao/mysql/comment"
@@ -8,55 +10,57 @@ import (
 	"github.com/bramble555/blog/model"
 )
 
-func PostArticleComments(uID uint, pc *model.ParamPostComment) (string, error) {
+func PostArticleComments(uSN int64, pc *model.ParamPostComment) (string, error) {
 	// 判断文章是否存在
-	ok, err := article.IDExist(pc.ArticleID)
+	ok, err := article.CheckSNExist(pc.ArticleSN)
 	if err != nil {
 		return "", err
 	}
 	if !ok {
-		global.Log.Errorf("文章:%d不存在", pc.ArticleID)
-		return "", code.ErrorIDNotExit
+		global.Log.Errorf("文章:%d不存在", pc.ArticleSN)
+		return "", code.ErrorSNNotExit
 	}
-	if pc.ParentCommentID == -1 {
-		return comment.PostArticleComments(uID, pc)
+	// 判断父评论是否存在
+	if pc.ParentCommentSN != -1 {
+		ok, err := comment.CheckSNExist(pc.ParentCommentSN)
+		if err != nil {
+			return "", err
+		}
+		if !ok {
+			return "", code.ErrorSNNotExit
+		}
+		// 获取父评论的文章 SN
+		articleSN, err := comment.GetArticleSNBySN(pc.ParentCommentSN)
+		if err != nil {
+			return "", err
+		}
+		// 校验文章 SN 是否一致
+		if articleSN != pc.ArticleSN {
+			return "", errors.New("评论的文章 SN 与父评论所属文章 SN 不一致")
+		}
 	}
-	// 查看父评论是否存在
-	ok, err = comment.CheckIDExist(uint(pc.ParentCommentID))
-	if err != nil {
-		return "", err
-	}
-	if !ok {
-		global.Log.Errorf("评论:%d不存在", pc.ArticleID)
-		return "", code.ErrorIDNotExit
-	}
-	return comment.PostArticleComments(uID, pc)
+	return comment.PostArticleComments(uSN, pc)
 }
 func GetArticleComments(pcl *model.ParamCommentList) ([]model.ResponseCommentList, error) {
 	// 判断文章是否存在
-	ok, err := article.IDExist(pcl.ArticleID)
+	ok, err := article.CheckSNExist(pcl.ArticleSN)
 	if err != nil {
 		return nil, err
 	}
 	if !ok {
-		global.Log.Errorf("文章:%d不存在", pcl.ArticleID)
-		return nil, code.ErrorIDNotExit
+		global.Log.Errorf("文章:%d不存在", pcl.ArticleSN)
+		return nil, code.ErrorSNNotExit
 	}
 	return comment.GetArticleComments(pcl)
 }
-func DeleteArticleComments(uID uint, pi *model.ParamID) (string, error) {
-	// 检查 id 是否存在
-	ok, err := comment.CheckIDExist(pi.ID)
-	if err != nil {
-		return "", err
+func DeleteArticleComments(uSN int64, role int64, psn *model.ParamSN, articleSN int64) (string, error) {
+	// 如果 articleSN 为 0，说明是从控制器传来的，需要查询
+	if articleSN == 0 {
+		var err error
+		articleSN, err = comment.GetArticleSNBySN(psn.SN)
+		if err != nil {
+			return "", err
+		}
 	}
-	if !ok {
-		global.Log.Errorf("id:%d不存在", pi.ID)
-		return "", code.ErrorIDExit
-	}
-	articleID, err := comment.GetArticleIDByID(pi.ID)
-	if err != nil {
-		return "", err
-	}
-	return comment.DeleteArticleComments(uID, pi, articleID)
+	return comment.DeleteArticleComments(uSN, role, psn, articleSN)
 }

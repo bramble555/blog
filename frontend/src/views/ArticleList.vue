@@ -6,7 +6,7 @@
         <button @click="fetchArticles" class="px-3 py-1 bg-vscode-sidebar border border-vscode-border hover:bg-vscode-bg rounded text-sm transition-colors">
           Refresh
         </button>
-        <router-link to="/admin/create" class="px-4 py-2 bg-vscode-primary hover:bg-opacity-90 text-white rounded text-sm font-medium transition-colors">
+        <router-link v-if="isAdmin" to="/admin/create" class="px-4 py-2 bg-vscode-primary hover:bg-opacity-90 text-white rounded text-sm font-medium transition-colors">
           + New Article
         </router-link>
       </div>
@@ -23,7 +23,7 @@
       <table class="w-full text-left border-collapse">
         <thead class="bg-[#2d2d2d]">
           <tr>
-            <th class="p-3 border-b border-vscode-border font-medium text-gray-400 w-16">ID</th>
+            <th class="p-3 border-b border-vscode-border font-medium text-gray-400 w-16">SN</th>
             <th class="p-3 border-b border-vscode-border font-medium text-gray-400">Title</th>
             <th class="p-3 border-b border-vscode-border font-medium text-gray-400">Category</th>
             <th class="p-3 border-b border-vscode-border font-medium text-gray-400">Tags</th>
@@ -32,9 +32,9 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="article in articles" :key="article.id" class="hover:bg-vocab-bg/50 transition-colors group">
+          <tr v-for="article in articles" :key="article.sn" class="hover:bg-vocab-bg/50 transition-colors group">
             <td class="p-3 border-b border-vscode-border border-opacity-50 text-gray-500 font-mono text-xs">
-              {{ article.id }}
+              {{ article.sn }}
             </td>
             <td class="p-3 border-b border-vscode-border border-opacity-50 font-medium text-vscode-text">
               {{ article.title }}
@@ -58,13 +58,13 @@
               {{ formatDate(article.create_time) }}
             </td>
             <td class="p-3 border-b border-vscode-border border-opacity-50 text-right">
-              <div class="flex justify-end gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                <button @click="editArticle(article.id)" class="text-vscode-primary hover:text-white" title="Edit">
+              <div v-if="isAdmin" class="flex justify-end gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                <button @click="editArticle(article.sn)" class="text-vscode-primary hover:text-white" title="Edit">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
                 </button>
-                <button @click="deleteArticle(article.id)" class="text-red-400 hover:text-red-200" title="Delete">
+                <button @click="deleteArticle(article.sn)" class="text-red-400 hover:text-red-200" title="Delete">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
@@ -84,11 +84,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { getArticles, deleteArticles } from '../api/article'
+import { authStore } from '../stores/auth'
 
 const router = useRouter()
+const isAdmin = computed(() => authStore.role === 1)
 const articles = ref([])
 const loading = ref(false)
 const error = ref(null)
@@ -118,17 +120,17 @@ const fetchArticles = async () => {
   }
 }
 
-const editArticle = (id) => {
-  router.push(`/admin/edit/${id}`)
+const editArticle = (sn) => {
+  router.push(`/admin/edit/${sn}`)
 }
 
-const deleteArticle = async (id) => {
+const deleteArticle = async (sn) => {
   if (!confirm('Are you sure you want to delete this article?')) return
   try {
-    const res = await deleteArticles([id])
+    const res = await deleteArticles([sn])
     if (res.data.code === 10000) {
       // Remove from list locally
-      articles.value = articles.value.filter(a => a.id !== id)
+      articles.value = articles.value.filter(a => a.sn !== sn)
     } else {
       alert('Delete failed: ' + res.data.msg)
     }

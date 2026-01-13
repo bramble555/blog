@@ -6,7 +6,7 @@
     </h2>
 
     <el-table :data="users" style="width: 100%" v-loading="loading">
-      <el-table-column prop="id" label="ID" width="80" />
+      <el-table-column prop="sn" label="SN" width="180" />
       <el-table-column label="Avatar" width="80">
         <template #default="scope">
           <el-avatar :size="40" :src="scope.row.avatar" />
@@ -16,7 +16,7 @@
       <el-table-column prop="email" label="Email" />
       <el-table-column prop="role" label="Role">
         <template #default="scope">
-           <el-tag :type="scope.row.role === 1 ? 'info' : 'danger'">{{ scope.row.role === 1 ? 'User' : 'Admin' }}</el-tag>
+           <el-tag :type="scope.row.role === 1 ? 'danger' : 'info'">{{ scope.row.role === 1 ? 'Admin' : 'User' }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="ip" label="IP" />
@@ -25,7 +25,7 @@
       <el-table-column label="Actions" width="150" fixed="right">
         <template #default="scope">
           <el-button type="primary" link @click="editRole(scope.row)">Role</el-button>
-          <el-button type="danger" link @click="deleteUser(scope.row.id)">Delete</el-button>
+          <el-button type="danger" link @click="deleteUser(scope.row.sn)">Delete</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -35,8 +35,8 @@
       <el-form :model="roleForm">
         <el-form-item label="Role">
           <el-select v-model="roleForm.role" placeholder="Select role">
-            <el-option label="Normal User" :value="1" />
-            <el-option label="Admin" :value="2" />
+            <el-option label="Admin" :value="1" />
+            <el-option label="Normal User" :value="2" />
           </el-select>
         </el-form-item>
       </el-form>
@@ -59,7 +59,7 @@ const users = ref([])
 const loading = ref(false)
 
 const roleDialogVisible = ref(false)
-const roleForm = reactive({ user_id: 0, role: 1 })
+const roleForm = reactive({ user_sn: 0, role: 1 })
 
 const fetchData = async () => {
   loading.value = true
@@ -77,15 +77,15 @@ const fetchData = async () => {
   }
 }
 
-const deleteUser = (id) => {
+const deleteUser = (sn) => {
   ElMessageBox.confirm('Are you sure to delete this user?', 'Warning', {
     type: 'warning'
   }).then(async () => {
     try {
-      const res = await deleteUsers([id])
+      const res = await deleteUsers([sn])
       if (res.data.code === 10000) {
         ElMessage.success('Deleted')
-        users.value = users.value.filter(u => u.id !== id)
+        users.value = users.value.filter(u => u.sn !== sn)
       } else {
         ElMessage.error(res.data.msg)
       }
@@ -96,7 +96,7 @@ const deleteUser = (id) => {
 }
 
 const editRole = (row) => {
-  roleForm.user_id = row.id // Note: row.id is usually a number in JS but user_id,string in JSON. API expects uint.
+  roleForm.user_sn = row.sn // Note: row.sn is usually a number in JS but user_sn,string in JSON. API expects int64.
   roleForm.role = row.role
   roleDialogVisible.value = true
 }

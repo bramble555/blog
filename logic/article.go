@@ -8,7 +8,6 @@ import (
 	md "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/bramble555/blog/dao"
-	"github.com/bramble555/blog/dao/es"
 	"github.com/bramble555/blog/dao/mysql/article"
 	"github.com/bramble555/blog/dao/mysql/code"
 	"github.com/bramble555/blog/dao/mysql/user"
@@ -27,10 +26,9 @@ func UploadArticles(claims *pkg.MyClaims, pa *model.ParamArticle) (string, error
 	if ok {
 		return "", code.ErrorTitleExit
 	}
-	userID := claims.ID
 	username := claims.Username
 	// 查询用户头像
-	ud, err := user.GetUserDetailByID(userID)
+	ud, err := user.GetUserDetailBySN(claims.SN)
 	if err != nil {
 		return "", err
 	}
@@ -62,16 +60,16 @@ func UploadArticles(claims *pkg.MyClaims, pa *model.ParamArticle) (string, error
 		return "", err
 	}
 	n := len(*rb)
-	IDList := make([]uint, n)
+	SNList := make([]int64, n)
 	for i, v := range *rb {
-		IDList[i] = v.ID
+		SNList[i] = v.SN
 	}
 	// 设置随机种子
 	source := rand.NewSource(time.Now().UnixNano())
 	r := rand.New(source)
-	// 从 IDList 中随机选择一个 ID
+	// 从 SNList 中随机选择一个 SN
 	randomIndex := r.Intn(n) // 生成一个 [0, n) 范围内的随机数
-	pa.BannerID = IDList[randomIndex]
+	pa.BannerSN = SNList[randomIndex]
 	bannerUrl := (*rb)[randomIndex].Name
 	// 组装数据
 	am := model.ArticleModel{
@@ -82,9 +80,9 @@ func UploadArticles(claims *pkg.MyClaims, pa *model.ParamArticle) (string, error
 		Source:     pa.Source,
 		Link:       pa.Link,
 		Tags:       pa.Tags,
-		BannerID:   pa.BannerID,
+		BannerSN:   pa.BannerSN,
 		BannerUrl:  bannerUrl,
-		UserID:     userID,
+		UserSN:     int64(claims.SN), // Cast int64 to int64 for database field
 		Username:   username,
 		UserAvatar: ud.Avatar,
 	}
@@ -92,13 +90,21 @@ func UploadArticles(claims *pkg.MyClaims, pa *model.ParamArticle) (string, error
 }
 
 func GetArticlesListByParam() dao.ArticleQueryService {
-	if global.Config.ES.Enable {
-		return &es.ESArticleQueryService{} // 返回 Elasticsearch 查询服务
-	}
 	return &article.MySQLArticleQueryService{} // 返回 MySQL 查询服务
 }
-func GetArticlesDetail(id string) (*model.ArticleModel, error) {
-	return article.GetArticlesDetail(id)
+func GetArticlesDetail(sn string, uSN int64) (*model.ArticleModel, error) {
+	am, err := article.GetArticlesDetail(sn)
+	if err != nil {
+		return nil, err
+	}
+	if uSN != 0 {
+		// 检查用户是否收藏
+		isCollect, err := article.IsUserCollect(uSN, am.SN)
+		if err == nil {
+			am.IsCollect = isCollect
+		}
+	}
+	return am, nil
 }
 
 func GetArticlesCalendar() (*map[string]int, error) {
@@ -107,55 +113,62 @@ func GetArticlesCalendar() (*map[string]int, error) {
 func GetArticlesTagsList(paq *model.ParamList) (*[]model.ResponseArticleTags, error) {
 	return article.GetArticlesTagsList(paq)
 }
-func UpdateArticles(id uint, uf map[string]any) (string, error) {
-	ok, err := article.IDExist(id)
+func UpdateArticles(sn int64, uf map[string]any) (string, error) {
+	ok, err := article.CheckSNExist(sn)
 	if err != nil {
 		return "", err
 	}
 	if !ok {
-		return "", code.ErrorIDNotExit
+		return "", code.ErrorSNNotExit
 	}
-	return article.UpdateArticles(id, uf)
+	return article.UpdateArticles(sn, uf)
 }
 func DeleteArticlesList(pdl *model.ParamDeleteList) (string, error) {
-	// 检查 IDList 是否为空
-	if len(pdl.IDList) == 0 {
-		return "", code.ErrorIDNotExit
+	// 检查 SNList 是否为空
+	if len(pdl.SNList) == 0 {
+		return "", code.ErrorSNNotExit
 	}
-	// 查询 IDList 是否存在
-	ok, err := article.IDListExist(pdl)
+	// 查询 SNList 是否存在
+	ok, err := article.SNListExist(pdl)
 	if err != nil {
 		return "", err
 	}
 	if !ok {
-		return "", code.ErrorIDNotExit
+		return "", code.ErrorSNNotExit
 	}
 	return article.DeleteArticlesList(pdl)
 }
-func PostArticleCollect(uID uint, articleID uint) (string, error) {
-	// 查询 articleID 是否存在
-	ok, err := article.IDExist(articleID)
+func PostArticleCollect(uSN int64, articleSN int64) (string, error) {
+	// 查询 articleSN 是否存在
+	ok, err := article.CheckSNExist(articleSN)
 	if err != nil {
 		return "", err
 	}
 	if !ok {
-		global.Log.Errorf("文章 ID:%d不存在\n", articleID)
-		return "", code.ErrorIDExit
+		global.Log.Errorf("文章 SN:%d不存在\n", articleSN)
+		return "", code.ErrorSNNotExit
 	}
-	return article.PostArticleCollect(uID, articleID)
+	return article.PostArticleCollect(uSN, articleSN)
 }
-func GetArticleCollect(uID uint) ([]model.ResponseArticle, error) {
-	return article.GetArticleCollect(uID)
+func GetArticleCollect(uSN int64) ([]model.ResponseArticle, error) {
+	return article.GetArticleCollect(uSN)
 }
-func DeleteArticleCollect(uID uint, pdl *model.ParamDeleteList) (string, error) {
-	// 检查用户已经收藏的文章
-	count, err := article.GetUserCollectsCount(uID, pdl.IDList)
+func DeleteArticleCollect(uSN int64, pdl *model.ParamDeleteList) (string, error) {
+	// 转换 SNList 为 []int64
+	snList, err := pkg.StringSliceToInt64Slice(pdl.SNList)
 	if err != nil {
-		return "", nil
+		global.Log.Errorf("DeleteArticleCollect StringSliceToInt64Slice err: %s\n", err.Error())
+		return "", err
 	}
-	if int(count) != len(pdl.IDList) {
-		global.Log.Errorf("IDList 不存在")
-		return "", code.ErrorIDExit
+
+	// 检查用户已经收藏的文章
+	count, err := article.GetUserCollectsCount(uSN, snList)
+	if err != nil {
+		return "", err
 	}
-	return article.DeleteArticleCollect(uID, pdl.IDList)
+	if int(count) != len(snList) {
+		global.Log.Errorf("SNList 不存在")
+		return "", code.ErrorSNNotExit
+	}
+	return article.DeleteArticleCollect(uSN, snList)
 }

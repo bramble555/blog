@@ -11,9 +11,9 @@ import (
 // CheckBannerNotExists 检查图片是否存在数据库，如果存在，返回false，不存在返回true
 func CheckBannerNotExists(byteData []byte) bool {
 	hash := pkg.MD5(byteData)
-	var id uint64
-	// select id from banner where hash = hash
-	rows := global.DB.Table("banner_models").Select("id").Where("hash=?", hash).Scan(&id).RowsAffected
+	var sn int64
+	// select sn from banner where hash = hash
+	rows := global.DB.Table("banner_models").Select("sn").Where("hash=?", hash).Scan(&sn).RowsAffected
 	return rows != 1
 }
 func UploadBanners(byteData []byte, fileName string) error {

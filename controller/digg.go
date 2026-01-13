@@ -8,32 +8,34 @@ import (
 )
 
 func PostArticleDigHandler(c *gin.Context) {
-	pi := model.ParamID{}
+	pi := model.ParamSN{}
 	err := c.ShouldBindJSON(&pi)
 	if err != nil {
-		global.Log.Errorf("ShouldBindJSON err:%s\n", err.Error())
+		global.Log.Errorf("controller PostArticleDigHandler ShouldBindJSON err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
 	var data string
-	data, err = logic.PostArticleDig(pi.ID)
+	data, err = logic.PostArticleDig(pi.SN)
 	if err != nil {
+		global.Log.Errorf("controller PostArticleDigHandler logic.PostArticleDig err:%s\n", err.Error())
 		ResponseErrorWithData(c, CodeServerBusy, err.Error())
 		return
 	}
 	ResponseSucceed(c, data)
 }
 func PostArticleCommentsDiggHandler(c *gin.Context) {
-	pi := model.ParamID{}
-	err := c.ShouldBindJSON(&pi)
+	ps := model.ParamSN{}
+	err := c.ShouldBindJSON(&ps)
 	if err != nil {
-		global.Log.Errorf("ShouldBindJSON err:%s\n", err.Error())
+		global.Log.Errorf("controller PostArticleCommentsDiggHandler ShouldBindJSON err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
 	var data string
-	data, err = logic.PostArticleCommentDig(pi.ID)
+	data, err = logic.PostArticleCommentDig(ps.SN)
 	if err != nil {
+		global.Log.Errorf("controller PostArticleCommentsDiggHandler logic.PostArticleCommentDig err:%s\n", err.Error())
 		ResponseErrorWithData(c, CodeServerBusy, err.Error())
 		return
 	}

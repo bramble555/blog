@@ -66,7 +66,7 @@
 
          <!-- Comment List -->
          <div class="space-y-8">
-            <div v-for="c in comments" :key="c.id" class="flex gap-4">
+            <div v-for="c in comments" :key="c.sn" class="flex gap-4">
                <el-avatar :src="c.user_avatar">{{ c.username?.[0] }}</el-avatar>
                <div class="flex-1">
                   <div class="flex items-center gap-2 mb-1">
@@ -101,6 +101,7 @@ import { getArticle, collectArticle } from '../api/article'
 import { getComments, createComment } from '../api/comment'
 import { View, Pointer, Star, StarFilled } from '@element-plus/icons-vue'
 import { authStore } from '../stores/auth'
+import { collectionStore } from '../stores/collection'
 import { ElMessage } from 'element-plus'
 
 const route = useRoute()
@@ -124,9 +125,15 @@ const tags = computed(() => {
 const fetchData = async () => {
    loading.value = true
    try {
-      const res = await getArticle(route.params.id)
+      const res = await getArticle(route.params.sn)
       if (res.data.code === 10000) {
          article.value = res.data.data
+         // Initialize state from backend, sync with global store
+         if (article.value.is_collect) {
+            collectionStore.add(article.value.sn)
+         } else {
+            collectionStore.remove(article.value.sn)
+         }
          fetchComments()
       }
    } catch (e) {
@@ -138,7 +145,7 @@ const fetchData = async () => {
 
 const fetchComments = async () => {
    try {
-      const res = await getComments({ article_id: route.params.id })
+      const res = await getComments({ article_sn: route.params.sn })
       if (res.data.code === 10000) {
          comments.value = res.data.data
       }
@@ -149,7 +156,7 @@ const postComment = async () => {
    if (!commentText.value) return
    try {
       const res = await createComment({
-         article_id: route.params.id,
+         article_sn: route.params.sn,
          content: commentText.value
       })
       if (res.data.code === 10000) {
@@ -164,26 +171,60 @@ const postComment = async () => {
    }
 }
 
-const isCollected = ref(false)
+const isCollected = computed(() => {
+   return article.value ? collectionStore.isCollected(article.value.sn) : false
+})
+const collectLoading = ref(false)
 
 const handleCollect = async () => {
    if (!authStore.isLoggedIn) {
       ElMessage.warning('Please login first')
       return
    }
+   if (collectLoading.value || !article.value) return
+   
+   // Backup current state for potential rollback
+   const previousIsCollected = isCollected.value
+   const previousCollectsCount = article.value.collects_count
+
+   // Optimistic Update: Immediately toggle store state
+   if (!previousIsCollected) {
+      article.value.collects_count++
+      collectionStore.add(article.value.sn)
+   } else {
+      article.value.collects_count--
+      collectionStore.remove(article.value.sn)
+   }
+
+   collectLoading.value = true
    try {
-      const res = await collectArticle(article.value.id)
+      const res = await collectArticle(article.value.sn)
       if (res.data.code === 10000) {
-         ElMessage.success(res.data.msg || 'Success')
-         // Toggle state locally or refetch
-         isCollected.value = !isCollected.value
-         if (isCollected.value) article.value.collects_count++
-         else article.value.collects_count--
+         // Success: Keep the optimistic changes and show feedback
+         const msg = res.data.data
+         ElMessage.success(msg === '收藏成功' ? 'Collected successfully' : 'Uncollected successfully')
       } else {
-         ElMessage.error(res.data.msg)
+         // Failure: Rollback to previous state
+         article.value.collects_count = previousCollectsCount
+         if (previousIsCollected) {
+            collectionStore.add(article.value.sn)
+         } else {
+            collectionStore.remove(article.value.sn)
+         }
+         ElMessage.error(res.data.msg || 'Action failed')
       }
    } catch (e) {
-      ElMessage.error('Action failed')
+      // Network/Server error: Rollback to previous state
+      article.value.collects_count = previousCollectsCount
+      if (previousIsCollected) {
+         collectionStore.add(article.value.sn)
+      } else {
+         collectionStore.remove(article.value.sn)
+      }
+      console.error('Collect error:', e)
+      ElMessage.error('Network error or server busy')
+   } finally {
+      collectLoading.value = false
    }
 }
 

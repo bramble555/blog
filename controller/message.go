@@ -12,12 +12,13 @@ func SendMessageHandler(c *gin.Context) {
 	pm := model.ParamMessage{}
 	err := c.ShouldBindJSON(&pm)
 	if err != nil {
-		global.Log.Errorf("controller ShouldBindJSON err:%s\n", err.Error())
+		global.Log.Errorf("controller SendMessageHandler ShouldBindJSON err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
 	data, err := logic.SendMessage(&pm)
 	if err != nil {
+		global.Log.Errorf("controller SendMessageHandler logic.SendMessage err:%s\n", err.Error())
 		ResponseErrorWithData(c, CodeServerBusy, err.Error())
 		return
 	}
@@ -28,11 +29,13 @@ func SendMessageHandler(c *gin.Context) {
 func MessageListAllHandler(c *gin.Context) {
 	pl, err := validateListParams(c)
 	if err != nil {
+		global.Log.Errorf("controller MessageListAllHandler validateListParams err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
 	data, err := logic.MessageListAll(pl)
 	if err != nil {
+		global.Log.Errorf("controller MessageListAllHandler logic.MessageListAll err:%s\n", err.Error())
 		ResponseErrorWithData(c, CodeServerBusy, err.Error())
 		return
 	}
@@ -44,25 +47,27 @@ func MessageListAllHandler(c *gin.Context) {
 func MessageListHandler(c *gin.Context) {
 	_cliams, _ := c.Get("claims")
 	cliams := _cliams.(*pkg.MyClaims)
-	data, err := logic.MessageList(cliams.ID)
+	data, err := logic.MessageList(cliams.SN)
 	if err != nil {
+		global.Log.Errorf("controller MessageListHandler logic.MessageList err:%s\n", err.Error())
 		ResponseErrorWithData(c, CodeServerBusy, err.Error())
 		return
 	}
 	ResponseSucceed(c, data)
 }
 func MessageRecordHandler(c *gin.Context) {
-	pr := model.ParamRecordID{}
+	pr := model.ParamRecordSN{}
 	err := c.ShouldBindJSON(&pr)
 	if err != nil {
-		global.Log.Errorf("controller ShouldBindJSON err:%s\n", err.Error())
+		global.Log.Errorf("controller MessageRecordHandler ShouldBindJSON err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
 	_claims, _ := c.Get("claims")
 	claims := _claims.(*pkg.MyClaims)
-	data, err := logic.MessageRecord(claims.ID, pr.UserID)
+	data, err := logic.MessageRecord(claims.SN, pr.UserSN)
 	if err != nil {
+		global.Log.Errorf("controller MessageRecordHandler logic.MessageRecord err:%s\n", err.Error())
 		ResponseErrorWithData(c, CodeServerBusy, err.Error())
 		return
 	}

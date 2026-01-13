@@ -24,6 +24,7 @@ func PostBindEmailHandler(c *gin.Context) {
 	// 参数绑定
 	err := c.ShouldBindJSON(&pbe)
 	if err != nil {
+		global.Log.Errorf("controller PostBindEmailHandler ShouldBindJSON err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
@@ -34,7 +35,7 @@ func PostBindEmailHandler(c *gin.Context) {
 		// --- 发送验证码流程 ---
 		code, err := pkg.SendEmail(pbe.Email)
 		if err != nil {
-			global.Log.Errorf("邮件发送失败:%s", err.Error())
+			global.Log.Errorf("controller PostBindEmailHandler pkg.SendEmail err:%s", err.Error())
 			ResponseError(c, CodeServerBusy)
 			return
 		}
@@ -53,22 +54,22 @@ func PostBindEmailHandler(c *gin.Context) {
 	storedCode := session.Get("code")
 	// 验证 email 是否一致
 	if storedEmail != pbe.Email {
-		global.Log.Errorf("邮箱不一致\n")
+		global.Log.Errorf("controller PostBindEmailHandler email mismatch\n")
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
 
 	// 验证 code 是否正确
 	if storedCode != *pbe.Code {
-		global.Log.Errorf("验证码不一致")
+		global.Log.Errorf("controller PostBindEmailHandler code mismatch\n")
 		ResponseError(c, CodeInvalidVerification)
 		return
 	}
 
 	// 检查是否需要修改邮箱
-	ud, err := user.GetUserDetailByID(claims.ID)
+	ud, err := user.GetUserDetailBySN(claims.SN)
 	if err != nil {
-		global.Log.Errorf("查询当前邮箱失败: %s", err.Error())
+		global.Log.Errorf("controller PostBindEmailHandler user.GetUserDetailBySN err:%s", err.Error())
 		ResponseError(c, CodeServerBusy)
 		return
 	}
@@ -79,9 +80,9 @@ func PostBindEmailHandler(c *gin.Context) {
 	}
 
 	// 更新邮箱（绑定或修改）
-	err = logic.PostBindEmail(claims.ID, pbe.Email)
+	err = logic.PostBindEmail(claims.SN, pbe.Email) // claims.SN is int64
 	if err != nil {
-		global.Log.Errorf("更新邮箱失败: %s", err.Error())
+		global.Log.Errorf("controller PostBindEmailHandler logic.PostBindEmail err:%s", err.Error())
 		ResponseError(c, CodeServerBusy)
 		return
 	}
@@ -94,12 +95,12 @@ func UsernameLoginHandler(c *gin.Context) {
 	var peu model.ParamUsername
 	err := c.ShouldBindJSON(&peu)
 	if err != nil {
-		global.Log.Errorf("controller EmailLoginHandler ShouldBindJSON err:%s\n", err.Error())
+		global.Log.Errorf("controller UsernameLoginHandler ShouldBindJSON err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
 	// 业务处理
-	token, err := logic.UsernameLogin(&peu)
+	data, err := logic.UsernameLogin(&peu)
 	if err != nil {
 		if errors.Is(err, code.ErrorUserNotExit) {
 			ResponseErrorWithData(c, CodeUserNotExist, err)
@@ -112,7 +113,7 @@ func UsernameLoginHandler(c *gin.Context) {
 			return
 		}
 	}
-	ResponseSucceed(c, token)
+	ResponseSucceed(c, data)
 }
 func GetUserListHandler(c *gin.Context) {
 	// 根据 token，获取 用户权限
@@ -122,11 +123,13 @@ func GetUserListHandler(c *gin.Context) {
 	// ParamList 默认值
 	pl, err := validateListParams(c)
 	if err != nil {
+		global.Log.Errorf("controller GetUserListHandler validateListParams err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
 	data, err := logic.GetUserList(role, pl)
 	if err != nil {
+		global.Log.Errorf("controller GetUserListHandler logic.GetUserList err:%s\n", err.Error())
 		ResponseError(c, CodeServerBusy)
 		return
 	}
@@ -138,14 +141,16 @@ func UpdateUserRoleHandler(c *gin.Context) {
 	puur := model.ParamUpdateUserRole{}
 	err := c.ShouldBindJSON(&puur)
 	if err != nil {
-		global.Log.Errorf("controller UpdateUserRoleHandler err:%s\n", err.Error())
+		global.Log.Errorf("controller UpdateUserRoleHandler ShouldBindJSON err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
 	data, err := logic.UpdateUserRole(&puur)
 	if err != nil {
-		if errors.Is(err, code.ErrorIDNotExit) {
-			ResponseErrorWithData(c, CodeUserNotExist, code.ErrorIDNotExit)
+		global.Log.Errorf("controller UpdateUserRoleHandler logic.UpdateUserRole err:%s\n", err.Error())
+		if errors.Is(err, code.ErrorSNNotExit) {
+			ResponseErrorWithData(c, CodeUserNotExist, code.ErrorSNNotExit)
+			return
 		}
 		ResponseError(c, CodeServerBusy)
 		return
@@ -158,15 +163,16 @@ func UpdateUserPwdHandler(c *gin.Context) {
 	puup := model.ParamUpdateUserPwd{}
 	err := c.ShouldBindJSON(&puup)
 	if err != nil {
-		global.Log.Errorf("controller UpdateUserPwdHandler err:%s\n", err.Error())
+		global.Log.Errorf("controller UpdateUserPwdHandler ShouldBindJSON err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
 	_claims, _ := c.Get("claims")
 	claims := _claims.(*pkg.MyClaims)
 	var data string
-	data, err = logic.UpdateUserPwd(&puup, claims.ID)
+	data, err = logic.UpdateUserPwd(&puup, claims.SN) // claims.SN is now int64
 	if err != nil {
+		global.Log.Errorf("controller UpdateUserPwdHandler logic.UpdateUserPwd err:%s\n", err.Error())
 		ResponseErrorWithData(c, CodeServerBusy, data)
 		return
 	}
@@ -186,6 +192,7 @@ func LogoutHandler(c *gin.Context) {
 	diff := exp.Sub(now)
 	err := logic.Logout(token, diff)
 	if err != nil {
+		global.Log.Errorf("controller LogoutHandler logic.Logout err:%s\n", err.Error())
 		ResponseError(c, CodeServerBusy)
 		return
 	}
@@ -194,16 +201,17 @@ func LogoutHandler(c *gin.Context) {
 
 // DeleteUserListHandler admin 删除用户
 func DeleteUserListHandler(c *gin.Context) {
-	pdl := model.ParamDeleteList{}
+	var pdl model.ParamDeleteList
 	err := c.ShouldBindJSON(&pdl)
 	if err != nil {
-		global.Log.Errorf("controller DeleteUserListHander err:%s\n", err.Error())
+		global.Log.Errorf("controller DeleteUserListHandler ShouldBindJSON err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
 	var data string
 	data, err = logic.DeleteUserList(&pdl)
 	if err != nil {
+		global.Log.Errorf("controller DeleteUserListHandler logic.DeleteUserList err:%s\n", err.Error())
 		ResponseError(c, CodeServerBusy)
 		return
 	}

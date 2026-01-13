@@ -14,18 +14,18 @@ func GetUserList(pl *model.ParamList) (*[]model.UserModel, error) {
 	}
 	return &udl, nil
 }
-func GetUserDetailByID(id uint) (*model.UserDetail, error) {
+func GetUserDetailBySN(sn int64) (*model.UserDetail, error) {
 	ud := model.UserDetail{}
-	err := global.DB.Table("user_models").Where("id = ?", id).Scan(&ud).Error
+	err := global.DB.Table("user_models").Where("sn = ?", sn).Scan(&ud).Error
 	if err != nil {
 		global.Log.Errorf("user GetUserDetail err:%s\n", err.Error())
 		return nil, err
 	}
 	return &ud, nil
 }
-func GetUserDetailListByIDList(IDList []uint) (*[]model.UserDetail, error) {
+func GetUserDetailListBySNList(SNList []int64) (*[]model.UserDetail, error) {
 	udl := []model.UserDetail{}
-	err := global.DB.Table("user_models").Where("id in (?)", IDList).Scan(&udl).Error
+	err := global.DB.Table("user_models").Where("sn in (?)", SNList).Scan(&udl).Error
 	if err != nil {
 		global.Log.Errorf("user GetUserDetailList err:%s\n", err.Error())
 		return nil, err

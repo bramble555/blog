@@ -1,29 +1,29 @@
 package model
 
 type CommentModel struct {
-	*MODEL
-	Content         string `json:"content"`           // 评论内容
-	DiggCount       uint   `json:"digg_count"`        // 点赞数
-	CommentCount    uint   `json:"comment_count"`     // 子评论数量
-	ParentCommentID int    `json:"parent_comment_id"` // 父级评论ID
-	ArticleID       uint   `json:"article_id,string"` // 文章ID
-	UserID          uint   `json:"user_id,string"`    // 评论的用户ID
+	MODEL
+	Content         string `json:"content"`                  // 评论内容
+	DiggCount       int64  `json:"digg_count"`               // 点赞量
+	CommentCount    int64  `json:"comment_count"`            // 子评论量
+	ParentCommentSN int64  `json:"parent_comment_sn,string"` // 父评论ID,为-1，表示为根评论
+	ArticleSN       int64  `json:"article_sn,string"`        // 评论的文章ID
+	UserSN          int64  `json:"user_sn,string"`           // 评论的用户ID
 }
 type ParamPostComment struct {
-	ArticleID       uint   `json:"article_id,string" binding:"required"` // 文章ID
-	ParentCommentID int    `json:"parent_comment_id,string"`             // 父级评论ID
+	ArticleSN       int64  `json:"article_sn,string" binding:"required"` // 文章ID
+	ParentCommentSN int64  `json:"parent_comment_sn,string"`             // 父级评论ID
 	Content         string `json:"content" binding:"required"`           // 评论内容
 }
 type ParamCommentList struct {
-	ArticleID uint `form:"article_id" binding:"required"` // 文章ID
+	ArticleSN int64 `form:"article_sn" binding:"required"` // 文章ID
 }
 type ResponseCommentList struct {
-	*MODEL
+	MODEL
 	Content         string                `json:"content"`
-	ParentCommentID int                   `json:"parent_comment_id"`
-	ArticleID       uint                  `json:"article_id,string"`
-	DiggCount       uint                  `json:"digg_count"`             // 点赞数
-	CommentCount    uint                  `json:"comment_count"`          // 子评论数量
+	ParentCommentSN int64                 `json:"parent_comment_SN"`
+	ArticleSN       int64                 `json:"article_sn,string"`
+	DiggCount       int64                 `json:"digg_count"`             // 点赞数
+	CommentCount    int64                 `json:"comment_count"`          // 子评论数量
 	SubComments     []ResponseCommentList `json:"sub_comments,omitempty"` // 子评论列表，嵌套结构
 	*UserDetail
 }

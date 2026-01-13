@@ -12,8 +12,8 @@ import (
 	"github.com/bramble555/blog/pkg"
 )
 
-func PostBindEmail(ID uint, email string) error {
-	err := global.DB.Table("user_models").Where("id = ?", ID).Updates(map[string]interface{}{
+func PostBindEmail(sn int64, email string) error {
+	err := global.DB.Table("user_models").Where("sn = ?", sn).Updates(map[string]interface{}{
 		"email": email,
 	}).Error
 
@@ -25,26 +25,26 @@ func PostBindEmail(ID uint, email string) error {
 }
 
 // 用户名或者邮箱登录
-func UsernameLogin(peu *model.ParamUsername) (string, error) {
+func UsernameLogin(peu *model.ParamUsername) (model.ResponseLogin, error) {
 	// 判断用户名是否存在
 	ok, err := user.CheckUserExistByName(peu.Username)
 	if err != nil {
-		return "", err
+		return model.ResponseLogin{}, err
 	}
 	if !ok {
-		return "", code.ErrorUserNotExit
+		return model.ResponseLogin{}, code.ErrorUserNotExit
 	}
 	// 判断密码是否错误
 	ok, err = user.QueryPasswordByUsername(peu)
 	if err != nil {
-		return "", err
+		return model.ResponseLogin{}, err
 	}
 	if !ok {
-		return "", code.ErrorPasswordWrong
+		return model.ResponseLogin{}, code.ErrorPasswordWrong
 	}
 	return user.GetToken(peu)
 }
-func GetUserList(role uint, pl *model.ParamList) (*[]model.UserModel, error) {
+func GetUserList(role int64, pl *model.ParamList) (*[]model.UserModel, error) {
 	udl, err := user.GetUserList(pl)
 	if err != nil {
 		return nil, err
@@ -57,7 +57,7 @@ func GetUserList(role uint, pl *model.ParamList) (*[]model.UserModel, error) {
 	}
 
 	// 如果是普通用户，username 返回 "****"
-	if role == uint(ctype.PermissionUser) {
+	if role == int64(ctype.PermissionUser) {
 		for i := range *udl {
 			(*udl)[i].Username = "****"
 		}
@@ -66,22 +66,22 @@ func GetUserList(role uint, pl *model.ParamList) (*[]model.UserModel, error) {
 	return udl, nil
 }
 func UpdateUserRole(puur *model.ParamUpdateUserRole) (string, error) {
-	ok, err := user.CheckUserExistByID(puur.UserID)
+	ok, err := user.CheckUserExistBySN(puur.UserSN)
 	if err != nil {
 		return "", err
 	}
 	if !ok {
-		return "", code.ErrorIDNotExit
+		return "", code.ErrorSNNotExit
 	}
 	return user.UpdateUserRole(puur)
 }
-func UpdateUserPwd(puup *model.ParamUpdateUserPwd, id uint) (string, error) {
-	ok, err := user.CheckPwdExistByID(id, puup.OldPwd)
+func UpdateUserPwd(puup *model.ParamUpdateUserPwd, sn int64) (string, error) {
+	ok, err := user.CheckPwdExistBySN(sn, puup.OldPwd)
 	if err != nil || !ok {
 		return "你输入的密码有误,请重新尝试", err
 	}
 	var data string
-	data, err = user.UpdateUserPwd(puup, id)
+	data, err = user.UpdateUserPwd(puup, sn)
 	if err != nil {
 		return "服务器繁忙", err
 	}

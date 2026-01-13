@@ -37,7 +37,6 @@
           <template v-else>
              <div class="flex items-center gap-4">
                 <router-link 
-                  v-if="isAdmin" 
                   to="/admin/articles" 
                   class="text-sm font-medium text-gray-400 hover:text-vscode-primary transition-colors"
                 >
@@ -84,7 +83,8 @@ const router = useRouter()
 const searchQuery = ref('')
 
 const isLoggedIn = computed(() => authStore.isLoggedIn)
-const isAdmin = computed(() => authStore.role === 2)
+const isAdmin = computed(() => authStore.role === 1)
+const isUser = computed(() => authStore.role === 2)
 const username = computed(() => authStore.username)
 
 const handleSearch = () => {

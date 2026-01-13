@@ -7,25 +7,25 @@ import (
 	"github.com/bramble555/blog/dao/redis"
 )
 
-func PostArticleDig(id uint) (string, error) {
-	// 查询 id 是否存在
-	ok, err := article.IDExist(id)
+func PostArticleDig(sn int64) (string, error) {
+	// 查询 sn 是否存在
+	ok, err := article.CheckSNExist(sn)
 	if err != nil {
 		return "", err
 	}
 	if !ok {
-		return "", code.ErrorIDNotExit
+		return "", code.ErrorSNNotExit
 	}
-	return redis.PostArticleDig(id)
+	return redis.PostArticleDig(sn)
 }
-func PostArticleCommentDig(id uint) (string, error) {
-	// 查询 id 是否存在
-	ok, err := comment.CheckIDExist(id)
+func PostArticleCommentDig(sn int64) (string, error) {
+	// 查询 sn 是否存在
+	ok, err := comment.CheckSNExist(sn)
 	if err != nil {
 		return "", err
 	}
 	if !ok {
-		return "", code.ErrorIDNotExit
+		return "", code.ErrorSNNotExit
 	}
-	return redis.PostArticleCommentDig(id)
+	return redis.PostArticleCommentDig(sn)
 }

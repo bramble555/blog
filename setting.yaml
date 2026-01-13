@@ -74,9 +74,3 @@ jwt:
 upload:
   size: 2
   path: ./uploads/file
-
-es:
-  enable: false
-  host: 127.0.0.1
-  port: 9200
-  sniff: false

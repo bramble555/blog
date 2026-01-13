@@ -70,10 +70,8 @@ const handleSubmit = async () => {
     } else {
        const res = await login({ username: form.username, password: form.password })
        if (res.data.code === 10000) {
-          // In a real app, the backend should return user info (role, etc.)
-          // For now, we assume role 2 for 'admin' and 1 for others
-          const role = form.username === 'admin' ? 2 : 1
-          authStore.setAuth(res.data.data, form.username, role) 
+          const { token, username, role, sn } = res.data.data
+          authStore.setAuth(token, username, role, sn) 
           ElMessage.success('Welcome back!')
           router.push('/')
        } else {

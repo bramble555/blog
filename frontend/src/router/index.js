@@ -12,6 +12,7 @@ import AuthView from '../portal/AuthView.vue'
 // Admin Views
 import ArticleList from '../views/ArticleList.vue'
 import ArticleEditor from '../views/ArticleEditor.vue'
+import CollectionList from '../views/CollectionList.vue'
 import UserList from '../views/UserList.vue'
 import BannerList from '../views/BannerList.vue'
 import AdvertList from '../views/AdvertList.vue'
@@ -33,7 +34,7 @@ const routes = [
                 meta: { title: 'Home' }
             },
             {
-                path: 'article/:id',
+                path: 'article/:sn',
                 name: 'ArticleDetail',
                 component: ArticleDetail,
                 meta: { title: 'Article Detail' }
@@ -66,13 +67,19 @@ const routes = [
                 meta: { title: 'Article Management', requiresAuth: true, role: 2 }
             },
             {
+                path: 'collections',
+                name: 'AdminCollections',
+                component: CollectionList,
+                meta: { title: 'My Collections', requiresAuth: true, role: 2 }
+            },
+            {
                 path: 'create',
                 name: 'AdminArticleCreate',
                 component: ArticleEditor,
                 meta: { title: 'New Article', requiresAuth: true, role: 2 }
             },
             {
-                path: 'edit/:id',
+                path: 'edit/:sn',
                 name: 'AdminArticleEdit',
                 component: ArticleEditor,
                 meta: { title: 'Edit Article', requiresAuth: true, role: 2 }

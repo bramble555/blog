@@ -5,9 +5,9 @@
     <div v-loading="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       <div 
         v-for="article in articles" 
-        :key="article.id"
+        :key="article.sn"
         class="group bg-vscode-sidebar rounded-2xl border border-vscode-border overflow-hidden hover:scale-[1.02] transition-all cursor-pointer shadow-lg hover:shadow-vscode-primary/10"
-        @click="$router.push(`/article/${article.id}`)"
+        @click="$router.push(`/article/${article.sn}`)"
       >
         <div class="aspect-video overflow-hidden">
           <el-image 

@@ -16,7 +16,7 @@ func validateListParams(c *gin.Context) (*model.ParamList, error) {
 	// 绑定查询参数
 	err := c.ShouldBindQuery(pl)
 	if err != nil {
-		global.Log.Errorf("controller  ShouldBindQuery err:%s\n", err.Error())
+		global.Log.Errorf("controller validateListParams ShouldBindQuery err:%s\n", err.Error())
 		return pl, err
 	}
 

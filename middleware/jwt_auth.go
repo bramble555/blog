@@ -61,13 +61,32 @@ func JWTAdminMiddleware() func(c *gin.Context) {
 			c.Abort()
 			return
 		}
-		if claims.Role != uint(ctype.PermissionAdmin) {
+		if claims.Role != int64(ctype.PermissionAdmin) {
 			controller.ResponseErrorWithData(c, controller.CodeInvalidAuth, "您不是管理员身份")
 			c.Abort()
 			return
 		}
 		// 将当前请求的userID信息保存到请求的上下文c上
 		c.Set("claims", claims)
+		c.Next()
+	}
+}
+
+// JWTOptionalMiddleware 可选登录认证
+func JWTOptionalMiddleware() func(c *gin.Context) {
+	return func(c *gin.Context) {
+		authHeader := c.Request.Header.Get("token")
+		if authHeader != "" {
+			ok := redis.CheckLogout(authHeader)
+			if !ok {
+				// 解析 token
+				claims, err := pkg.ParseToken(authHeader)
+				if err == nil {
+					// 将当前请求的userID信息保存到请求的上下文c上
+					c.Set("claims", claims)
+				}
+			}
+		}
 		c.Next()
 	}
 }

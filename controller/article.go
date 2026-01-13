@@ -40,7 +40,7 @@ func GetArticlesListHandler(c *gin.Context) {
 	paq := new(model.ParamArticleQuery)
 	err := c.ShouldBindQuery(paq)
 	if err != nil {
-		global.Log.Errorf("ShouldBindQuery err:%s\n", err.Error())
+		global.Log.Errorf("controller GetArticlesListHandler ShouldBindQuery err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
@@ -53,20 +53,36 @@ func GetArticlesListHandler(c *gin.Context) {
 	if paq.Size <= 0 {
 		paq.Size = 10
 	}
+
+	var uSN int64
+	_claims, exists := c.Get("claims")
+	if exists {
+		claims := _claims.(*pkg.MyClaims)
+		uSN = claims.SN
+	}
+
 	queryService := logic.GetArticlesListByParam()
 
 	// 使用返回的查询服务获取文章列表
-	data, err := queryService.GetArticlesListByParam(paq)
+	data, err := queryService.GetArticlesListByParam(paq, uSN)
 	if err != nil {
+		global.Log.Errorf("controller GetArticlesListHandler queryService.GetArticlesListByParam err:%s\n", err.Error())
 		ResponseError(c, CodeServerBusy)
 		return
 	}
 	ResponseSucceed(c, data)
 }
 func GetArticlesDetailHandler(c *gin.Context) {
-	id := c.Param("id")
-	data, err := logic.GetArticlesDetail(id)
+	sn := c.Param("sn")
+	var uSN int64
+	_claims, exists := c.Get("claims")
+	if exists {
+		claims := _claims.(*pkg.MyClaims)
+		uSN = claims.SN
+	}
+	data, err := logic.GetArticlesDetail(sn, uSN)
 	if err != nil {
+		global.Log.Errorf("controller GetArticlesDetailHandler logic.GetArticlesDetail err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
@@ -76,6 +92,7 @@ func GetArticlesDetailHandler(c *gin.Context) {
 func GetArticlesCalendarHandler(c *gin.Context) {
 	data, err := logic.GetArticlesCalendar()
 	if err != nil {
+		global.Log.Errorf("controller GetArticlesCalendarHandler logic.GetArticlesCalendar err:%s\n", err.Error())
 		ResponseError(c, CodeServerBusy)
 		return
 	}
@@ -84,11 +101,13 @@ func GetArticlesCalendarHandler(c *gin.Context) {
 func GetArticlesTagsListHandler(c *gin.Context) {
 	pl, err := validateListParams(c)
 	if err != nil {
+		global.Log.Errorf("controller GetArticlesTagsListHandler validateListParams err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
 	data, err := logic.GetArticlesTagsList(pl)
 	if err != nil {
+		global.Log.Errorf("controller GetArticlesTagsListHandler logic.GetArticlesTagsList err:%s\n", err.Error())
 		ResponseError(c, CodeServerBusy)
 		return
 	}
@@ -96,22 +115,23 @@ func GetArticlesTagsListHandler(c *gin.Context) {
 }
 func UpdateArticlesHandler(c *gin.Context) {
 	// http://localhost:8080/articles/1
-	articleID := c.Param("id")
-	// 将 articleID 转换为整型
-	id, err := strconv.Atoi(articleID)
+	articleSN := c.Param("sn")
+	// 将 articleSN 转换为整型
+	sn, err := strconv.ParseInt(articleSN, 10, 64)
 	if err != nil {
-		global.Log.Errorf("id 有误 err:%s\n", err.Error())
+		global.Log.Errorf("controller UpdateArticlesHandler strconv.ParseInt err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidID)
 		return
 	}
 	uf := make(map[string]any)
 	if err := c.ShouldBindJSON(&uf); err != nil {
-		global.Log.Errorf("ShouldBindJSON err:%s\n", err.Error())
+		global.Log.Errorf("controller UpdateArticlesHandler ShouldBindJSON err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
-	data, err := logic.UpdateArticles(uint(id), uf)
+	data, err := logic.UpdateArticles(int64(sn), uf)
 	if err != nil {
+		global.Log.Errorf("controller UpdateArticlesHandler logic.UpdateArticles err:%s\n", err.Error())
 		ResponseErrorWithData(c, CodeServerBusy, err.Error())
 		return
 	}
@@ -121,13 +141,14 @@ func DeleteArticlesListHandler(c *gin.Context) {
 	var pdl model.ParamDeleteList
 	err := c.ShouldBindJSON(&pdl)
 	if err != nil {
-		global.Log.Errorf("DeleteArticlesListHandler ShouldBindQuery err:%s\n", err.Error())
+		global.Log.Errorf("controller DeleteArticlesListHandler ShouldBindJSON err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
 	var data string
 	data, err = logic.DeleteArticlesList(&pdl)
 	if err != nil {
+		global.Log.Errorf("controller DeleteArticlesListHandler logic.DeleteArticlesList err:%s\n", err.Error())
 		ResponseErrorWithData(c, CodeServerBusy, err.Error())
 		return
 	}
@@ -136,17 +157,18 @@ func DeleteArticlesListHandler(c *gin.Context) {
 func PostArticleCollectHandler(c *gin.Context) {
 	_claims, _ := c.Get("claims")
 	claims := _claims.(*pkg.MyClaims)
-	uID := claims.ID
-	pi := model.ParamID{}
-	err := c.ShouldBindJSON(&pi)
+	uSN := claims.SN
+	psn := model.ParamSN{}
+	err := c.ShouldBindJSON(&psn)
 	if err != nil {
-		global.Log.Errorf("ShouldBindJSON err%s\n", err.Error())
+		global.Log.Errorf("controller PostArticleCollectHandler ShouldBindJSON err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
 	var data string
-	data, err = logic.PostArticleCollect(uID, pi.ID)
+	data, err = logic.PostArticleCollect(uSN, psn.SN)
 	if err != nil {
+		global.Log.Errorf("controller PostArticleCollectHandler logic.PostArticleCollect err:%s\n", err.Error())
 		ResponseError(c, CodeServerBusy)
 		return
 	}
@@ -155,9 +177,10 @@ func PostArticleCollectHandler(c *gin.Context) {
 func GetArticleCollectHandler(c *gin.Context) {
 	_claims, _ := c.Get("claims")
 	claims := _claims.(*pkg.MyClaims)
-	uID := claims.ID
-	data, err := logic.GetArticleCollect(uID)
+	uSN := claims.SN
+	data, err := logic.GetArticleCollect(uSN)
 	if err != nil {
+		global.Log.Errorf("controller GetArticleCollectHandler logic.GetArticleCollect err:%s\n", err.Error())
 		ResponseError(c, CodeServerBusy)
 		return
 	}
@@ -166,17 +189,18 @@ func GetArticleCollectHandler(c *gin.Context) {
 func DeleteArticleCollectHandler(c *gin.Context) {
 	_claims, _ := c.Get("claims")
 	claims := _claims.(*pkg.MyClaims)
-	uID := claims.ID
+	uSN := claims.SN
 	var pdl model.ParamDeleteList
 	err := c.ShouldBindJSON(&pdl)
 	if err != nil {
-		global.Log.Errorf("DeleteArticleCollectHandler ShouldBindQuery err:%s\n", err.Error())
+		global.Log.Errorf("controller DeleteArticleCollectHandler ShouldBindJSON err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
 	var data string
-	data, err = logic.DeleteArticleCollect(uID, &pdl)
+	data, err = logic.DeleteArticleCollect(uSN, &pdl)
 	if err != nil {
+		global.Log.Errorf("controller DeleteArticleCollectHandler logic.DeleteArticleCollect err:%s\n", err.Error())
 		ResponseErrorWithData(c, CodeServerBusy, err.Error())
 		return
 	}

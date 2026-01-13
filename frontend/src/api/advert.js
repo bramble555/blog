@@ -8,6 +8,6 @@ export const createAdvert = (data) => {
     return service.post('/adverts', data);
 };
 
-export const deleteAdverts = (idList) => {
-    return service.delete('/adverts', { data: { id_list: idList } });
+export const deleteAdverts = (snList) => {
+    return service.delete('/adverts', { data: { sn_list: snList } });
 };

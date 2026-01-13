@@ -7,7 +7,7 @@ import (
 )
 
 type ChatModel struct {
-	*MODEL
+	MODEL
 	NickName string        `json:"nick_name"`
 	Avatar   string        `json:"avatar"`
 	Content  string        `json:"content" binding:"required"`

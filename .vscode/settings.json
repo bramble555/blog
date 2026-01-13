@@ -1,0 +1,22 @@
+{
+      "editor.fontSize": 18,
+      "window.zoomLevel": 0.8, // 稍微整体放大界面
+      "workbench.tree.indent": 16, // 让层级更明显
+      "workbench.iconTheme": "file-icons-colourless",
+      "cSpell.customDictionaries": {},
+      "workbench.colorTheme": "Moonlight II",
+      "go.toolsManagement.autoUpdate": true,
+      "editor.minimap.size": "fit",
+      "editor.minimap.showSlider": "always",
+      "editor.minimap.enabled": false,
+      "files.autoSave": "onWindowChange",
+      "trae.enableCodelens": {
+            "enableInlineDocumentation": false,
+            "enableInlineExplain": false
+      },
+      "workbench.tree.renderIndentGuides": "always",
+      "workbench.colorCustomizations": {
+            "tree.indentGuidesStroke": "#ef050d"
+      },
+      "explorer.confirmDelete": false,
+}

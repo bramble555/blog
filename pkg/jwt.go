@@ -9,8 +9,8 @@ import (
 )
 
 type MyClaims struct {
-	ID                 uint   `json:"id"`
-	Role               uint   `json:"role"`
+	SN                 int64  `json:"sn,string"` // Snowflake ID
+	Role               int64  `json:"role"`
 	Username           string `json:"user_name"`
 	jwt.StandardClaims        // 嵌入 jwt.StandardClaims
 }
@@ -19,10 +19,10 @@ type MyClaims struct {
 // 因为函数执行顺序是 包级变量  函数
 
 // GenToken 生成JWT
-func GenToken(id uint, role uint, username string) (string, error) {
+func GenToken(sn int64, role int64, username string) (string, error) {
 	// 创建一个我们自己的声明
 	claims := MyClaims{
-		ID:       id, // 自定义字段
+		SN:       sn, // 自定义字段
 		Role:     role,
 		Username: username,
 		StandardClaims: jwt.StandardClaims{ // 明确指定字段名

@@ -8,10 +8,10 @@ export const createComment = (data) => {
     return service.post('/comments', data);
 };
 
-export const deleteComment = (id) => {
-    return service.delete('/comments', { data: { id: id } });
+export const deleteComment = (sn) => {
+    return service.delete('/comments', { data: { sn: sn } });
 };
 
-export const digComment = (id) => {
-    return service.post('/comments/digg', { id });
+export const digComment = (sn) => {
+    return service.post('/comments/digg', { sn: sn });
 };

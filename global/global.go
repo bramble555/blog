@@ -2,7 +2,7 @@ package global
 
 import (
 	config "github.com/bramble555/blog/conf"
-	"github.com/olivere/elastic/v7"
+	"github.com/bramble555/blog/pkg/snow"
 
 	"github.com/go-redis/redis"
 	"github.com/sirupsen/logrus"
@@ -11,10 +11,10 @@ import (
 )
 
 var (
-	Config   *config.Config // 配置文件
-	DB       *gorm.DB       // 数据库文件
-	Log      *logrus.Logger // 日志文件
-	MysqlLog logger.Interface
-	Redis    *redis.Client
-	ES       *elastic.Client
+	Config    *config.Config // 配置文件
+	DB        *gorm.DB       // 数据库文件
+	Log       *logrus.Logger // 日志文件
+	MysqlLog  logger.Interface
+	Redis     *redis.Client
+	Snowflake *snow.Snowflake
 )

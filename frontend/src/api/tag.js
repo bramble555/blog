@@ -8,6 +8,6 @@ export const createTag = (data) => {
     return service.post('/tags', data);
 };
 
-export const deleteTags = (idList) => {
-    return service.delete('/tags', { data: { id_list: idList } });
+export const deleteTags = (snList) => {
+    return service.delete('/tags', { data: { sn_list: snList } });
 };

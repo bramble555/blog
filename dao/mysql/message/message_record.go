@@ -5,20 +5,27 @@ import (
 	"github.com/bramble555/blog/model"
 )
 
-func MessageRecord(myID, recordID uint) ([]model.MessageModel, error) {
-	// 查询之后的 _messageList 列表，然后需要分组进行返回
-	var _messageList []model.MessageModel
-	var messageList = make([]model.MessageModel, 0)
-	// 先查找与自己相关联的聊天记录，然后分组,然后再寻找 recordID
-	err := global.DB.Order("create_time asc").Find(&_messageList, "send_user_id = ? or rev_user_id = ?", myID, myID).Error
+func MessageRecord(userSN int64, revUserSN int64) ([]model.MessageModel, error) {
+	var messageList []model.MessageModel
+	// 查找所有与自己和对方相关的消息
+	err := global.DB.Order("create_time asc").
+		Find(&messageList, "send_user_sn = ? and rev_user_sn = ? or send_user_sn = ? and rev_user_sn = ?",
+			userSN, revUserSN, revUserSN, userSN).Error
 	if err != nil {
-		global.Log.Errorf("message MessageRecord err:%s\n", err.Error())
 		return nil, err
 	}
-	for _, model := range _messageList {
-		if model.RevUserID == recordID || model.SendUserID == recordID {
-			messageList = append(messageList, model)
+	// 标记对方发给自己的消息为已读
+	var sns []int64
+	for _, m := range messageList {
+		// 只有接收者是自己的时候，才标记为已读
+		if m.RevUserSN == userSN {
+			sns = append(sns, m.SN)
 		}
 	}
+	// 批量更新已读状态
+	if len(sns) > 0 {
+		global.DB.Model(&model.MessageModel{}).Where("sn IN ?", sns).Update("is_read", true)
+	}
+
 	return messageList, nil
 }

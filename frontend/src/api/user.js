@@ -12,8 +12,8 @@ export const updateUserPassword = (data) => {
     return service.put('/user_password', data);
 };
 
-export const deleteUsers = (idList) => {
-    return service.delete('/users', { data: { id_list: idList } });
+export const deleteUsers = (snList) => {
+    return service.delete('/users', { data: { sn_list: snList } });
 };
 
 export const login = (data) => {

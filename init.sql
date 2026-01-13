@@ -1,142 +1,157 @@
 
 CREATE DATABASE IF NOT EXISTS gvb;
-
 USE gvb;
 
-
+-- 1. 图片/横幅表
 CREATE TABLE IF NOT EXISTS banner_models (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键',
-    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    hash VARCHAR(32) COMMENT 'Hash 值',
-    name VARCHAR(100) COMMENT '文件名',
-    image_type TINYINT(1) DEFAULT 1 COMMENT '图片类型,默认是本地',
-    CHECK (image_type IN (1, 2))
-) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    sn BIGINT NOT NULL UNIQUE COMMENT '外部暴露ID',
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    hash VARCHAR(32),
+    name VARCHAR(100),
+    image_type TINYINT(1) DEFAULT 1 COMMENT '1:本地 2:对象存储',
+    UNIQUE KEY `idx_sn` (`sn`)
+) ENGINE = INNODB DEFAULT CHARSET = utf8mb4;
 
--- DROP TABLE banner_models;
-
+-- 2. 广告表
 CREATE TABLE IF NOT EXISTS advert_models (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键',
-    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    title VARCHAR(50) NOT NULL UNIQUE COMMENT '标题',
-    href VARCHAR(200) NOT NULL COMMENT '链接',
-    images VARCHAR(200) NOT NULL COMMENT '图片',
-    is_show TINYINT(1) DEFAULT 1 COMMENT '是否显示,1为是,0为否',
-    UNIQUE KEY `idx_title` ( `title` ) USING BTREE
-) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    sn BIGINT NOT NULL UNIQUE,
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    title VARCHAR(50) NOT NULL UNIQUE,
+    href VARCHAR(200) NOT NULL,
+    images VARCHAR(200) NOT NULL,
+    is_show TINYINT(1) DEFAULT 1,
+    UNIQUE KEY `idx_sn` (`sn`)
+) ENGINE = INNODB DEFAULT CHARSET = utf8mb4;
 
--- ALTER TABLE advert_models ADD CONSTRAINT idx_title UNIQUE (title);
-
+-- 3. 用户表
 CREATE TABLE IF NOT EXISTS user_models (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '用户ID',
-    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    username VARCHAR(36) NOT NULL UNIQUE COMMENT '用户名，唯一标识',
-    password VARCHAR(72) NOT NULL COMMENT '用户密码',
-    avatar VARCHAR(256) COMMENT '用户头像URL',
-    email VARCHAR(128) NULL COMMENT '用户邮箱',
-    phone VARCHAR(18) NULL COMMENT '用户电话', 
-    addr VARCHAR(64) NULL COMMENT '用户地址',
-    token VARCHAR(64) NULL COMMENT '用户身份令牌',
-    ip VARCHAR(20) DEFAULT '127.0.0.1' COMMENT '用户最后登录IP',
-    role SMALLINT(1) DEFAULT 1 COMMENT '用户角色,默认值为1',
-    sign_status SMALLINT(1) COMMENT '用户签到状态',
-    article_id BIGINT COMMENT '文章ID',
-    collect_id BIGINT COMMENT '收藏文章ID',
-    UNIQUE KEY `idx_username` (`username`) USING BTREE
-) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    sn BIGINT NOT NULL UNIQUE,
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    username VARCHAR(36) NOT NULL UNIQUE,
+    password VARCHAR(72) NOT NULL,
+    avatar VARCHAR(256),
+    email VARCHAR(128),
+    phone VARCHAR(18), 
+    addr VARCHAR(64),
+    token VARCHAR(64),
+    ip VARCHAR(20) DEFAULT '127.0.0.1',
+    role SMALLINT(1) DEFAULT 2 COMMENT '1:管理员 2:普通用户',
+    UNIQUE KEY `idx_sn` (`sn`)
+) ENGINE = INNODB DEFAULT CHARSET = utf8mb4;
 
+-- 4. 文章表
 CREATE TABLE IF NOT EXISTS article_models (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '文章ID',
-    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    title VARCHAR(255) NOT NULL UNIQUE COMMENT '文章标题',
-    abstract TEXT NOT NULL COMMENT '文章简介',
-    content TEXT NOT NULL COMMENT '文章内容',
-    look_count INT DEFAULT 0 COMMENT '浏览量',
-    comment_count INT DEFAULT 0 COMMENT '评论量',
-    digg_count INT DEFAULT 0 COMMENT '点赞量',
-    collects_count INT DEFAULT 0 COMMENT '收藏量',
-    category VARCHAR(20) NOT NULL COMMENT '文章分类',
-    source VARCHAR(255) COMMENT '文章来源',
-    link VARCHAR(255) COMMENT '原文链接',
-    tags TEXT COMMENT '文章标签（以逗号分隔）',
-    banner_id BIGINT NOT NULL COMMENT '文章封面ID',
-    banner_url VARCHAR(255) COMMENT '封面图片链接',
-    user_id BIGINT NOT NULL COMMENT '用户ID',
-    username VARCHAR(255) COMMENT '用户名',
-    user_avatar VARCHAR(255) COMMENT '用户头像',
-    UNIQUE KEY `idx_title` ( `title` ) USING BTREE
-) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    sn BIGINT NOT NULL UNIQUE,
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    title VARCHAR(255) NOT NULL UNIQUE,
+    abstract TEXT NOT NULL,
+    content TEXT NOT NULL,
+    look_count INT DEFAULT 0,
+    comment_count INT DEFAULT 0,
+    digg_count INT DEFAULT 0,
+    collects_count INT DEFAULT 0,
+    category VARCHAR(20) NOT NULL,
+    source VARCHAR(255),
+    link VARCHAR(255),
+    tags TEXT,
+    banner_sn BIGINT NOT NULL COMMENT '对应banner_models的sn',
+    banner_url VARCHAR(255),
+    user_sn BIGINT NOT NULL COMMENT '对应user_models的sn',
+    username VARCHAR(255),
+    user_avatar VARCHAR(255),
+    UNIQUE KEY `idx_sn` (`sn`)
+) ENGINE = INNODB DEFAULT CHARSET = utf8mb4;
 
+-- 5. 评论表
 CREATE TABLE IF NOT EXISTS comment_models (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '评论ID',
-    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    content VARCHAR(256) NOT NULL COMMENT '评论内容',
-    digg_count INT DEFAULT 0 COMMENT '点赞数',
-    comment_count INT DEFAULT 0 COMMENT '子评论数量',
-    parent_comment_id BIGINT COMMENT '父级评论ID 根评论的父级评论为 -1',
-    article_id BIGINT NOT NULL COMMENT '文章ID',
-    user_id BIGINT NOT NULL COMMENT '评论的用户ID'
-) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    sn BIGINT NOT NULL UNIQUE,
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    content VARCHAR(256) NOT NULL,
+    digg_count INT DEFAULT 0,
+    comment_count INT DEFAULT 0,
+    parent_comment_sn BIGINT COMMENT '对应自身的sn',
+    article_sn BIGINT NOT NULL COMMENT '对应article_models的sn',
+    user_sn BIGINT NOT NULL COMMENT '对应user_models的sn',
+    UNIQUE KEY `idx_sn` (`sn`)
+) ENGINE = INNODB DEFAULT CHARSET = utf8mb4;
+
+-- 6. 消息表
 CREATE TABLE IF NOT EXISTS message_models (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '消息 ID',
-    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    send_user_id BIGINT NOT NULL COMMENT '发送人 ID',
-    send_username VARCHAR(100) COMMENT '发送人用户名',
-    send_user_avatar VARCHAR(255) COMMENT '发送人头像',
-    rev_user_id BIGINT NOT NULL COMMENT '接收人 ID',
-    rev_username VARCHAR(100) COMMENT '接收人用户名',
-    rev_user_avatar VARCHAR(255) COMMENT '接收人头像',
-    is_read BOOLEAN DEFAULT FALSE COMMENT '接收方是否查看',
-    content TEXT COMMENT '消息内容'
-) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    sn BIGINT NOT NULL UNIQUE,
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    send_user_sn BIGINT NOT NULL,
+    send_username VARCHAR(100),
+    send_user_avatar VARCHAR(255),
+    rev_user_sn BIGINT NOT NULL,
+    rev_username VARCHAR(100),
+    rev_user_avatar VARCHAR(255),
+    is_read BOOLEAN DEFAULT FALSE,
+    content TEXT,
+    UNIQUE KEY `idx_sn` (`sn`)
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 
+-- 7. 标签表
 CREATE TABLE IF NOT EXISTS tag_models (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '标签 ID',
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    sn BIGINT NOT NULL UNIQUE,
     title VARCHAR(100) NOT NULL,
-    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    INDEX idx_title (title) -- 为 title 字段创建索引
-) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY `idx_sn` (`sn`),
+    INDEX idx_title (title)
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 
+-- 8. 文章-标签关联表（关联表建议直接记录 sn 以简化逻辑）
 CREATE TABLE IF NOT EXISTS article_tag_models (
-    article_id BIGINT NOT NULL COMMENT "文章 ID",
-    article_title VARCHAR(255) NOT NULL  COMMENT '文章主题',
-    tag_title VARCHAR(255) NOT NULL  COMMENT '标签名字',
-    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    PRIMARY KEY (article_title, tag_title) COMMENT '复合主键，确保每一对 (article_title, tag_title) 是唯一的'
-)ENGINE=INNODB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+    article_sn BIGINT NOT NULL,
+    tag_title VARCHAR(100) NOT NULL,
+    article_title VARCHAR(255) NOT NULL,
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (article_sn, tag_title)
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 
+-- 9. 用户收藏表
 CREATE TABLE IF NOT EXISTS user_collect_models (
-    user_id BIGINT NOT NULL COMMENT '用户 ID',
-    article_id BIGINT NOT NULL COMMENT '文章 ID',
-    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    PRIMARY KEY (user_id, article_id) COMMENT '复合主键，确保每个用户和每篇文章的收藏记录是唯一的'
-) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+    user_sn BIGINT NOT NULL,
+    article_sn BIGINT NOT NULL,
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_sn, article_sn)
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 
+-- 10. 聊天记录表
 CREATE TABLE IF NOT EXISTS chat_models (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '聊天记录ID',
-    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    nick_name VARCHAR(64) NOT NULL COMMENT '用户昵称',
-    avatar VARCHAR(256) COMMENT '用户头像URL',
-    content TEXT NOT NULL COMMENT '聊天内容',
-    ip VARCHAR(20)  COMMENT '用户IP地址',
-    addr VARCHAR(64) COMMENT '用户地址',
-    msg_type TINYINT NOT NULL COMMENT '消息类型'
-) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    sn BIGINT NOT NULL UNIQUE,
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    nick_name VARCHAR(64) NOT NULL,
+    avatar VARCHAR(256),
+    content TEXT NOT NULL,
+    ip VARCHAR(20),
+    addr VARCHAR(64),
+    msg_type TINYINT NOT NULL,
+    UNIQUE KEY `idx_sn` (`sn`)
+) ENGINE = INNODB DEFAULT CHARSET = utf8mb4;
 
+-- 11. 登录记录表
 CREATE TABLE IF NOT EXISTS login_models (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键',
-    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    username VARCHAR(36) NOT NULL UNIQUE COMMENT '用户名，唯一标识',
-    UNIQUE KEY `idx_username` (`username`) USING BTREE
-) ENGINE = INNODB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    sn BIGINT NOT NULL UNIQUE,
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    username VARCHAR(36) NOT NULL,
+    UNIQUE KEY `idx_sn` (`sn`)
+) ENGINE = INNODB DEFAULT CHARSET = utf8mb4;
+

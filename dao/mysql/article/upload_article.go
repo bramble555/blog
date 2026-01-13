@@ -25,16 +25,16 @@ func UploadArticles(am *model.ArticleModel) (string, error) {
 		return "", tx.Error
 	}
 
-	now := time.Now()
-	// 定义时间格式
-	layout := "2006-01-02 15:04:05"
-	// 将当前时间格式化为字符串
-	tStr := now.Format(layout)
+	// 生成 SN
+	am.SN = global.Snowflake.GetID()
 
-	// 创建一个 ArticleModel 实例并赋值
+	now := time.Now()
 	err := tx.Create(&model.ArticleModel{
-		CreateTime:    tStr,
-		UpdateTime:    tStr,
+		MODEL: model.MODEL{
+			SN:         am.SN,
+			CreateTime: now,
+			UpdateTime: now,
+		},
 		Title:         am.Title,
 		Abstract:      am.Abstract,
 		Content:       am.Content,
@@ -46,9 +46,9 @@ func UploadArticles(am *model.ArticleModel) (string, error) {
 		Source:        am.Source,
 		Link:          am.Link,
 		Tags:          am.Tags,
-		BannerID:      am.BannerID,
+		BannerSN:      am.BannerSN,
 		BannerUrl:     am.BannerUrl,
-		UserID:        am.UserID,
+		UserSN:        am.UserSN,
 		Username:      am.Username,
 		UserAvatar:    am.UserAvatar,
 	}).Error
@@ -57,14 +57,7 @@ func UploadArticles(am *model.ArticleModel) (string, error) {
 		global.Log.Errorf("article  UploadArticles err:%s\n", err.Error())
 		return "", err
 	}
-	// 获取插入后的 ID（如果自动填充失败）
-	var lastInsertID uint
-	err = tx.Raw("SELECT LAST_INSERT_ID()").Scan(&lastInsertID).Error
-	if err != nil {
-		tx.Rollback()
-		global.Log.Errorf("Failed to get last insert ID: %s", err.Error())
-		return "", err
-	}
+
 	tagsStrList := []string(am.Tags)
 	n := len(am.Tags)
 	if n == 0 {
@@ -75,7 +68,7 @@ func UploadArticles(am *model.ArticleModel) (string, error) {
 	for i := range tagsStrList {
 		err = tx.Table("article_tag_models").
 			Create(&model.ArticleTagModel{
-				ArticleID:    lastInsertID,
+				ArticleSN:    am.SN, // 使用生成的 SN
 				ArticleTitle: am.Title,
 				TagTitle:     tagsStrList[i],
 			}).Error

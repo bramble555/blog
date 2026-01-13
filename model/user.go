@@ -7,7 +7,7 @@ import (
 )
 
 type UserModel struct {
-	*MODEL
+	MODEL
 	Username   string           `json:"username"`
 	PassWord   string           `json:"-"`
 	Avatar     string           `json:"avatar"`
@@ -18,13 +18,14 @@ type UserModel struct {
 	IP         string           `json:"ip"`
 	Role       ctype.Role       `json:"role"` //角色权限
 	SignStatus ctype.SignStatus `json:"sign_status"`
-	ArticleID  uint             `json:"artcile_id"` //发布的文章
-	CollectID  uint             `json:"collect_id"`
+	ArticleSN  int64            `json:"article_sn"` //发布的文章
+	CollectSN  int64            `json:"collect_sn"`
 }
 type ParamFlagUser struct {
+	SN       int64  `json:"sn"`
 	Username string `json:"username"`
 	Password string `json:"password"`
-	Role     uint   `json:"role"`
+	Role     int64  `json:"role"`
 	Avatar   string `json:"avatar"`
 }
 type ParamUsername struct {
@@ -36,7 +37,7 @@ type ParamBindEmail struct {
 	Code  *string `json:"code"`
 }
 type ParamUpdateUserRole struct {
-	UserID uint       `json:"user_id,string"`
+	UserSN int64      `json:"user_sn,string"`
 	Role   ctype.Role `json:"role"`
 }
 type ParamUpdateUserPwd struct {
@@ -44,19 +45,19 @@ type ParamUpdateUserPwd struct {
 	Pwd    string `json:"pwd"`
 }
 type UserDetail struct {
-	ID       uint   `json:"user_id,string"`
+	SN       int64  `json:"user_sn,string"`
 	Username string `json:"username"`
 	Avatar   string `json:"avatar"`
 	Email    string `json:"-"`
 }
 type DailyLoginCount struct {
 	LoginDate  time.Time `json:"login_date"`  // 登录日期
-	LoginCount int       `json:"login_count"` // 登录次数
+	LoginCount int64     `json:"login_count"` // 登录次数
 }
 
-// 返回响应
-// type ResponseUserLogin struct {
-// 	Token    string
-// 	UserName string
-// 	Role     int
-// }
+type ResponseLogin struct {
+	Token    string `json:"token"`
+	SN       int64  `json:"sn,string"` // Snowflake ID as string
+	Username string `json:"username"`
+	Role     int64  `json:"role"`
+}

@@ -13,13 +13,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/bramble555/blog/dao/es"
 	dao_mysql "github.com/bramble555/blog/dao/mysql"
 	"github.com/bramble555/blog/dao/redis"
 	"github.com/bramble555/blog/flag"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/logger"
-	"github.com/bramble555/blog/model"
+	"github.com/bramble555/blog/pkg/snow"
 	"github.com/bramble555/blog/router"
 	"github.com/bramble555/blog/setting"
 	_ "github.com/go-sql-driver/mysql"
@@ -91,22 +90,9 @@ func main() {
 		global.Log.Printf("Init redis failed, err:%v\n", err)
 		return
 	}
-	// 初始化 ES
-	if global.Config.ES.Enable {
-		global.ES, err = es.Init()
-		if err != nil {
-			global.Log.Errorf("es init err:%s\n", err.Error())
-			return
-		}
-		// 创建文章索引
-		a := model.ArticleModel{}
-		err = a.CreateIndex()
-		if err != nil {
-			global.Log.Errorf("es index init err:%s\n", err.Error())
-			return
-		}
-		// a.DeleteIndex()
-	}
+
+	// 初始化雪花算法
+	global.Snowflake = snow.Init()
 
 	// 解析命令行参数
 	op := flag.FlagUserParse()

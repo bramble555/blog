@@ -21,20 +21,20 @@ func CheckUserExistByName(name string) (bool, error) {
 	}
 	return count == 1, nil
 }
-func CheckUserExistByID(id uint) (bool, error) {
+func CheckUserExistBySN(sn int64) (bool, error) {
 	var count int64
-	err := global.DB.Table("user_models").Where("id = ?", id).Count(&count).Error
+	err := global.DB.Table("user_models").Where("sn = ?", sn).Count(&count).Error
 	if err != nil {
-		global.Log.Errorf("user CheckUserExistByID err:%s\n", err.Error())
+		global.Log.Errorf("user CheckUserExistBySN err:%s\n", err.Error())
 		return false, err
 	}
 	return count == 1, nil
 }
 
-// CheckPwdExistByID 传入 ID，检查密码是否正确
-func CheckPwdExistByID(id uint, pwd string) (bool, error) {
+// CheckPwdExistBySN 传入 SN，检查密码是否正确
+func CheckPwdExistBySN(sn int64, pwd string) (bool, error) {
 	var encryPassword string
-	err := global.DB.Table("user_models").Where("id = ?", id).
+	err := global.DB.Table("user_models").Where("sn = ?", sn).
 		Select("password").Scan(&encryPassword).Error
 	if err != nil {
 		global.Log.Errorf("user QueryPassword err: %v\n", err)
@@ -70,26 +70,31 @@ func QueryPasswordByUsername(peu *model.ParamUsername) (bool, error) {
 	}
 	return true, nil
 }
-func GetToken(peu *model.ParamUsername) (string, error) {
+func GetToken(peu *model.ParamUsername) (model.ResponseLogin, error) {
 	type paramUserDetail struct {
-		ID       uint // 改为大写 否则不能 Scan 到
+		SN       int64 // Snowflake ID
 		Username string
-		Role     uint // 改为大写
+		Role     int64
 	}
 	var udd paramUserDetail
 
 	err := global.DB.Table("user_models").Where("username = ?", peu.Username).
-		Select("id,username,role").Scan(&udd).Error
+		Select("sn,username,role").Scan(&udd).Error
 	if err != nil {
 		global.Log.Errorf("user GetToken select err:%s\n", err.Error())
-		return "", err
+		return model.ResponseLogin{}, err
 	}
-	token, err := pkg.GenToken(udd.ID, udd.Role, udd.Username)
+	token, err := pkg.GenToken(udd.SN, udd.Role, udd.Username)
 	if err != nil {
 		global.Log.Errorf("pkg GetToken err:%s\n", err.Error())
-		return "", err
+		return model.ResponseLogin{}, err
 	}
-	return token, nil
+	return model.ResponseLogin{
+		Token:    token,
+		SN:       udd.SN, // Return Snowflake ID
+		Username: udd.Username,
+		Role:     udd.Role,
+	}, nil
 }
 func PostLogin(username string) error {
 	type data struct {
@@ -131,7 +136,7 @@ func GetUserLoginData() ([]model.DailyLoginCount, error) {
 	for _, result := range queryResults {
 		dateStr := result.LoginDate.Format("2006-01-02") // 转换时间为字符串
 		if _, exists := dates[dateStr]; exists {
-			dates[dateStr] = result.LoginCount
+			dates[dateStr] = int(result.LoginCount)
 		}
 	}
 
@@ -141,7 +146,7 @@ func GetUserLoginData() ([]model.DailyLoginCount, error) {
 		parsedDate, _ := time.Parse("2006-01-02", dateStr) // 转换字符串为 time.Time
 		finalResults = append(finalResults, model.DailyLoginCount{
 			LoginDate:  parsedDate,
-			LoginCount: count,
+			LoginCount: int64(count),
 		})
 	}
 

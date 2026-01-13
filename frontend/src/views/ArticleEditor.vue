@@ -77,7 +77,7 @@ import { getArticle, createArticle, updateArticle } from '../api/article'
 const route = useRoute()
 const router = useRouter()
 
-const isEdit = computed(() => !!route.params.id)
+const isEdit = computed(() => !!route.params.sn)
 const submitting = ref(false)
 const tagsInput = ref('')
 
@@ -94,7 +94,7 @@ onMounted(async () => {
   if (isEdit.value) {
     // Fetch article detail
     try {
-      const res = await getArticle(route.params.id)
+      const res = await getArticle(route.params.sn)
       if (res.data.code === 10000) {
         const d = res.data.data
         form.title = d.title
@@ -132,7 +132,7 @@ const submit = async () => {
     category: form.category,
     content: form.content,
     tags: tags,
-    banner_id: "1" // Default placeholder as string because backend uses json:"banner_id,string"
+    banner_sn: "1" // Default placeholder as string because backend uses json:"banner_sn,string"
   }
 
   try {
@@ -140,7 +140,7 @@ const submit = async () => {
     if (isEdit.value) {
       // Update
       // Using generic object map for PUT
-      res = await updateArticle(route.params.id, payload)
+      res = await updateArticle(route.params.sn, payload)
     } else {
       // Create
       // ParamArticle struct matches

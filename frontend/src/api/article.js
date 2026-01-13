@@ -4,26 +4,30 @@ export const getArticles = (params) => {
     return service.get('/articles', { params });
 };
 
-export const getArticle = (id) => {
-    return service.get(`/articles/${id}`);
+export const getArticle = (sn) => {
+    return service.get(`/articles/${sn}`);
 };
 
 export const createArticle = (data) => {
     return service.post('/articles', data);
 };
 
-export const updateArticle = (id, data) => {
-    return service.put(`/articles/${id}`, data);
+export const updateArticle = (sn, data) => {
+    return service.put(`/articles/${sn}`, data);
 };
 
-export const deleteArticles = (idList) => {
-    return service.delete('/articles', { data: { id_list: idList } });
+export const deleteArticles = (snList) => {
+    return service.delete('/articles', { data: { sn_list: snList } });
 };
 
-export const collectArticle = (id) => {
-    return service.post('/articles/collects', { id: String(id) });
+export const collectArticle = (sn) => {
+    return service.post('/articles/collects', { sn: String(sn) });
 };
 
-export const deleteCollectArticle = (idList) => {
-    return service.delete('/articles/collects', { data: { id_list: idList } });
+export const deleteCollectArticle = (snList) => {
+    return service.delete('/articles/collects', { data: { sn_list: snList } });
+};
+
+export const getCollects = () => {
+    return service.get('/articles/collects');
 };

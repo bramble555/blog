@@ -13,12 +13,13 @@ func CreateAdvertHandle(c *gin.Context) {
 	var ad model.AdvertModel
 	err := c.ShouldBindJSON(&ad)
 	if err != nil {
-		global.Log.Errorf("controller CreateAdvertHandle ShouldBindQuery err:%s\n", err.Error())
+		global.Log.Errorf("controller CreateAdvertHandle ShouldBindJSON err:%s\n", err.Error())
 		ResponseErrorWithData(c, CodeInvalidParam, err.Error())
 		return
 	}
 	data, err := logic.CreateAdvert(&ad)
 	if err != nil {
+		global.Log.Errorf("controller CreateAdvertHandle logic.CreateAdvert err:%s\n", err.Error())
 		ResponseErrorWithData(c, CodeServerBusy, err.Error())
 		return
 	}
@@ -29,7 +30,7 @@ func CreateAdvertHandle(c *gin.Context) {
 func GetAdvertListHandler(c *gin.Context) {
 	pl, err := validateListParams(c)
 	if err != nil {
-		global.Log.Errorf("controller GetAdvertListHandler err:%s\n", err.Error())
+		global.Log.Errorf("controller GetAdvertListHandler validateListParams err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
@@ -41,6 +42,7 @@ func GetAdvertListHandler(c *gin.Context) {
 	}
 	data, err := logic.GetAdvertList(pl, isShow)
 	if err != nil {
+		global.Log.Errorf("controller GetAdvertListHandler logic.GetAdvertList err:%s\n", err.Error())
 		ResponseError(c, CodeServerBusy)
 		return
 	}
@@ -51,13 +53,14 @@ func DeleteAdvertListHandler(c *gin.Context) {
 	var pdl model.ParamDeleteList
 	err := c.ShouldBindJSON(&pdl)
 	if err != nil {
-		global.Log.Errorf("DeleteAdvertListHandler ShouldBindQuery err:%s\n", err.Error())
+		global.Log.Errorf("controller DeleteAdvertListHandler ShouldBindJSON err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
 	var data string
 	data, err = logic.DeleteAdvertList(&pdl)
 	if err != nil {
+		global.Log.Errorf("controller DeleteAdvertListHandler logic.DeleteAdvertList err:%s\n", err.Error())
 		ResponseErrorWithData(c, CodeServerBusy, err.Error())
 		return
 	}

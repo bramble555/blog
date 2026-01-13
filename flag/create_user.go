@@ -30,10 +30,10 @@ func FlagUserParse() Option {
 }
 func CreateUser(op *Option) {
 	// 默认是用户
-	role := uint(ctype.PermissionUser)
+	role := int64(ctype.PermissionUser)
 	// 如果是超级用户，那就 改为超级用户
 	if op.Permission == "admin" {
-		role = uint(ctype.PermissionAdmin)
+		role = int64(ctype.PermissionAdmin)
 	}
 	if op.Permission != "admin" && op.Permission != "user" {
 		fmt.Println("-u 输入参数有误")

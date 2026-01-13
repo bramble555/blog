@@ -3,8 +3,8 @@ package model
 import "github.com/bramble555/blog/model/ctype"
 
 type LoginDataModel struct {
-	*MODEL
-	UserID    uint             `json:"user_id"`
+	MODEL
+	UserSN    int64            `json:"user_sn"`
 	IP        string           `json:"ip"` // 登录的 IP
 	NickName  string           `json:"nick_name"`
 	Token     string           `json:"token"`

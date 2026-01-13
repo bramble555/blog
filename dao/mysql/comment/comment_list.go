@@ -1,60 +1,61 @@
 package comment
 
 import (
-	"sync"
+	"errors"
 
 	"github.com/bramble555/blog/dao/mysql/user"
 	"github.com/bramble555/blog/dao/redis"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
+	"github.com/bramble555/blog/model/ctype"
 	"gorm.io/gorm"
 )
 
-var userMap map[uint]model.UserDetail
+var userMap map[int64]model.UserDetail // Changed to int64 for Snowflake IDs
 
 func GetArticleComments(pcl *model.ParamCommentList) ([]model.ResponseCommentList, error) {
-	// 查找与这篇文章所有相关用户的 IDList
-	idList := make([]uint, 0)
+	// 查找与这篇文章所有相关用户的 SNList
+	snList := make([]int64, 0)
 	err := global.DB.Table("comment_models").
-		Where("article_id = ?", pcl.ArticleID).
-		Pluck("user_id", &idList).Error // 使用 Pluck 只提取 user_id 字段
+		Where("article_sn = ?", pcl.ArticleSN).
+		Pluck("user_sn", &snList).Error // 使用 Pluck 只提取 user_sn 字段
 	if err != nil {
-		global.Log.Errorf("select idList err:%s\n", err.Error())
+		global.Log.Errorf("select snList err:%s\n", err.Error())
 		return []model.ResponseCommentList{}, err
 	}
 
-	// 去重 idList
-	uniqueIDList := make([]uint, 0)
-	idSet := make(map[uint]struct{}) // 使用 map 去重
-	for _, id := range idList {
-		if _, exists := idSet[id]; !exists {
-			idSet[id] = struct{}{}
-			uniqueIDList = append(uniqueIDList, id)
+	// 去重 snList
+	uniqueSNList := make([]int64, 0)
+	snSet := make(map[int64]struct{}) // 使用 map 去重
+	for _, sn := range snList {
+		if _, exists := snSet[sn]; !exists {
+			snSet[sn] = struct{}{}
+			uniqueSNList = append(uniqueSNList, sn)
 		}
 	}
-	// 查找去重后的 idList 用户信息列表
-	udl, err := user.GetUserDetailListByIDList(uniqueIDList)
+	// 查找去重后的 snList 用户信息列表
+	udl, err := user.GetUserDetailListBySNList(uniqueSNList)
 	if err != nil {
 		return []model.ResponseCommentList{}, err
 	}
 	// 存储起来，方便后面拼接数据
-	userMap = make(map[uint]model.UserDetail, len(*udl))
+	userMap = make(map[int64]model.UserDetail, len(*udl)) // Changed to int64 for Snowflake IDs
 	for _, ud := range *udl {
-		userMap[ud.ID] = ud
+		userMap[ud.SN] = ud
 	}
 	// 获取根评论
-	rootComments, err := GetRootComments(pcl.ArticleID)
+	rootComments, err := GetRootComments(pcl.ArticleSN)
 	if err != nil {
 		return nil, err
 	}
 	return rootComments, nil
 }
 
-func GetRootComments(articleID uint) ([]model.ResponseCommentList, error) {
+func GetRootComments(articleSN int64) ([]model.ResponseCommentList, error) {
 	// 查找根评论
 	var rootComments []model.CommentModel
 	err := global.DB.Table("comment_models").
-		Where("article_id = ? AND parent_comment_id = -1", articleID).
+		Where("article_sn = ? AND parent_comment_sn = -1", articleSN).
 		Order("create_time ASC"). // 按创建时间排序
 		Find(&rootComments).Error
 	if err != nil {
@@ -66,9 +67,9 @@ func GetRootComments(articleID uint) ([]model.ResponseCommentList, error) {
 	responseCommentsList := make([]model.ResponseCommentList, 0, len(rootComments))
 	for _, comment := range rootComments {
 		// 查找用户详情，直接通过评论中的 UserID 获取
-		userDetail := userMap[comment.UserID]
+		userDetail := userMap[comment.UserSN]
 		// 递归获取子评论
-		subComments, err := getSubComments(comment.ID, articleID)
+		subComments, err := getSubComments(comment.SN, articleSN)
 		if err != nil {
 			return nil, err
 		}
@@ -77,8 +78,8 @@ func GetRootComments(articleID uint) ([]model.ResponseCommentList, error) {
 		responseComment := model.ResponseCommentList{
 			MODEL:           comment.MODEL,
 			Content:         comment.Content,
-			ParentCommentID: comment.ParentCommentID,
-			ArticleID:       comment.ArticleID,
+			ParentCommentSN: comment.ParentCommentSN,
+			ArticleSN:       comment.ArticleSN,
 			DiggCount:       comment.DiggCount,
 			CommentCount:    comment.CommentCount,
 			SubComments:     subComments, // 添加子评论
@@ -92,127 +93,111 @@ func GetRootComments(articleID uint) ([]model.ResponseCommentList, error) {
 	return responseCommentsList, nil
 }
 
-func getSubComments(parentCommentID uint, articleID uint) ([]model.ResponseCommentList, error) {
+func getSubComments(parentCommentSN int64, articleSN int64) ([]model.ResponseCommentList, error) {
 	// 查找子评论
 	var subComments []model.CommentModel
 	err := global.DB.Table("comment_models").
-		Where("article_id = ? AND parent_comment_id = ?", articleID, parentCommentID).
-		Order("create_time ASC"). // 按创建时间排序
+		Where("article_sn = ? AND parent_comment_sn = ?", articleSN, parentCommentSN).
+		Order("create_time ASC").
 		Find(&subComments).Error
 	if err != nil {
 		global.Log.Errorf("comment_models Find err: %s\n", err.Error())
 		return nil, err
 	}
 
-	// 如果没有子评论，直接返回空
-	if len(subComments) == 0 {
-		return nil, nil
-	}
-
-	// 并发处理子评论
-	// wg 用来等待所有并发任务完成
-	var wg sync.WaitGroup
-	responseSubComments := make([]model.ResponseCommentList, 0, len(subComments))
-	// ch 用于发送数据给 responseSubComments
-	ch := make(chan model.ResponseCommentList)
-
-	// 使用 Goroutine 并发获取每个子评论的详情
+	// 构建响应数据
+	responseCommentsList := make([]model.ResponseCommentList, 0, len(subComments))
 	for _, comment := range subComments {
-		wg.Add(1)
-		go func(comment model.CommentModel) {
-			defer wg.Done()
+		// 查找用户详情
+		userDetail := userMap[comment.UserSN]
 
-			// 获取用户详情
-			userDetail := userMap[comment.UserID]
+		// 递归获取子评论
+		nestedSubComments, err := getSubComments(comment.SN, articleSN)
+		if err != nil {
+			return nil, err
+		}
 
-			// 递归获取子评论
-			subSubComments, err := getSubComments(comment.ID, articleID)
-			if err != nil {
-				global.Log.Errorf("获取子评论失败: %s", err)
-				return
-			}
+		// 构建响应评论
+		responseComment := model.ResponseCommentList{
+			MODEL:           comment.MODEL,
+			Content:         comment.Content,
+			ParentCommentSN: comment.ParentCommentSN,
+			ArticleSN:       comment.ArticleSN,
+			DiggCount:       comment.DiggCount,
+			CommentCount:    comment.CommentCount,
+			SubComments:     nestedSubComments, // 递归添加子评论
+			UserDetail:      &userDetail,
+		}
 
-			// 构建响应评论数据
-			responseComment := model.ResponseCommentList{
-				MODEL:           comment.MODEL,
-				Content:         comment.Content,
-				ParentCommentID: comment.ParentCommentID,
-				ArticleID:       comment.ArticleID,
-				DiggCount:       comment.DiggCount,
-				CommentCount:    comment.CommentCount,
-				SubComments:     subSubComments,
-				UserDetail:      &userDetail,
-			}
-
-			// 通过 channel 发送结果
-			ch <- responseComment
-		}(comment)
+		// 将子评论添加到响应列表
+		responseCommentsList = append(responseCommentsList, responseComment)
 	}
 
-	// 等待所有 goroutine 完成并关闭 channel
-	go func() {
-		wg.Wait()
-		close(ch)
-	}()
-
-	// 从 channel 中读取并返回结果
-	for comment := range ch {
-		responseSubComments = append(responseSubComments, comment)
-	}
-
-	return responseSubComments, nil
+	return responseCommentsList, nil
 }
-func DeleteArticleComments(uID uint, pi *model.ParamID, articleID uint) (string, error) {
-	// 创建一个局部变量来存储需要删除的评论 ID 列表
-	var deleteCommentIDList []uint
+func DeleteArticleComments(uSN int64, role int64, psn *model.ParamSN, articleSN int64) (string, error) {
+	// 验证权限：如果是管理员(1)可以直接删除；如果是用户，必须是自己的评论
+	if role != int64(ctype.PermissionAdmin) {
+		var commentUserSN int64
+		// 查询评论的所有者
+		err := global.DB.Table("comment_models").Where("sn = ?", psn.SN).Pluck("user_sn", &commentUserSN).Error
+		if err != nil {
+			return "", err
+		}
+		if commentUserSN != uSN {
+			return "", errors.New("无权删除该评论")
+		}
+	}
+	// 创建一个局部变量来存储需要删除的评论 SN 列表
+	var deleteCommentSNList []int64
 
-	// 从给定的评论 ID 开始递归收集所有需要删除的评论
-	if err := RecursiveCollectComments(pi.ID, &deleteCommentIDList); err != nil {
+	// 从给定的评论 SN 开始递归收集所有需要删除的评论
+	if err := RecursiveCollectComments(psn.SN, &deleteCommentSNList); err != nil {
 		global.Log.Errorf("Delete err:%s\n", err.Error())
 		return "", err
 	}
 
-	// 将根评论 ID 添加到删除列表中
-	deleteCommentIDList = append(deleteCommentIDList, pi.ID)
+	// 将根评论 SN 添加到删除列表中
+	deleteCommentSNList = append(deleteCommentSNList, psn.SN)
 
 	// 计算需要递减的评论数量
-	deleteCount := len(deleteCommentIDList)
+	deleteCount := len(deleteCommentSNList)
 
 	// 更新根评论的父评论计数，根据删除数量递减
-	if err := decrementParentCommentCount(pi.ID, deleteCount); err != nil {
+	if err := decrementParentCommentCount(psn.SN, deleteCount); err != nil {
 		return "", err
 	}
 
 	// 更新文章的评论计数
-	if err := decrementArticleCommentCount(articleID, deleteCount); err != nil {
+	if err := decrementArticleCommentCount(articleSN, deleteCount); err != nil {
 		return "", err
 	}
 
 	// 删除所有收集到的评论
-	if err := global.DB.Where("id IN (?)", deleteCommentIDList).Delete(&model.CommentModel{}).Error; err != nil {
+	if err := global.DB.Table("comment_models").Where("sn IN (?)", deleteCommentSNList).Delete(&model.CommentModel{}).Error; err != nil {
 		return "", err
 	}
 
 	// 删除 Redis 中的评论缓存
-	if err := redis.DeleteArticleComments(uID, deleteCommentIDList); err != nil {
+	if err := redis.DeleteArticleComments(uSN, deleteCommentSNList); err != nil {
 		return "", err
 	}
 
 	return "删除成功", nil
 }
 
-// RecursiveCollectComments 递归收集评论及其所有子评论的 ID
-func RecursiveCollectComments(commentID uint, deleteCommentIDList *[]uint) error {
+// RecursiveCollectComments 递归收集评论及其所有子评论的 SN
+func RecursiveCollectComments(commentSN int64, deleteCommentSNList *[]int64) error {
 	// 查询当前评论的子评论
 	var subComments []model.CommentModel
-	if err := global.DB.Where("parent_comment_id = ?", commentID).Find(&subComments).Error; err != nil {
+	if err := global.DB.Table("comment_models").Where("parent_comment_sn = ?", commentSN).Find(&subComments).Error; err != nil {
 		return err
 	}
 
-	// 递归收集每个子评论的 ID
+	// 递归收集每个子评论的 SN
 	for _, subComment := range subComments {
-		*deleteCommentIDList = append(*deleteCommentIDList, subComment.ID)
-		if err := RecursiveCollectComments(subComment.ID, deleteCommentIDList); err != nil {
+		*deleteCommentSNList = append(*deleteCommentSNList, subComment.SN)
+		if err := RecursiveCollectComments(subComment.SN, deleteCommentSNList); err != nil {
 			return err
 		}
 	}
@@ -221,28 +206,28 @@ func RecursiveCollectComments(commentID uint, deleteCommentIDList *[]uint) error
 }
 
 // decrementParentCommentCount 递减父评论的 CommentCount
-func decrementParentCommentCount(commentID uint, deleteCount int) error {
-	// 获取当前评论的父评论 ID
-	var parentID int
-	if err := global.DB.Model(&model.CommentModel{}).
-		Where("id = ?", commentID).
-		Select("parent_comment_id").
-		Scan(&parentID).Error; err != nil {
+func decrementParentCommentCount(commentSN int64, deleteCount int) error {
+	// 获取当前评论的父评论 SN
+	var parentSN int64
+	if err := global.DB.Table("comment_models").
+		Where("sn = ?", commentSN).
+		Select("parent_comment_sn").
+		Scan(&parentSN).Error; err != nil {
 		return err
 	}
 
 	// 递减父评论的 CommentCount
-	if parentID != -1 {
-		return global.DB.Model(&model.CommentModel{}).
-			Where("id = ?", parentID).
+	if parentSN != -1 {
+		return global.DB.Table("comment_models").
+			Where("sn = ?", parentSN).
 			UpdateColumn("comment_count", gorm.Expr("comment_count - ?", deleteCount)).Error
 	}
 	return nil
 }
 
 // decrementArticleCommentCount 递减 article_models 表中的 comment_count
-func decrementArticleCommentCount(articleID uint, count int) error {
-	return global.DB.Model(&model.ArticleModel{}).
-		Where("id = ?", articleID).
+func decrementArticleCommentCount(articleSN int64, count int) error {
+	return global.DB.Table("article_models").
+		Where("sn = ?", articleSN).
 		UpdateColumn("comment_count", gorm.Expr("comment_count - ?", count)).Error
 }

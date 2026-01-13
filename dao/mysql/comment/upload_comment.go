@@ -7,30 +7,30 @@ import (
 	"gorm.io/gorm"
 )
 
-func CheckIDExist(id uint) (bool, error) {
+func CheckSNExist(sn int64) (bool, error) {
 	var count int64
-	err := global.DB.Table("comment_models").Where("id = ?", id).Count(&count).Error
+	err := global.DB.Table("comment_models").Where("sn = ?", sn).Count(&count).Error
 	if err != nil {
-		global.Log.Errorf("Error IDExist: %v\n", err)
-		return false, code.ErrorIDNotExit
+		global.Log.Errorf("Error SNExist: %v\n", err)
+		return false, code.ErrorSNNotExit
 	}
 	return count > 0, nil
 }
-func PostArticleComments(uID uint, pc *model.ParamPostComment) (string, error) {
+func PostArticleComments(uSN int64, pc *model.ParamPostComment) (string, error) {
 	tx := global.DB.Begin()
 	// 把此次评论添加到 comment_models 中
 	err := tx.Table("comment_models").Create(&model.CommentModel{
 		Content:         pc.Content,
-		ParentCommentID: pc.ParentCommentID,
-		ArticleID:       pc.ArticleID,
-		UserID:          uID,
+		ParentCommentSN: pc.ParentCommentSN,
+		ArticleSN:       pc.ArticleSN,
+		UserSN:          uSN,
 	}).Error
 	if err != nil {
 		global.Log.Errorf("comment_models  Create err:%s\n", err.Error())
 		tx.Rollback()
 		return "", err
 	}
-	err = tx.Table("article_models").Where("id = ?", pc.ArticleID).
+	err = tx.Table("article_models").Where("sn = ?", pc.ArticleSN).
 		UpdateColumn("comment_count", gorm.Expr("comment_count + ?", 1)).
 		Error
 	if err != nil {
@@ -39,7 +39,7 @@ func PostArticleComments(uID uint, pc *model.ParamPostComment) (string, error) {
 		return "", err
 	}
 	// 更新父级评论的 CommentCount
-	if err = updateParentCommentCount(tx, pc.ParentCommentID); err != nil {
+	if err = updateParentCommentCount(tx, pc.ParentCommentSN); err != nil {
 		global.Log.Errorf("updateParentCommentCount err:%s\n", err.Error())
 		tx.Rollback()
 		return "", err
@@ -53,39 +53,40 @@ func PostArticleComments(uID uint, pc *model.ParamPostComment) (string, error) {
 	}
 	return "评论成功", nil
 }
-func GetArticleIDByID(id uint) (uint, error) {
-	var articleID uint
-	err := global.DB.Table("comment_models").Where("id = ?", id).
-		Select("article_id").Scan(&articleID).Error
+func GetArticleSNBySN(sn int64) (int64, error) {
+	var articleSN int64
+	err := global.DB.Table("comment_models").Where("sn = ?", sn).
+		Select("article_sn").Scan(&articleSN).Error
 	if err != nil {
-		global.Log.Errorf("Error IDExist: %v\n", err)
+		global.Log.Errorf("Error SNExist: %v\n", err)
 		return 0, err
 	}
-	return articleID, nil
+	return articleSN, nil
 }
 
 // updateParentCommentCount 递归更新父级评论的 CommentCount
 // 从下到上
-func updateParentCommentCount(tx *gorm.DB, parentID int) error {
-	if parentID == -1 {
-		return nil // 如果没有父级评论则直接返回
+func updateParentCommentCount(tx *gorm.DB, parentSN int64) error {
+	// 如果没有父级评论则直接返回
+	if parentSN == -1 {
+		return nil
 	}
 
 	// 更新当前父级评论的 CommentCount +1
-	if err := tx.Table("comment_models").Where("id = ?", parentID).
+	if err := tx.Table("comment_models").Where("sn = ?", parentSN).
 		UpdateColumn("comment_count", gorm.Expr("comment_count + ?", 1)).
 		Error; err != nil {
 		return err
 	}
 
-	// 查询当前父级评论的 ParentCommentID
+	// 查询当前父级评论的 ParentCommentSN
 	var parentComment model.CommentModel
-	if err := tx.Table("comment_models").Where("id = ?", parentID).
+	if err := tx.Table("comment_models").Where("sn = ?", parentSN).
 		First(&parentComment).
 		Error; err != nil {
 		return err
 	}
 
 	// 递归更新上一级父评论
-	return updateParentCommentCount(tx, parentComment.ParentCommentID)
+	return updateParentCommentCount(tx, parentComment.ParentCommentSN)
 }

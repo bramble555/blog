@@ -3,7 +3,7 @@
     <h2 class="text-xl font-semibold mb-6">Messages</h2>
     <el-tabs v-model="activeTab" @tab-click="handleTabClick">
       <el-tab-pane label="My Messages" name="my">
-         <div v-for="grp in myMessages" :key="grp.id" class="p-3 border-b border-vscode-border hover:bg-[#2d2d2d] cursor-pointer" @click="viewDetail(grp)">
+         <div v-for="grp in myMessages" :key="grp.sn" class="p-3 border-b border-vscode-border hover:bg-[#2d2d2d] cursor-pointer" @click="viewDetail(grp)">
             <div class="font-bold">{{ grp.send_user_name }}</div>
             <div class="text-sm text-gray-400">{{ grp.content }}</div>
          </div>
@@ -28,7 +28,7 @@ import { ElMessage } from 'element-plus'
 const activeTab = ref('my')
 const myMessages = ref([
   // Mock Data as fallback
-  { id: 1, send_user_name: 'System', content: 'Welcome to the system!', create_time: '2023-01-01' }
+  { sn: 1, send_user_name: 'System', content: 'Welcome to the system!', create_time: '2023-01-01' }
 ])
 const allMessages = ref([])
 

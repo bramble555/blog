@@ -1,8 +1,6 @@
 package ctype
 
-import "encoding/json"
-
-type Role uint
+type Role int64
 
 const (
 	PermissionAdmin       Role = 1 // 管理员
@@ -13,9 +11,11 @@ const (
 
 // MarshalJSON 方法用于将 Role 类型转换为 JSON 格式。
 // 它调用 s.String() 方法获取角色的字符串表示，并将其编码为 JSON
-func (s Role) MarshalJSON() ([]byte, error) {
-	return json.Marshal(s.String())
-}
+// MarshalJSON 方法用于将 Role 类型转换为 JSON 格式。
+// 它调用 s.String() 方法获取角色的字符串表示，并将其编码为 JSON
+// func (s Role) MarshalJSON() ([]byte, error) {
+// 	return json.Marshal(s.String())
+// }
 
 func (s Role) String() string {
 	var str string

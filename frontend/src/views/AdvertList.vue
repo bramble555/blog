@@ -20,7 +20,7 @@
       </el-table-column>
       <el-table-column label="Actions" width="100">
         <template #default="scope">
-          <el-button type="danger" link @click="remove(scope.row.id)">Delete</el-button>
+          <el-button type="danger" link @click="remove(scope.row.sn)">Delete</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -104,10 +104,10 @@ const submit = async () => {
   }
 }
 
-const remove = (id) => {
+const remove = (sn) => {
   ElMessageBox.confirm('Delete this advert?', 'Warning').then(async () => {
     try {
-      const res = await deleteAdverts([id])
+      const res = await deleteAdverts([sn])
       if (res.data.code === 10000) {
         ElMessage.success('Deleted')
         fetchData()

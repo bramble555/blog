@@ -13,28 +13,31 @@
         <router-link to="/admin/comments" class="nav-item" active-class="nav-active">
           <el-icon class="mr-3"><ChatLineSquare /></el-icon> Comments
         </router-link>
+        <router-link to="/admin/collections" class="nav-item" active-class="nav-active">
+          <el-icon class="mr-3"><Star /></el-icon> Collections
+        </router-link>
         <router-link to="/admin/tags" class="nav-item" active-class="nav-active">
           <el-icon class="mr-3"><CollectionTag /></el-icon> Tags
         </router-link>
 
-        <div class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 mt-4">Messages</div>
-        <router-link to="/admin/messages" class="nav-item" active-class="nav-active">
+        <div v-if="isAdmin" class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 mt-4">Messages</div>
+        <router-link v-if="isAdmin" to="/admin/messages" class="nav-item" active-class="nav-active">
            <el-icon class="mr-3"><Bell /></el-icon> Messages
         </router-link>
-         <router-link to="/admin/chat" class="nav-item" active-class="nav-active">
+         <router-link v-if="isAdmin" to="/admin/chat" class="nav-item" active-class="nav-active">
            <el-icon class="mr-3"><ChatDotRound /></el-icon> Chat
         </router-link>
 
-        <div class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 mt-4">Marketing</div>
-        <router-link to="/admin/banners" class="nav-item" active-class="nav-active">
-          <el-icon class="mr-3"><Picture /></el-icon> Banners
+        <div v-if="isAdmin" class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 mt-4">Marketing</div>
+        <router-link v-if="isAdmin" to="/admin/banners" class="nav-item" active-class="nav-active">
+           <el-icon class="mr-3"><Picture /></el-icon> Banners
         </router-link>
-        <router-link to="/admin/adverts" class="nav-item" active-class="nav-active">
-          <el-icon class="mr-3"><DataBoard /></el-icon> Adverts
+        <router-link v-if="isAdmin" to="/admin/adverts" class="nav-item" active-class="nav-active">
+           <el-icon class="mr-3"><DataBoard /></el-icon> Adverts
         </router-link>
 
-        <div class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 mt-4">System</div>
-        <router-link to="/admin/users" class="nav-item" active-class="nav-active">
+        <div v-if="isAdmin" class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 mt-4">System</div>
+        <router-link v-if="isAdmin" to="/admin/users" class="nav-item" active-class="nav-active">
            <el-icon class="mr-3"><User /></el-icon> Users
         </router-link>
 
@@ -54,7 +57,7 @@
             </router-link>
             <div class="h-4 w-px bg-vscode-border"></div>
             <div class="flex items-center gap-3">
-               <span class="text-xs font-semibold text-vscode-primary">ADMIN</span>
+               <span class="text-xs font-semibold text-vscode-primary">{{ isAdmin ? 'ADMIN' : 'USER' }}</span>
                <el-avatar :size="28" src="" icon="UserFilled" class="border border-vscode-border" />
             </div>
         </div>
@@ -72,10 +75,12 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { 
   Document, ChatLineSquare, CollectionTag, Picture, 
-  DataBoard, User, Bell, ChatDotRound, Back, UserFilled 
+  DataBoard, User, Bell, ChatDotRound, Back, UserFilled, Star
 } from '@element-plus/icons-vue'
+import { authStore } from '../stores/auth'
 
 const route = useRoute()
+const isAdmin = computed(() => authStore.role === 1)
 const currentPageTitle = computed(() => route.meta?.title || route.name || 'Dashboard')
 </script>
 

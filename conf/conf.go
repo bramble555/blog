@@ -11,5 +11,4 @@ type Config struct {
 	Email    Email    `mapstructure:"email"`
 	Jwt      Jwt      `mapstructure:"jwt"`
 	Upload   Upload   `mapstructure:"upload"`
-	ES       ES       `mapstructure:"es"`
 }

@@ -3,6 +3,7 @@
     <h2 class="text-xl font-semibold mb-6 flex justify-between">
       Banner Management
       <el-upload
+        v-if="isAdmin"
         action=""
         :http-request="upload"
         :show-file-list="false"
@@ -13,7 +14,7 @@
     </h2>
 
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4" v-loading="loading">
-      <div v-for="banner in banners" :key="banner.id" class="border border-vscode-border rounded p-2 bg-[#2d2d2d] group relative">
+      <div v-for="banner in banners" :key="banner.sn" class="border border-vscode-border rounded p-2 bg-[#2d2d2d] group relative">
         <el-image 
           :src="banner.path" 
           fit="cover" 
@@ -22,8 +23,8 @@
         />
         <div class="mt-2 text-xs truncate text-gray-400">{{ banner.name }}</div>
         
-        <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-           <el-button type="danger" circle size="small" icon="Delete" @click="remove(banner.id)" />
+        <div v-if="isAdmin" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+           <el-button type="danger" circle size="small" icon="Delete" @click="remove(banner.sn)" />
         </div>
       </div>
     </div>
@@ -31,11 +32,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { getBanners, uploadBanners, deleteBanners } from '../api/banner'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete } from '@element-plus/icons-vue'
+import { authStore } from '../stores/auth'
 
+const isAdmin = computed(() => authStore.role === 1)
 const banners = ref([])
 const loading = ref(false)
 
@@ -70,13 +73,13 @@ const upload = async (param) => {
   }
 }
 
-const remove = (id) => {
+const remove = (sn) => {
   ElMessageBox.confirm('Delete this image?', 'Warning').then(async () => {
     try {
-      const res = await deleteBanners([id])
+      const res = await deleteBanners([sn])
       if (res.data.code === 10000) {
         ElMessage.success('Deleted')
-        banners.value = banners.value.filter(b => b.id !== id)
+        banners.value = banners.value.filter(b => b.sn !== sn)
       } else {
         ElMessage.error(res.data.msg)
       }

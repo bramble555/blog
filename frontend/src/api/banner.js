@@ -14,6 +14,6 @@ export const uploadBanners = (formData) => {
     });
 };
 
-export const deleteBanners = (idList) => {
-    return service.delete('/images', { data: { id_list: idList } });
+export const deleteBanners = (snList) => {
+    return service.delete('/images', { data: { sn_list: snList } });
 };

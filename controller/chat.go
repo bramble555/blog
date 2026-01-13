@@ -24,12 +24,12 @@ func GetChatGroupHandler(c *gin.Context) {
 	}
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		global.Log.Errorf("upgrade websocket err:%s\n", err.Error())
+		global.Log.Errorf("controller GetChatGroupHandler upgrader.Upgrade err:%s\n", err.Error())
 		ResponseError(c, CodeServerBusy)
 		return
 	}
 	addr := conn.RemoteAddr().String()
-	global.Log.Debugf("%s连接成功", addr)
+	global.Log.Debugf("controller GetChatGroupHandler %s connected", addr)
 
 	// 添加到连接组
 	logic.AddUserConnection(addr, conn)
@@ -42,6 +42,7 @@ func GetChatGroupHandler(c *gin.Context) {
 	// 生成随机昵称和头像
 	name, avatar, err := logic.GetNameAvatar()
 	if err != nil {
+		global.Log.Errorf("controller GetChatGroupHandler logic.GetNameAvatar err:%s\n", err.Error())
 		ResponseError(c, CodeServerBusy)
 		return
 	}
@@ -56,6 +57,7 @@ func GetChatGroupHandler(c *gin.Context) {
 		// 参数绑定
 		var pcg model.ParamChatGroup
 		if err := json.Unmarshal(p, &pcg); err != nil {
+			global.Log.Errorf("controller GetChatGroupHandler json.Unmarshal err:%s\n", err.Error())
 			continue
 		}
 
@@ -73,7 +75,7 @@ func GetChatGroupHandler(c *gin.Context) {
 			Date:           time.Now(),
 			OnlineCount:    len(logic.ConnGroupMap),
 		}
-		global.Log.Debugf("response:%+v", response)
+		global.Log.Debugf("controller GetChatGroupHandler response:%+v", response)
 		// 根据消息类型处理
 		if pcg.MsgType == ctype.TextMsg || pcg.MsgType == ctype.ImageMsg {
 			// 处理测试消息或图片消息
@@ -101,7 +103,7 @@ func GetChatGroupHandler(c *gin.Context) {
 			MsgType:  response.ParamChatGroup.MsgType,
 		}
 		if err := logic.UploadChat(&chatModel); err != nil {
-			global.Log.Errorf("上传聊天记录失败: %s", err.Error())
+			global.Log.Errorf("controller GetChatGroupHandler logic.UploadChat err: %s", err.Error())
 			ResponseError(c, CodeServerBusy)
 			return
 		}

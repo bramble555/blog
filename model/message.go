@@ -1,34 +1,34 @@
 package model
 
 type MessageModel struct {
-	*MODEL
-	SendUserID     uint   `json:"send_user_id,string"` // 发送人 ID
+	MODEL
+	SendUserSN     int64  `json:"send_user_sn,string"` // 发送人 SN
 	SendUsername   string `json:"send_user_name"`
 	SendUserAvatar string `json:"send_user_avater"`
-	RevUserID      uint   `json:"rev_user_id,string"` // 接收人 ID
+	RevUserSN      int64  `json:"rev_user_sn,string"` // 接收人 SN
 	RevUsername    string `json:"rev_user_name"`
 	RevUserAvatar  string `json:"rev_user_avater"`
 	IsRead         bool   `json:"is_read"`                    // 接收方是否查看
 	Content        string `json:"content" binding:"required"` // 消息内容
 }
 type ParamMessage struct {
-	SendUserID uint   `json:"send_user_id,string"`        // 发送人ID
-	RevUserID  uint   `json:"rev_user_id,string"`         // 接收人ID
+	SendUserSN int64  `json:"send_user_sn,string"`        // 发送人SN
+	RevUserSN  int64  `json:"rev_user_sn,string"`         // 接收人SN
 	Content    string `json:"content" binding:"required"` // 消息内容
 }
 type RespondMessage struct {
-	*MODEL
-	SendUserID     uint   `json:"send_user_id,string"` // 发送人id
+	MODEL
+	SendUserSN     int64  `json:"send_user_sn,string"` // 发送人sn
 	SendUsername   string `json:"send_user_name"`
 	SendUserAvatar string `json:"send_user_avater"`
-	RevUserID      uint   `json:"rev_user_id,string"` // 接收人id
+	RevUserSN      int64  `json:"rev_user_sn,string"` // 接收人sn
 	RevUsername    string `json:"rev_user_name"`
 	RevUserAvatar  string `json:"rev_user_avater"`
 	IsRead         bool   `json:"is_read"`       // 接收方是否查看
 	Content        string `json:"content"`       // 消息内容
-	MessageCount   uint   `json:"message_count"` // 消息数量
+	MessageCount   int64  `json:"message_count"` // 消息数量
 }
-type ParamRecordID struct {
-	UserID uint `json:"user_id,string"` // 查询聊天记录的 ID
+type ParamRecordSN struct {
+	UserSN int64 `json:"user_sn,string"` // 查询聊天记录的 SN
 }
-type RespondMessageGroup map[uint]*RespondMessage
+type RespondMessageGroup map[int64]*RespondMessage
