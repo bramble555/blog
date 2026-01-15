@@ -28,21 +28,44 @@ func PostBindEmail(sn int64, email string) error {
 func UsernameLogin(peu *model.ParamUsername) (model.ResponseLogin, error) {
 	// 判断用户名是否存在
 	ok, err := user.CheckUserExistByName(peu.Username)
+	resp := model.ResponseLogin{}
 	if err != nil {
-		return model.ResponseLogin{}, err
+		return resp, err
 	}
 	if !ok {
-		return model.ResponseLogin{}, code.ErrorUserNotExit
+		return resp, code.ErrorUserNotExit
 	}
-	// 判断密码是否错误
+	// 用户存在,判断密码是否错误
 	ok, err = user.QueryPasswordByUsername(peu)
 	if err != nil {
-		return model.ResponseLogin{}, err
+		return resp, err
 	}
 	if !ok {
-		return model.ResponseLogin{}, code.ErrorPasswordWrong
+		return resp, code.ErrorPasswordWrong
 	}
 	return user.GetToken(peu)
+}
+func RegisterUser(pr *model.ParamRegister) (model.ResponseLogin, error) {
+	resp := model.ResponseLogin{}
+	role := int64(ctype.PermissionUser)
+	err := user.CreateUser(role, pr.Username, pr.Password)
+	if err != nil {
+		return resp, err
+	}
+	pu := model.ParamUsername{
+		Username: pr.Username,
+		Password: pr.Password,
+	}
+	resp, err = user.GetToken(&pu)
+	if err != nil {
+		return resp, err
+	}
+	if pr.Email != "" {
+		if err = PostBindEmail(resp.SN, pr.Email); err != nil {
+			return resp, err
+		}
+	}
+	return resp, nil
 }
 func GetUserList(role int64, pl *model.ParamList) (*[]model.UserModel, error) {
 	udl, err := user.GetUserList(pl)
@@ -83,7 +106,7 @@ func UpdateUserPwd(puup *model.ParamUpdateUserPwd, sn int64) (string, error) {
 	var data string
 	data, err = user.UpdateUserPwd(puup, sn)
 	if err != nil {
-		return "服务器繁忙", err
+		return "", err
 	}
 	return data, nil
 }
@@ -92,6 +115,13 @@ func UpdateUserPwd(puup *model.ParamUpdateUserPwd, sn int64) (string, error) {
 func Logout(token string, diff time.Duration) error {
 	return redis.Logout(token, diff)
 }
-func DeleteUserList(pdl *model.ParamDeleteList) (string, error) {
-	return user.DeleteUserList(pdl)
+func DeleteUser(psn *model.ParamSN) (string, error) {
+	ok, err := user.CheckUserExistBySN(psn.SN)
+	if err != nil {
+		return "", err
+	}
+	if !ok {
+		return "", code.ErrorSNNotExit
+	}
+	return user.DeleteUser(psn.SN)
 }

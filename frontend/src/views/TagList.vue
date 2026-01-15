@@ -2,7 +2,7 @@
   <div>
     <h2 class="text-xl font-semibold mb-6 flex justify-between">
       Tag Management
-      <el-button v-if="isAdmin" type="primary" size="small" @click="openDialog">Add Tag</el-button>
+      <el-button type="primary" size="small" @click="openDialog">Add Tag</el-button>
     </h2>
 
     <div class="flex flex-wrap gap-2" v-loading="loading">

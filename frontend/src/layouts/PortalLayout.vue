@@ -38,13 +38,13 @@
              <div class="flex items-center gap-4">
                 <router-link 
                   to="/admin/articles" 
-                  class="text-sm font-medium text-gray-400 hover:text-vscode-primary transition-colors"
+                  class="text-sm font-medium text-[#FF6600] hover:text-vscode-primary transition-colors"
                 >
                   Dashboard
                 </router-link>
                 <button 
                   @click="handleLogout" 
-                  class="text-sm font-medium text-gray-400 hover:text-red-400 transition-colors cursor-pointer"
+                  class="text-sm font-medium text-[#FF6600] hover:text-red-400 transition-colors cursor-pointer"
                 >
                   Logout
                 </button>
@@ -60,13 +60,13 @@
     </header>
 
     <!-- Content -->
-    <main class="container mx-auto px-4 py-8 max-w-6xl">
+    <main :class="['py-8', $route.name === 'Home' ? 'w-full px-0' : 'container mx-auto px-4 max-w-6xl']">
        <router-view :key="$route.fullPath"></router-view>
     </main>
 
     <!-- Footer -->
     <footer class="border-t border-vscode-border py-8 mt-auto">
-      <div class="container mx-auto px-4 text-center text-sm text-gray-500">
+      <div class="container mx-auto px-4 text-center text-sm text-[#FF6600]">
         © 2026 GVB Blog. Powered by Go & Vue 3.
       </div>
     </footer>
@@ -74,10 +74,19 @@
 </template>
 
 <script setup>
+/**
+ * PortalLayout.vue
+ * 
+ * @description 门户前台布局组件。包含顶部导航栏、主体内容区域和底部页脚。
+ * @author GVB Admin
+ * @last_modified 2026-01-14
+ * @requires vue, vue-router, @element-plus/icons-vue, ../stores/auth
+ */
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search, UserFilled } from '@element-plus/icons-vue'
 import { authStore } from '../stores/auth'
+import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const searchQuery = ref('')
@@ -87,6 +96,9 @@ const isAdmin = computed(() => authStore.role === 1)
 const isUser = computed(() => authStore.role === 2)
 const username = computed(() => authStore.username)
 
+/**
+ * 处理搜索跳转
+ */
 const handleSearch = () => {
   router.push({
     path: '/',
@@ -94,6 +106,9 @@ const handleSearch = () => {
   })
 }
 
+/**
+ * 处理用户退出登录
+ */
 const handleLogout = () => {
   authStore.clearAuth()
   router.push('/')

@@ -7,8 +7,9 @@ import (
 )
 
 func InitAdvertRoutes(r *gin.RouterGroup) gin.IRoutes {
-	r.POST("/adverts", controller.CreateAdvertHandle)
+	r.POST("/adverts", middleware.JWTAuthorMiddleware(), controller.UploadAdvertImagesHandler)
 	r.GET("/adverts", controller.GetAdvertListHandler)
 	r.DELETE("/adverts", middleware.JWTAdminMiddleware(), controller.DeleteAdvertListHandler)
+	r.PUT("/adverts", middleware.JWTAdminMiddleware(), controller.UpdateAdvertShowHandler)
 	return r
 }

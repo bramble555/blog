@@ -50,7 +50,7 @@ func CreateUser(op *Option) {
 	}
 
 	// 用命令行创建用户
-	err := user.CreateFlagUser(role, op.Username, op.Password)
+	err := user.CreateUser(role, op.Username, op.Password)
 	if err != nil {
 		global.Log.Errorf("user CreateFlagUser err: %s\n", err.Error())
 		os.Exit(1)

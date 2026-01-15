@@ -3,17 +3,17 @@ package comment
 import (
 	"errors"
 
+	"github.com/bramble555/blog/dao/mysql/digg"
 	"github.com/bramble555/blog/dao/mysql/user"
-	"github.com/bramble555/blog/dao/redis"
+
+	// "github.com/bramble555/blog/dao/redis"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
 	"github.com/bramble555/blog/model/ctype"
 	"gorm.io/gorm"
 )
 
-var userMap map[int64]model.UserDetail // Changed to int64 for Snowflake IDs
-
-func GetArticleComments(pcl *model.ParamCommentList) ([]model.ResponseCommentList, error) {
+func GetArticleComments(pcl *model.ParamCommentList, uSN int64) (*model.ResponseCommentListWrapper, error) {
 	// 查找与这篇文章所有相关用户的 SNList
 	snList := make([]int64, 0)
 	err := global.DB.Table("comment_models").
@@ -21,7 +21,7 @@ func GetArticleComments(pcl *model.ParamCommentList) ([]model.ResponseCommentLis
 		Pluck("user_sn", &snList).Error // 使用 Pluck 只提取 user_sn 字段
 	if err != nil {
 		global.Log.Errorf("select snList err:%s\n", err.Error())
-		return []model.ResponseCommentList{}, err
+		return nil, err
 	}
 
 	// 去重 snList
@@ -36,31 +36,116 @@ func GetArticleComments(pcl *model.ParamCommentList) ([]model.ResponseCommentLis
 	// 查找去重后的 snList 用户信息列表
 	udl, err := user.GetUserDetailListBySNList(uniqueSNList)
 	if err != nil {
-		return []model.ResponseCommentList{}, err
+		return nil, err
 	}
 	// 存储起来，方便后面拼接数据
-	userMap = make(map[int64]model.UserDetail, len(*udl)) // Changed to int64 for Snowflake IDs
+	userMap := make(map[int64]model.UserDetail, len(*udl)) // Changed to local variable
 	for _, ud := range *udl {
 		userMap[ud.SN] = ud
 	}
+
+    if pcl.Page <= 0 {
+        pcl.Page = 1
+    }
+    if pcl.Size <= 0 {
+        pcl.Size = 10
+    }
+
 	// 获取根评论
-	rootComments, err := GetRootComments(pcl.ArticleSN)
+	rootComments, count, err := GetRootComments(pcl, uSN, userMap)
 	if err != nil {
 		return nil, err
 	}
-	return rootComments, nil
+	return &model.ResponseCommentListWrapper{
+		List:  rootComments,
+		Count: count,
+	}, nil
 }
 
-func GetRootComments(articleSN int64) ([]model.ResponseCommentList, error) {
+// GetAllComments 获取所有文章的根评论（管理员后台用途）
+func GetAllComments(pcl *model.ParamCommentList, uSN int64) (*model.ResponseCommentListWrapper, error) {
+    if pcl.Page <= 0 {
+        pcl.Page = 1
+    }
+    if pcl.Size <= 0 {
+        pcl.Size = 20 // 后台默认每页20条
+    }
+    if pcl.Order == "" {
+        pcl.Order = model.OrderByTime
+    }
+
+    // 查询所有根评论
+    var rootComments []model.CommentModel
+    var count int64
+    db := global.DB.Table("comment_models").Where("parent_comment_sn = -1")
+    if err := db.Count(&count).Error; err != nil {
+        return nil, err
+    }
+
+    offset := (pcl.Page - 1) * pcl.Size
+    if err := db.Order(pcl.Order).Limit(pcl.Size).Offset(offset).Find(&rootComments).Error; err != nil {
+        global.Log.Errorf("comment_models Find all root err: %s\n", err.Error())
+        return nil, err
+    }
+
+    // 预取用户详情：减少重复查询
+    snSet := make(map[int64]struct{}, len(rootComments))
+    for _, c := range rootComments {
+        snSet[c.UserSN] = struct{}{}
+    }
+    userSNs := make([]int64, 0, len(snSet))
+    for sn := range snSet {
+        userSNs = append(userSNs, sn)
+    }
+    udl, err := user.GetUserDetailListBySNList(userSNs)
+    if err != nil {
+        return nil, err
+    }
+    userMap := make(map[int64]model.UserDetail, len(*udl))
+    for _, ud := range *udl {
+        userMap[ud.SN] = ud
+    }
+
+    // 构建响应列表（不递归子评论以提升性能）
+    resp := make([]model.ResponseCommentList, 0, len(rootComments))
+    for _, c := range rootComments {
+        isDigg := false
+        if uSN != 0 {
+            isDigg, _ = digg.IsUserCommentDigg(uSN, c.SN)
+        }
+        ud := userMap[c.UserSN]
+        resp = append(resp, model.ResponseCommentList{
+            MODEL:           c.MODEL,
+            Content:         c.Content,
+            ParentCommentSN: c.ParentCommentSN,
+            ArticleSN:       c.ArticleSN,
+            DiggCount:       c.DiggCount,
+            CommentCount:    c.CommentCount,
+            SubComments:     nil,
+            IsDigg:          isDigg,
+            UserDetail:      &ud,
+        })
+    }
+
+    return &model.ResponseCommentListWrapper{List: resp, Count: count}, nil
+}
+
+func GetRootComments(pcl *model.ParamCommentList, uSN int64, userMap map[int64]model.UserDetail) ([]model.ResponseCommentList, int64, error) {
 	// 查找根评论
 	var rootComments []model.CommentModel
-	err := global.DB.Table("comment_models").
-		Where("article_sn = ? AND parent_comment_sn = -1", articleSN).
-		Order("create_time ASC"). // 按创建时间排序
-		Find(&rootComments).Error
+	var count int64
+	db := global.DB.Table("comment_models").
+		Where("article_sn = ? AND parent_comment_sn = -1", pcl.ArticleSN)
+
+	if err := db.Count(&count).Error; err != nil {
+		return nil, 0, err
+	}
+
+	offset := (pcl.Page - 1) * pcl.Size
+	err := db.Order("create_time ASC").Limit(pcl.Size).Offset(offset).Find(&rootComments).Error
 	if err != nil {
 		global.Log.Errorf("comment_models Find err: %s\n", err.Error())
-		return nil, err
+		return nil, 0, err
 	}
 
 	// 构建响应数据
@@ -69,9 +154,15 @@ func GetRootComments(articleSN int64) ([]model.ResponseCommentList, error) {
 		// 查找用户详情，直接通过评论中的 UserID 获取
 		userDetail := userMap[comment.UserSN]
 		// 递归获取子评论
-		subComments, err := getSubComments(comment.SN, articleSN)
+		subComments, err := getSubComments(comment.SN, pcl.ArticleSN, uSN, userMap)
 		if err != nil {
-			return nil, err
+			return nil, 0, err
+		}
+
+		// 检查点赞状态
+		isDigg := false
+		if uSN != 0 {
+			isDigg, _ = digg.IsUserCommentDigg(uSN, comment.SN)
 		}
 
 		// 构建响应评论
@@ -83,58 +174,58 @@ func GetRootComments(articleSN int64) ([]model.ResponseCommentList, error) {
 			DiggCount:       comment.DiggCount,
 			CommentCount:    comment.CommentCount,
 			SubComments:     subComments, // 添加子评论
+			IsDigg:          isDigg,      // 是否点赞
 			UserDetail:      &userDetail,
 		}
 
 		// 将根评论添加到响应列表
 		responseCommentsList = append(responseCommentsList, responseComment)
 	}
-
-	return responseCommentsList, nil
+	return responseCommentsList, count, nil
 }
 
-func getSubComments(parentCommentSN int64, articleSN int64) ([]model.ResponseCommentList, error) {
-	// 查找子评论
+func getSubComments(parentSN int64, articleSN int64, uSN int64, userMap map[int64]model.UserDetail) ([]model.ResponseCommentList, error) {
 	var subComments []model.CommentModel
+	// 查找子评论
 	err := global.DB.Table("comment_models").
-		Where("article_sn = ? AND parent_comment_sn = ?", articleSN, parentCommentSN).
+		Where("article_sn = ? AND parent_comment_sn = ?", articleSN, parentSN).
 		Order("create_time ASC").
 		Find(&subComments).Error
 	if err != nil {
-		global.Log.Errorf("comment_models Find err: %s\n", err.Error())
 		return nil, err
 	}
 
-	// 构建响应数据
-	responseCommentsList := make([]model.ResponseCommentList, 0, len(subComments))
-	for _, comment := range subComments {
-		// 查找用户详情
-		userDetail := userMap[comment.UserSN]
+	var responseSubComments []model.ResponseCommentList
+	for _, subComment := range subComments {
+		userDetail := userMap[subComment.UserSN]
 
-		// 递归获取子评论
-		nestedSubComments, err := getSubComments(comment.SN, articleSN)
+		// 递归获取孙子评论
+		grandChildren, err := getSubComments(subComment.SN, articleSN, uSN, userMap)
 		if err != nil {
 			return nil, err
 		}
 
-		// 构建响应评论
-		responseComment := model.ResponseCommentList{
-			MODEL:           comment.MODEL,
-			Content:         comment.Content,
-			ParentCommentSN: comment.ParentCommentSN,
-			ArticleSN:       comment.ArticleSN,
-			DiggCount:       comment.DiggCount,
-			CommentCount:    comment.CommentCount,
-			SubComments:     nestedSubComments, // 递归添加子评论
-			UserDetail:      &userDetail,
+		isDigg := false
+		if uSN != 0 {
+			isDigg, _ = digg.IsUserCommentDigg(uSN, subComment.SN)
 		}
 
-		// 将子评论添加到响应列表
-		responseCommentsList = append(responseCommentsList, responseComment)
+		responseSubComment := model.ResponseCommentList{
+			MODEL:           subComment.MODEL,
+			Content:         subComment.Content,
+			ParentCommentSN: subComment.ParentCommentSN,
+			ArticleSN:       subComment.ArticleSN,
+			DiggCount:       subComment.DiggCount,
+			CommentCount:    subComment.CommentCount,
+			SubComments:     grandChildren,
+			IsDigg:          isDigg,
+			UserDetail:      &userDetail,
+		}
+		responseSubComments = append(responseSubComments, responseSubComment)
 	}
-
-	return responseCommentsList, nil
+	return responseSubComments, nil
 }
+
 func DeleteArticleComments(uSN int64, role int64, psn *model.ParamSN, articleSN int64) (string, error) {
 	// 验证权限：如果是管理员(1)可以直接删除；如果是用户，必须是自己的评论
 	if role != int64(ctype.PermissionAdmin) {
@@ -178,10 +269,10 @@ func DeleteArticleComments(uSN int64, role int64, psn *model.ParamSN, articleSN 
 		return "", err
 	}
 
-	// 删除 Redis 中的评论缓存
-	if err := redis.DeleteArticleComments(uSN, deleteCommentSNList); err != nil {
-		return "", err
-	}
+	// 删除 Redis 中的评论缓存 (Disabled as per requirement)
+	// if err := redis.DeleteArticleComments(uSN, deleteCommentSNList); err != nil {
+	// 	return "", err
+	// }
 
 	return "删除成功", nil
 }

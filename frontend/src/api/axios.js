@@ -1,8 +1,9 @@
 import axios from 'axios';
 
 const service = axios.create({
-    baseURL: 'http://localhost:8080/api',
-    timeout: 5000,
+	baseURL: 'http://localhost:8080/api',
+	timeout: 5000,
+	withCredentials: true,
 });
 
 service.interceptors.request.use(

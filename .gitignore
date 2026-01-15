@@ -29,3 +29,6 @@
 /testdata/
 /.VSCodeCounter
 .air.toml
+.trae
+.vscode
+.

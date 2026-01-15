@@ -64,7 +64,7 @@ func GetArticlesList(pl *model.ParamList) (*[]model.ResponseArticle, error) {
 	offset := (pl.Page - 1) * pl.Size
 	res := []model.ResponseArticle{}
 	err := global.DB.Table("article_models").
-		Select("sn, create_time, update_time, title, abstract, look_count, comment_count, digg_count, collects_count, category, tags, banner_sn, banner_url, user_sn, username, user_avatar").
+		Select("sn, create_time, update_time, title, abstract, look_count, comment_count, digg_count, collects_count, tags, banner_sn, banner_url, user_sn, username, user_avatar").
 		Order(pl.Order).
 		Limit(pl.Size).
 		Offset(offset).
@@ -76,10 +76,9 @@ func GetArticlesList(pl *model.ParamList) (*[]model.ResponseArticle, error) {
 	return &res, nil
 }
 
-type MySQLArticleQueryService struct{}
-
-func (q *MySQLArticleQueryService) GetArticlesListByParam(paq *model.ParamArticleQuery, uSN int64) (*[]model.ResponseArticle, error) {
-	var articles []model.ResponseArticle
+func GetArticlesListByParam(paq *model.ParamArticleQuery, uSN int64) (*model.ResponseArticleList, error) {
+	articles := make([]model.ResponseArticle, 0)
+	var count int64
 	db := global.DB.Table("article_models")
 
 	if paq.Title != "" {
@@ -90,6 +89,11 @@ func (q *MySQLArticleQueryService) GetArticlesListByParam(paq *model.ParamArticl
 	}
 	if paq.Content != "" {
 		db = db.Where("content LIKE ?", "%"+paq.Content+"%")
+	}
+
+	if err := db.Count(&count).Error; err != nil {
+		global.Log.Errorf("GetArticlesListByParam count failed: %v", err)
+		return nil, err
 	}
 
 	offset := (paq.Page - 1) * paq.Size
@@ -124,7 +128,10 @@ func (q *MySQLArticleQueryService) GetArticlesListByParam(paq *model.ParamArticl
 		}
 	}
 
-	return &articles, nil
+	return &model.ResponseArticleList{
+		List:  articles,
+		Count: count,
+	}, nil
 }
 
 func GetArticlesDetail(sn string) (*model.ArticleModel, error) {

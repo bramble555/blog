@@ -1,6 +1,8 @@
 package logic
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -13,17 +15,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// 上传多个文件
 func UploadImages(c *gin.Context, fileList []*multipart.FileHeader) (*[]model.FileUploadResponse, error) {
 	resFileList := new([]model.FileUploadResponse)
 	pkg.CreateFolder(global.Config.Upload.Path)
 	for _, file := range fileList {
-		// 检验扩展名
 		fileExt := strings.Split(file.Filename, ".")
 		if len(fileExt) != 2 {
 			global.Log.Errorf("上传的文件%s没有扩展名\n", file.Filename)
 			continue
 		}
-		// 检查扩展名是否在白名单中
 		if _, exists := model.WhiteImageExtList[fileExt[1]]; !exists {
 			global.Log.Errorf("上传的文件%s的扩展名不被支持,文件名是%s\n", fileExt[1], file.Filename)
 			continue
@@ -31,44 +32,47 @@ func UploadImages(c *gin.Context, fileList []*multipart.FileHeader) (*[]model.Fi
 		size := float64(file.Size) / 1024 / 1024
 		if size >= float64(global.Config.Upload.Size) {
 			*resFileList = append(*resFileList, model.FileUploadResponse{
-				FileName:  file.Filename,
-				IsSuccess: false,
-				Msg:       fmt.Sprintf("图片太大了,是%.2fMB,图片大小需要缩小到%dMB\n", size, global.Config.Upload.Size),
+				FileName: file.Filename,
+				Msg:      fmt.Sprintf("图片太大了,是%.2fMB,图片大小需要缩小到%dMB\n", size, global.Config.Upload.Size),
 			})
 			continue
 		}
-		*resFileList = append(*resFileList, model.FileUploadResponse{
-			FileName:  file.Filename,
-			IsSuccess: true,
-			Msg:       "上传成功",
-		})
-		err := c.SaveUploadedFile(file, global.Config.Upload.Path+"/"+file.Filename)
-		if err != nil {
-			global.Log.Errorf("Logic BannerHandler SaveUploadedFile[banners] err:%s\n", err.Error())
-			continue
-		}
-		var fileObj multipart.File
-		fileObj, err = file.Open()
+		fileObj, err := file.Open()
 		if err != nil {
 			global.Log.Errorf("Logic file.Open err:%s\n", err.Error())
 			continue
 		}
-		// 记得关闭文件对象
+		// 需要关闭文件流
 		defer fileObj.Close()
-		var byteData []byte
-		byteData, err = io.ReadAll(fileObj)
-		if err != nil {
-			global.Log.Errorf("Logic io.ReadAll err:%s\n", err.Error())
+		hash := md5.New()
+		// 使用 io.Copy 将文件内容拷贝到 hash 中,而不是 io.ReadAll,
+		// 因为 io.ReadAll 会将文件内容全部读取到内存中,如果文件很大,会导致内存溢出
+		if _, err := io.Copy(hash, fileObj); err != nil {
+			global.Log.Errorf("Logic io.Copy err:%s\n", err.Error())
 			continue
 		}
-		ok := banner.CheckBannerNotExists(byteData)
-		// 如果不存在，插入数据库
-		if ok {
-			// 写入数据库
-			err = banner.UploadBanners(byteData, file.Filename)
-			if err != nil {
-				global.Log.Errorf("sqlba.UploadBanners err:%s\n", err.Error())
-			}
+		byteHash := hash.Sum(nil)
+		hashStr := hex.EncodeToString(byteHash)
+		ok := banner.CheckBannerNotExists(hashStr)
+		if !ok {
+			*resFileList = append(*resFileList, model.FileUploadResponse{
+				FileName: file.Filename,
+				Msg:      "该图片已上传",
+			})
+			continue
+		}
+		// 与前端商量好,如果上传成功,msg 就为 "",否则 msg 就有内容
+		*resFileList = append(*resFileList, model.FileUploadResponse{
+			FileName: file.Filename,
+		})
+		err = c.SaveUploadedFile(file, global.Config.Upload.Path+"/"+file.Filename)
+		if err != nil {
+			global.Log.Errorf("Logic BannerHandler SaveUploadedFile[banners] err:%s\n", err.Error())
+			continue
+		}
+		err = banner.UploadBanners(hashStr, file.Filename)
+		if err != nil {
+			global.Log.Errorf("sqlba.UploadBanners err:%s\n", err.Error())
 		}
 	}
 	return resFileList, nil
@@ -76,9 +80,7 @@ func UploadImages(c *gin.Context, fileList []*multipart.FileHeader) (*[]model.Fi
 func GetBannerList(pl *model.ParamList) (*[]model.BannerModel, error) {
 	return banner.GetBannerList(pl)
 }
-func GetBannerDetail() (*[]model.ResponseBanner, error) {
-	return banner.GetBannerDetail()
-}
+
 func DeleteBannerList(pdl *model.ParamDeleteList) (string, error) {
 	return banner.DeleteBannerList(pdl)
 }

@@ -3,14 +3,12 @@ package user
 import (
 	"fmt"
 
-	"github.com/bramble555/blog/dao/mysql"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
 	"github.com/bramble555/blog/pkg"
 )
 
 func UpdateUserRole(puur *model.ParamUpdateUserRole) (string, error) {
-	global.Log.Debugf("sn:%d", puur.UserSN)
 	err := global.DB.Table("user_models").Where("sn = ?", puur.UserSN).Update("role", puur.Role).Error
 	if err != nil {
 		global.Log.Errorf("user UpdateUserRole err:%s\n", err.Error())
@@ -36,9 +34,49 @@ func UpdateUserPwd(puup *model.ParamUpdateUserPwd, sn int64) (string, error) {
 	return fmt.Sprintf("修改用户 %d 密码成功", sn), nil
 }
 
-// DeleteUserList 删除用户列表
-func DeleteUserList(pdl *model.ParamDeleteList) (string, error) {
-	// 其实还要删除许多关联的表，后面再删除
-	// to do
-	return mysql.DeleteTableList[model.UserModel]("user_models", pdl)
+func DeleteUser(sn int64) (string, error) {
+	tx := global.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// 删除用户关联的文章
+	// var articleSNs []int64
+	// if err := tx.Table("article_models").Where("user_sn = ?", sn).Pluck("sn", &articleSNs).Error; err != nil {
+	// 	tx.Rollback()
+	// 	return "", err
+	// }
+	// if len(articleSNs) > 0 {
+	// 	if err := tx.Table("comment_models").Where("article_sn IN ?", articleSNs).Delete(&model.CommentModel{}).Error; err != nil {
+	// 		tx.Rollback()
+	// 		return "", err
+	// 	}
+	// 	if err := tx.Table("article_tag_models").Where("article_sn IN ?", articleSNs).Delete(&model.ArticleTagModel{}).Error; err != nil {
+	// 		tx.Rollback()
+	// 		return "", err
+	// 	}
+	// 	if err := tx.Table("article_models").Where("sn IN ?", articleSNs).Delete(&model.ArticleModel{}).Error; err != nil {
+	// 		tx.Rollback()
+	// 		return "", err
+	// 	}
+	// }
+
+	// 删除用户关联的评论
+	if err := tx.Table("comment_models").Where("user_sn = ?", sn).Delete(&model.CommentModel{}).Error; err != nil {
+		tx.Rollback()
+		return "", err
+	}
+
+	// 删除用户
+	if err := tx.Table("user_models").Where("sn = ?", sn).Delete(&model.UserModel{}).Error; err != nil {
+		tx.Rollback()
+		return "", err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("删除用户 %d 及其文章和评论成功", sn), nil
 }

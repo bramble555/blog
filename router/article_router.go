@@ -7,7 +7,7 @@ import (
 )
 
 func InitArticleRoutes(r *gin.RouterGroup) gin.IRoutes {
-	r.POST("/articles", middleware.JWTAuthorMiddleware(), controller.UploadArticlesHandler)
+	r.POST("/articles", middleware.JWTAuthorMiddleware(), controller.UploadArticleHandler)
 	r.GET("/articles", controller.GetArticlesListHandler)
 	r.GET("/articles/:sn", middleware.JWTOptionalMiddleware(), controller.GetArticlesDetailHandler)
 	r.GET("/articles/calendar", controller.GetArticlesCalendarHandler)

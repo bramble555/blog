@@ -4,7 +4,6 @@
     
     <el-table :data="articles" style="width: 100%" v-loading="loading">
        <el-table-column prop="title" label="Article Title" />
-       <el-table-column prop="category" label="Category" width="120" />
        <el-table-column prop="create_time" label="Collect Time" width="180">
           <template #default="scope">
              {{ formatDate(scope.row.create_time) }}
@@ -24,6 +23,7 @@
 import { ref, onMounted } from 'vue'
 import { getCollects, deleteCollectArticle } from '../api/article'
 import { collectionStore } from '../stores/collection'
+import { formatDate } from '../utils/date'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const articles = ref([])
@@ -80,8 +80,6 @@ const remove = (row) => {
       }
    })
 }
-
-const formatDate = (s) => new Date(s).toLocaleString()
 
 onMounted(() => {
    fetchData()

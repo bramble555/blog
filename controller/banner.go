@@ -8,13 +8,14 @@ import (
 )
 
 func UploadBannersHandler(c *gin.Context) {
-	// 获取图片并且对参数进行处理
+	// 获取多个图片并且对参数进行处理
 	form, err := c.MultipartForm()
 	if err != nil {
 		global.Log.Errorf("controller UploadBannersHandler c.MultipartForm err:%s\n", err.Error())
 		ResponseErrorWithData(c, CodeInvalidParam, err.Error())
 		return
 	}
+	// images 是与前端商量好的参数名
 	fileList, ok := form.File["images"]
 	if !ok {
 		global.Log.Errorf("controller UploadBannersHandler form.File[images] not found\n")
@@ -31,6 +32,7 @@ func UploadBannersHandler(c *gin.Context) {
 	ResponseSucceed(c, data)
 }
 func GetBannerListHandler(c *gin.Context) {
+	// 验证参数
 	pl, err := validateListParams(c)
 	if err != nil {
 		global.Log.Errorf("controller GetBannerListHandler validateListParams err:%s\n", err.Error())
@@ -46,16 +48,8 @@ func GetBannerListHandler(c *gin.Context) {
 	// 返回响应
 	ResponseSucceed(c, data)
 }
-func GetBannerDetailHandler(c *gin.Context) {
-	data, err := logic.GetBannerDetail()
-	if err != nil {
-		global.Log.Errorf("controller GetBannerDetailHandler logic.GetBannerDetail err:%s\n", err.Error())
-		ResponseError(c, CodeServerBusy)
-		return
-	}
-	ResponseSucceed(c, data)
-}
-func DeleteBannerListHander(c *gin.Context) {
+
+func DeleteBannerListHandler(c *gin.Context) {
 	var pdl model.ParamDeleteList
 	err := c.ShouldBindJSON(&pdl)
 	if err != nil {

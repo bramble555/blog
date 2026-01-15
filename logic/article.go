@@ -1,23 +1,20 @@
 package logic
 
 import (
+	"encoding/json"
 	"math/rand"
-	"strings"
 	"time"
 
-	md "github.com/JohannesKaufmann/html-to-markdown"
-	"github.com/PuerkitoBio/goquery"
-	"github.com/bramble555/blog/dao"
 	"github.com/bramble555/blog/dao/mysql/article"
 	"github.com/bramble555/blog/dao/mysql/code"
+	"github.com/bramble555/blog/dao/mysql/digg"
 	"github.com/bramble555/blog/dao/mysql/user"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
 	"github.com/bramble555/blog/pkg"
-	"github.com/russross/blackfriday"
 )
 
-func UploadArticles(claims *pkg.MyClaims, pa *model.ParamArticle) (string, error) {
+func UploadArticles(claims *pkg.MyClaims, pa *model.ParamArticle, bannerList *[]model.BannerModel) (string, error) {
 	// 判断标题是否存在
 	ok, err := article.TitleIsExist(pa.Title)
 	if err != nil {
@@ -32,76 +29,83 @@ func UploadArticles(claims *pkg.MyClaims, pa *model.ParamArticle) (string, error
 	if err != nil {
 		return "", err
 	}
-	// 处理文本 删除 script 标签
-	ct := blackfriday.MarkdownCommon([]byte(pa.Content))
-	// 查看是否有 script 标签
-	doc, _ := goquery.NewDocumentFromReader(strings.NewReader(string(ct)))
-	nodes := doc.Find("script").Nodes
+	rawContent := pa.Content
+	safeHTML := pkg.MarkdownToHTML(rawContent)
 
-	if len(nodes) > 0 {
-		doc.Find("script").Remove()
-		convert := md.NewConverter("", true, nil)
-		html, _ := doc.Html()
-		markdown, _ := convert.ConvertString(html)
-		pa.Content = markdown
-
-	}
-	// 用户是否传入简介
 	if pa.Abstract == "" {
-		c := []rune(pa.Content)
+		c := []rune(rawContent)
 		if len(c) >= 100 {
 			pa.Abstract = string(c[:100])
+		} else {
+			pa.Abstract = string(c)
 		}
-		pa.Abstract = string(c)
 	}
-	// 用户是否传入图片，如果没有，那就随机选择一张图片
-	rb, err := GetBannerDetail()
-	if err != nil {
-		return "", err
-	}
+	// 随机选择一张图片作为为张图片
+	rb := bannerList
 	n := len(*rb)
-	SNList := make([]int64, n)
-	for i, v := range *rb {
-		SNList[i] = v.SN
+	var bannerUrl string
+	if n > 0 {
+		// 设置随机种子（均匀分布，公平且高效）
+		source := rand.NewSource(time.Now().UnixNano())
+		r := rand.New(source)
+		idx := r.Intn(n)
+		selected := (*rb)[idx]
+		pa.BannerSN = selected.SN
+		bannerUrl = "/uploads/file/" + selected.Name
+		global.Log.Infof("selected banner sn: %d", pa.BannerSN)
+	} else {
+		// 无可用 banner 时，降级为无封面，避免异常
+		pa.BannerSN = 0
+		bannerUrl = ""
+		global.Log.Warnf("no banner available, article will use empty cover")
 	}
-	// 设置随机种子
-	source := rand.NewSource(time.Now().UnixNano())
-	r := rand.New(source)
-	// 从 SNList 中随机选择一个 SN
-	randomIndex := r.Intn(n) // 生成一个 [0, n) 范围内的随机数
-	pa.BannerSN = SNList[randomIndex]
-	bannerUrl := (*rb)[randomIndex].Name
 	// 组装数据
 	am := model.ArticleModel{
 		Title:      pa.Title,
 		Abstract:   pa.Abstract,
-		Content:    pa.Content,
-		Category:   pa.Category,
-		Source:     pa.Source,
-		Link:       pa.Link,
+		Content:    rawContent,
 		Tags:       pa.Tags,
 		BannerSN:   pa.BannerSN,
 		BannerUrl:  bannerUrl,
-		UserSN:     int64(claims.SN), // Cast int64 to int64 for database field
+		UserSN:     claims.SN,
 		Username:   username,
 		UserAvatar: ud.Avatar,
 	}
-	return article.UploadArticles(&am)
+	_, err = article.UploadArticles(&am)
+	if err != nil {
+		return "", err
+	}
+	response := map[string]any{
+		"raw_content":    rawContent,
+		"parsed_content": safeHTML,
+		"status":         "ok",
+	}
+	//
+	b, _ := json.Marshal(response)
+	return string(b), nil
 }
 
-func GetArticlesListByParam() dao.ArticleQueryService {
-	return &article.MySQLArticleQueryService{} // 返回 MySQL 查询服务
+func GetArticlesListByParam(paq *model.ParamArticleQuery, uSN int64) (*model.ResponseArticleList, error) {
+	return article.GetArticlesListByParam(paq, uSN)
 }
 func GetArticlesDetail(sn string, uSN int64) (*model.ArticleModel, error) {
 	am, err := article.GetArticlesDetail(sn)
 	if err != nil {
 		return nil, err
 	}
+	// Parse Markdown
+	am.ParsedContent = pkg.MarkdownToHTML(am.Content)
+
 	if uSN != 0 {
 		// 检查用户是否收藏
 		isCollect, err := article.IsUserCollect(uSN, am.SN)
 		if err == nil {
 			am.IsCollect = isCollect
+		}
+		// 检查用户是否点赞
+		isDigg, err := digg.IsUserDigg(uSN, am.SN)
+		if err == nil {
+			am.IsDigg = isDigg
 		}
 	}
 	return am, nil
@@ -121,6 +125,10 @@ func UpdateArticles(sn int64, uf map[string]any) (string, error) {
 	if !ok {
 		return "", code.ErrorSNNotExit
 	}
+	// 清理已经移除的字段，防止旧前端传入导致更新失败
+	delete(uf, "category")
+	delete(uf, "source")
+	delete(uf, "link")
 	return article.UpdateArticles(sn, uf)
 }
 func DeleteArticlesList(pdl *model.ParamDeleteList) (string, error) {

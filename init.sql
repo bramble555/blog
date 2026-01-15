@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS advert_models (
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     title VARCHAR(50) NOT NULL UNIQUE,
-    href VARCHAR(200) NOT NULL,
+    href VARCHAR(200) ,
     images VARCHAR(200) NOT NULL,
     is_show TINYINT(1) DEFAULT 1,
     UNIQUE KEY `idx_sn` (`sn`)
@@ -58,10 +58,7 @@ CREATE TABLE IF NOT EXISTS article_models (
     comment_count INT DEFAULT 0,
     digg_count INT DEFAULT 0,
     collects_count INT DEFAULT 0,
-    category VARCHAR(20) NOT NULL,
-    source VARCHAR(255),
-    link VARCHAR(255),
-    tags TEXT,
+    tags TEXT NOT NULL,
     banner_sn BIGINT NOT NULL COMMENT '对应banner_models的sn',
     banner_url VARCHAR(255),
     user_sn BIGINT NOT NULL COMMENT '对应user_models的sn',
@@ -113,7 +110,7 @@ CREATE TABLE IF NOT EXISTS tag_models (
     INDEX idx_title (title)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 
--- 8. 文章-标签关联表（关联表建议直接记录 sn 以简化逻辑）
+-- 8. 文章-标签关联表
 CREATE TABLE IF NOT EXISTS article_tag_models (
     article_sn BIGINT NOT NULL,
     tag_title VARCHAR(100) NOT NULL,
@@ -154,4 +151,22 @@ CREATE TABLE IF NOT EXISTS login_models (
     username VARCHAR(36) NOT NULL,
     UNIQUE KEY `idx_sn` (`sn`)
 ) ENGINE = INNODB DEFAULT CHARSET = utf8mb4;
+
+-- 12. 文章点赞记录表
+CREATE TABLE IF NOT EXISTS user_digg_models (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_sn BIGINT NOT NULL,
+    article_sn BIGINT NOT NULL,
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY `idx_user_article` (user_sn, article_sn)
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
+
+-- 13. 评论点赞记录表
+CREATE TABLE IF NOT EXISTS user_comment_digg_models (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_sn BIGINT NOT NULL,
+    comment_sn BIGINT NOT NULL,
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY `idx_user_comment` (user_sn, comment_sn)
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
 

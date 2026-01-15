@@ -12,7 +12,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func UploadArticlesHandler(c *gin.Context) {
+// UploadArticleHandler 上传文章
+func UploadArticleHandler(c *gin.Context) {
 	var pa model.ParamArticle
 	err := c.ShouldBindJSON(&pa)
 	if err != nil {
@@ -23,13 +24,22 @@ func UploadArticlesHandler(c *gin.Context) {
 	_claims, _ := c.Get("claims")
 	claims := _claims.(*pkg.MyClaims)
 
-	data, err := logic.UploadArticles(claims, &pa)
+	// 获取 banner 列表，用于随机选择封面
+	pl := &model.ParamList{Page: 1, Size: 100}
+	bannerList, err := logic.GetBannerList(pl)
+	if err != nil {
+		global.Log.Errorf("controller UploadArticlesHandler logic.GetBannerList err:%s\n", err.Error())
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+
+	data, err := logic.UploadArticles(claims, &pa, bannerList)
 	if err != nil {
 		if errors.Is(err, code.ErrorTitleExit) {
 			ResponseError(c, CodeTitleExist)
 			return
 		}
-		ResponseError(c, CodeServerBusy)
+		ResponseErrorWithData(c, CodeServerBusy, err.Error())
 		return
 	}
 	ResponseSucceed(c, data)
@@ -61,12 +71,9 @@ func GetArticlesListHandler(c *gin.Context) {
 		uSN = claims.SN
 	}
 
-	queryService := logic.GetArticlesListByParam()
-
-	// 使用返回的查询服务获取文章列表
-	data, err := queryService.GetArticlesListByParam(paq, uSN)
+	data, err := logic.GetArticlesListByParam(paq, uSN)
 	if err != nil {
-		global.Log.Errorf("controller GetArticlesListHandler queryService.GetArticlesListByParam err:%s\n", err.Error())
+		global.Log.Errorf("controller GetArticlesListHandler logic.GetArticlesListByParam err:%s\n", err.Error())
 		ResponseError(c, CodeServerBusy)
 		return
 	}

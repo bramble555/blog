@@ -9,6 +9,7 @@ import (
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
 	"github.com/bramble555/blog/pkg"
+	"gorm.io/gorm"
 )
 
 // CheckUserExistByName 检查用户是否存在
@@ -58,11 +59,12 @@ func CheckPwdExistBySN(sn int64, pwd string) (bool, error) {
 func QueryPasswordByUsername(peu *model.ParamUsername) (bool, error) {
 	var encryPassword string
 	err := global.DB.Table("user_models").Where("username = ?", peu.Username).
-		Select("password").Scan(&encryPassword).Error // 使用 Scan 将结果绑定到 password
+		Select("password").Scan(&encryPassword).Error // 使用 Scan 将结果绑定到 encryPassword
 	if err != nil {
 		global.Log.Errorf("user QueryPassword err: %v\n", err)
 		return false, err
 	}
+	// 对比密码是否一致
 	err = pkg.ComparePasswords(encryPassword, peu.Password)
 	if err != nil {
 		global.Log.Errorf("user pkg.ComparePassword serr: %v\n", err)
@@ -71,30 +73,52 @@ func QueryPasswordByUsername(peu *model.ParamUsername) (bool, error) {
 	return true, nil
 }
 func GetToken(peu *model.ParamUsername) (model.ResponseLogin, error) {
+	// 内存对齐
 	type paramUserDetail struct {
-		SN       int64 // Snowflake ID
 		Username string
+		SN       int64
 		Role     int64
 	}
-	var udd paramUserDetail
 
-	err := global.DB.Table("user_models").Where("username = ?", peu.Username).
-		Select("sn,username,role").Scan(&udd).Error
+	// 使用 var 块统一声明所有变量
+	var (
+		pud   paramUserDetail
+		res   model.ResponseLogin // 预声明返回对象，初始即为零值 {}
+		token string
+		err   error
+	)
+
+	// 1. 查询数据库
+	// 使用 First/Token 进行查询是否存在,如果不存在 error 是 gorm.ErrRecordNotFound, 不用 Find/Scan
+	err = global.DB.Table("user_models").
+		Select("sn", "username", "role").
+		Where("username = ?", peu.Username).
+		Take(&pud).Error
+
+	// 细分 err
 	if err != nil {
-		global.Log.Errorf("user GetToken select err:%s\n", err.Error())
-		return model.ResponseLogin{}, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			global.Log.Warnf("GetToken 失败: 用户 [%s] 不存在", peu.Username)
+			return res, errors.New("用户不存在") // 直接返回 res，无需写 model.ResponseLogin{}
+		}
+		global.Log.Errorf("GetToken 数据库查询异常: %v", err)
+		return res, err
 	}
-	token, err := pkg.GenToken(udd.SN, udd.Role, udd.Username)
+
+	// 2. 生成 Token
+	token, err = pkg.GenToken(pud.SN, pud.Role, pud.Username)
 	if err != nil {
-		global.Log.Errorf("pkg GetToken err:%s\n", err.Error())
-		return model.ResponseLogin{}, err
+		global.Log.Errorf("GenToken 签名失败: %v", err)
+		return res, err
 	}
-	return model.ResponseLogin{
-		Token:    token,
-		SN:       udd.SN, // Return Snowflake ID
-		Username: udd.Username,
-		Role:     udd.Role,
-	}, nil
+
+	// 3. 填充预声明的对象
+	res.Token = token
+	res.SN = pud.SN
+	res.Username = pud.Username
+	res.Role = pud.Role
+
+	return res, nil
 }
 func PostLogin(username string) error {
 	type data struct {

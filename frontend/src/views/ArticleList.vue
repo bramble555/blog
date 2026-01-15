@@ -23,38 +23,32 @@
       <table class="w-full text-left border-collapse">
         <thead class="bg-[#2d2d2d]">
           <tr>
-            <th class="p-3 border-b border-vscode-border font-medium text-gray-400 w-16">SN</th>
-            <th class="p-3 border-b border-vscode-border font-medium text-gray-400">Title</th>
-            <th class="p-3 border-b border-vscode-border font-medium text-gray-400">Category</th>
-            <th class="p-3 border-b border-vscode-border font-medium text-gray-400">Tags</th>
-            <th class="p-3 border-b border-vscode-border font-medium text-gray-400 w-40">Created At</th>
-            <th class="p-3 border-b border-vscode-border font-medium text-gray-400 w-32 text-right">Actions</th>
+            <th class="p-3 border-b border-vscode-border font-medium text-[#FFA500] w-16">SN</th>
+            <th class="p-3 border-b border-vscode-border font-medium text-[#FFA500]">Title</th>
+            <th class="p-3 border-b border-vscode-border font-medium text-[#FFA500]">Tags</th>
+            <th class="p-3 border-b border-vscode-border font-medium text-[#FFA500] w-40">Created At</th>
+            <th class="p-3 border-b border-vscode-border font-medium text-[#FFA500] w-32 text-right">Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="article in articles" :key="article.sn" class="hover:bg-vocab-bg/50 transition-colors group">
-            <td class="p-3 border-b border-vscode-border border-opacity-50 text-gray-500 font-mono text-xs">
+            <td class="p-3 border-b border-vscode-border border-opacity-50 text-[#FFA500] font-mono text-xs">
               {{ article.sn }}
             </td>
             <td class="p-3 border-b border-vscode-border border-opacity-50 font-medium text-vscode-text">
               {{ article.title }}
-              <div class="text-xs text-gray-500 truncate max-w-xs mt-1">{{ article.abstract }}</div>
-            </td>
-            <td class="p-3 border-b border-vscode-border border-opacity-50 text-sm">
-              <span class="px-2 py-0.5 rounded-full bg-blue-900/30 text-blue-300 border border-blue-900/50 text-xs">
-                {{ article.category || 'Uncategorized' }}
-              </span>
+              <div class="text-xs text-[#FFA500] truncate max-w-xs mt-1">{{ article.abstract }}</div>
             </td>
             <td class="p-3 border-b border-vscode-border border-opacity-50 text-sm">
               <div class="flex flex-wrap gap-1">
                 <span v-for="tag in parseTags(article.tags)" :key="tag" 
-                  class="px-2 py-0.5 rounded bg-[#3e3e42] text-gray-300 text-xs text-[10px]"
+                  class="px-2 py-0.5 rounded bg-[#3e3e42] text-[#FFA500] text-2xs"
                 >
                   {{ tag }}
                 </span>
               </div>
             </td>
-            <td class="p-3 border-b border-vscode-border border-opacity-50 text-xs text-gray-500 font-mono">
+            <td class="p-3 border-b border-vscode-border border-opacity-50 text-xs text-[#FFA500] font-mono">
               {{ formatDate(article.create_time) }}
             </td>
             <td class="p-3 border-b border-vscode-border border-opacity-50 text-right">
@@ -73,7 +67,7 @@
             </td>
           </tr>
           <tr v-if="articles.length === 0">
-            <td colspan="6" class="p-8 text-center text-gray-500">
+            <td colspan="5" class="p-8 text-center text-gray-500">
               No articles found. Create one to get started.
             </td>
           </tr>
@@ -84,71 +78,134 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
+/**
+ * ArticleList.vue
+ * 
+ * @description 后台文章管理页面。提供文章的列表展示、搜索、编辑和删除功能。
+ * @author GVB Admin
+ * @last_modified 2026-01-14
+ * @requires element-plus, vue, ../api/article, @/utils/date, @element-plus/icons-vue
+ */
+import { ref, reactive, onMounted, computed } from 'vue'
 import { getArticles, deleteArticles } from '../api/article'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { formatDateTime } from '@/utils/date'
+import { Edit, Delete, Search } from '@element-plus/icons-vue'
+import { useRouter } from 'vue-router'
 import { authStore } from '../stores/auth'
 
 const router = useRouter()
-const isAdmin = computed(() => authStore.role === 1)
 const articles = ref([])
 const loading = ref(false)
 const error = ref(null)
+const searchKeyword = ref('')
+const pagination = reactive({
+  page: 1,
+  size: 10,
+  total: 0
+})
 
+/**
+ * 计算属性：是否为管理员
+ * @returns {boolean}
+ */
+const isAdmin = computed(() => authStore.role === 1)
+
+/**
+ * 格式化日期
+ * @param {string} date
+ * @returns {string}
+ */
+const formatDate = (date) => {
+  return formatDateTime(date)
+}
+
+/**
+ * 解析标签
+ * @param {string|Array} tags
+ * @returns {Array}
+ */
+const parseTags = (tags) => {
+  if (!tags) return []
+  if (Array.isArray(tags)) return tags
+  if (typeof tags === 'string') {
+    try {
+      // 尝试解析 JSON 字符串
+      return JSON.parse(tags)
+    } catch (e) {
+      // 如果不是 JSON，尝试逗号分隔
+      return tags.split(',').map(t => t.trim()).filter(t => t)
+    }
+  }
+  return []
+}
+
+/**
+ * 获取文章数据
+ */
 const fetchArticles = async () => {
   loading.value = true
   error.value = null
   try {
-    const res = await getArticles({ page: 1, size: 100 })
+    const res = await getArticles({ 
+      page: pagination.page, 
+      size: pagination.size,
+      keyword: searchKeyword.value
+    })
     if (res.data.code === 10000) {
-      const d = res.data.data
-      if (Array.isArray(d)) {
-         articles.value = d
-      } else if (d.list) {
-         articles.value = d.list
-      } else {
-         articles.value = []
-      }
+       articles.value = res.data.data.list
+       pagination.total = res.data.data.count
     } else {
-      error.value = res.data.msg || 'Failed to fetch articles'
+       error.value = res.data.msg || '获取文章失败'
     }
   } catch (err) {
     console.error(err)
-    error.value = 'Network error or backend unreachable.'
+    error.value = '获取文章失败'
+    ElMessage.error('获取文章失败')
   } finally {
     loading.value = false
   }
 }
 
-const editArticle = (sn) => {
-  router.push(`/admin/edit/${sn}`)
+/**
+ * 处理搜索
+ */
+const handleSearch = () => {
+  pagination.page = 1
+  fetchArticles()
 }
 
-const deleteArticle = async (sn) => {
-  if (!confirm('Are you sure you want to delete this article?')) return
-  try {
-    const res = await deleteArticles([sn])
+/**
+ * 处理分页变化
+ * @param {number} page - 新页码
+ */
+const handlePageChange = (page) => {
+  pagination.page = page
+  fetchArticles()
+}
+
+/**
+ * 跳转编辑页面
+ * @param {string} id - 文章 ID
+ */
+const editArticle = (id) => {
+  router.push(`/admin/edit/${id}`)
+}
+
+/**
+ * 删除文章
+ * @param {string} id - 文章 ID
+ */
+const deleteArticle = (id) => {
+  ElMessageBox.confirm('确定删除该文章吗?', '提示', {
+    type: 'warning'
+  }).then(async () => {
+    const res = await deleteArticles([id])
     if (res.data.code === 10000) {
-      // Remove from list locally
-      articles.value = articles.value.filter(a => a.sn !== sn)
-    } else {
-      alert('Delete failed: ' + res.data.msg)
+      ElMessage.success('删除成功')
+      fetchArticles()
     }
-  } catch (err) {
-    console.error(err)
-    alert('Delete error')
-  }
-}
-
-const parseTags = (tags) => {
-  if (Array.isArray(tags)) return tags
-  // Usually ctype.Array is just []string in JSON
-  return []
-}
-
-const formatDate = (dateStr) => {
-  if (!dateStr) return '-'
-  return new Date(dateStr).toLocaleString()
+  })
 }
 
 onMounted(() => {

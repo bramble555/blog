@@ -37,7 +37,13 @@ func GetArticleCommentsHandler(c *gin.Context) {
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
-	data, err := logic.GetArticleComments(&pcl)
+	var uSN int64
+	_claims, exists := c.Get("claims")
+	if exists {
+		claims := _claims.(*pkg.MyClaims)
+		uSN = claims.SN
+	}
+	data, err := logic.GetArticleComments(&pcl, uSN)
 	if err != nil {
 		global.Log.Errorf("controller GetArticleCommentsHandler logic.GetArticleComments err:%s\n", err.Error())
 		ResponseError(c, CodeServerBusy)

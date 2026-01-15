@@ -18,14 +18,7 @@ func GetBannerList(pl *model.ParamList) (*[]model.BannerModel, error) {
 	}
 	return &bml, nil
 }
-func GetBannerDetail() (*[]model.ResponseBanner, error) {
-	var bd []model.ResponseBanner
-	err := global.DB.Table("banner_models").Select("sn, name").Scan(&bd).Error
-	if err != nil {
-		return nil, err
-	}
-	return &bd, nil
-}
+
 func GetBannerBySN(sn *int64) (*model.ResponseBanner, error) {
 	var bd model.ResponseBanner
 	err := global.DB.Table("banner_models").Select("sn, name").Where("sn = ?", sn).First(&bd).Error
@@ -69,7 +62,7 @@ func DeleteBannerList(pdl *model.ParamDeleteList) (string, error) {
 		global.Log.Errorf("删除 banner_models 时出错:%v\n", resultB.Error)
 		return "删除 banner_models 时出错", code.ErrorSNNotExit
 	}
-
+	// 提交事务
 	t.Commit()
 	return fmt.Sprintf("banner_models 共删除 %d 行", resultB.RowsAffected), nil
 }

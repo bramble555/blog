@@ -32,6 +32,15 @@ type ParamUsername struct {
 	Username string `json:"username" binding:"required" msg:"请输入用户名"`
 	Password string `json:"password" binding:"required" msg:"请输入密码"`
 }
+type ParamRegister struct {
+	Username string `json:"username" binding:"required" msg:"请输入用户名"`
+	Password string `json:"password" binding:"required" msg:"请输入密码"`
+	Email    string `json:"email" binding:"required" msg:"邮箱非法"`
+	Code     string `json:"code" binding:"required" msg:"请输入验证码"`
+}
+type ParamRegisterEmail struct {
+	Email string `json:"email" binding:"required" msg:"邮箱非法"`
+}
 type ParamBindEmail struct {
 	Email string  `json:"email" binding:"required" msg:"邮箱非法"`
 	Code  *string `json:"code"`
@@ -60,4 +69,9 @@ type ResponseLogin struct {
 	SN       int64  `json:"sn,string"` // Snowflake ID as string
 	Username string `json:"username"`
 	Role     int64  `json:"role"`
+}
+
+// TableName 实现 gorm.Tabler 接口,就不用写 tx.Table("user_models")了
+func (UserModel) TableName() string {
+	return "user_models"
 }

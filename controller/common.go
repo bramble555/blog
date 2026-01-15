@@ -6,13 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// validateListParams 验证列表参数
 func validateListParams(c *gin.Context) (*model.ParamList, error) {
-	// 默认值
 	pl := new(model.ParamList)
-	pl.Page = 1
-	pl.Size = 10
-	pl.Order = model.OrderByTime
-
 	// 绑定查询参数
 	err := c.ShouldBindQuery(pl)
 	if err != nil {
@@ -20,7 +16,7 @@ func validateListParams(c *gin.Context) (*model.ParamList, error) {
 		return pl, err
 	}
 
-	// 参数校验
+	// 参数校验 & 处理默认值
 	if pl.Page < 1 {
 		pl.Page = 1
 	}

@@ -9,7 +9,7 @@ var (
 	ErrorUserExit      = errors.New("用户已存在")
 	ErrorUserNotExit   = errors.New("用户不存在")
 	ErrorPasswordWrong = errors.New("密码错误")
-	ErrorTitleExit     = errors.New("主题已存在") // 广告主题
+	ErrorTitleExit     = errors.New("主题已存在")
 
 	ErrorCreateWrong     = errors.New("创建错误")
 	ErrorAssertionFailed = errors.New("断言失败")

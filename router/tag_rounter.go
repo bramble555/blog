@@ -7,7 +7,7 @@ import (
 )
 
 func InitTagRoutes(r *gin.RouterGroup) gin.IRoutes {
-	r.POST("/tags", middleware.JWTAdminMiddleware(), controller.CreateTagsHandle)
+	r.POST("/tags", middleware.JWTAuthorMiddleware(), controller.CreateTagsHandle)
 	r.GET("/tags", controller.GetTagsListHandler)
 	r.DELETE("/tags", middleware.JWTAdminMiddleware(), controller.DeleteTagsListHandler)
 	return r

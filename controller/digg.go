@@ -4,6 +4,7 @@ import (
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/logic"
 	"github.com/bramble555/blog/model"
+	"github.com/bramble555/blog/pkg"
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,8 +16,12 @@ func PostArticleDigHandler(c *gin.Context) {
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
+	_claims, _ := c.Get("claims")
+	claims := _claims.(*pkg.MyClaims)
+	uSN := claims.SN
+
 	var data string
-	data, err = logic.PostArticleDig(pi.SN)
+	data, err = logic.PostArticleDig(uSN, pi.SN)
 	if err != nil {
 		global.Log.Errorf("controller PostArticleDigHandler logic.PostArticleDig err:%s\n", err.Error())
 		ResponseErrorWithData(c, CodeServerBusy, err.Error())
@@ -24,6 +29,7 @@ func PostArticleDigHandler(c *gin.Context) {
 	}
 	ResponseSucceed(c, data)
 }
+
 func PostArticleCommentsDiggHandler(c *gin.Context) {
 	ps := model.ParamSN{}
 	err := c.ShouldBindJSON(&ps)
@@ -32,8 +38,12 @@ func PostArticleCommentsDiggHandler(c *gin.Context) {
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
+	_claims, _ := c.Get("claims")
+	claims := _claims.(*pkg.MyClaims)
+	uSN := claims.SN
+
 	var data string
-	data, err = logic.PostArticleCommentDig(ps.SN)
+	data, err = logic.PostArticleCommentDig(uSN, ps.SN)
 	if err != nil {
 		global.Log.Errorf("controller PostArticleCommentsDiggHandler logic.PostArticleCommentDig err:%s\n", err.Error())
 		ResponseErrorWithData(c, CodeServerBusy, err.Error())

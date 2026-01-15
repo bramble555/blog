@@ -4,10 +4,10 @@ import (
 	"github.com/bramble555/blog/dao/mysql/article"
 	"github.com/bramble555/blog/dao/mysql/code"
 	"github.com/bramble555/blog/dao/mysql/comment"
-	"github.com/bramble555/blog/dao/redis"
+	"github.com/bramble555/blog/dao/mysql/digg"
 )
 
-func PostArticleDig(sn int64) (string, error) {
+func PostArticleDig(uSN, sn int64) (string, error) {
 	// 查询 sn 是否存在
 	ok, err := article.CheckSNExist(sn)
 	if err != nil {
@@ -16,9 +16,17 @@ func PostArticleDig(sn int64) (string, error) {
 	if !ok {
 		return "", code.ErrorSNNotExit
 	}
-	return redis.PostArticleDig(sn)
+	isDigg, err := digg.PostArticleDig(uSN, sn)
+	if err != nil {
+		return "", err
+	}
+	if isDigg {
+		return "点赞成功", nil
+	}
+	return "取消点赞成功", nil
 }
-func PostArticleCommentDig(sn int64) (string, error) {
+
+func PostArticleCommentDig(uSN, sn int64) (string, error) {
 	// 查询 sn 是否存在
 	ok, err := comment.CheckSNExist(sn)
 	if err != nil {
@@ -27,5 +35,12 @@ func PostArticleCommentDig(sn int64) (string, error) {
 	if !ok {
 		return "", code.ErrorSNNotExit
 	}
-	return redis.PostArticleCommentDig(sn)
+	isDigg, err := digg.PostCommentDig(uSN, sn)
+	if err != nil {
+		return "", err
+	}
+	if isDigg {
+		return "点赞成功", nil
+	}
+	return "取消点赞成功", nil
 }

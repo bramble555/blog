@@ -1,6 +1,8 @@
 package model
 
-import "time"
+import (
+	"time"
+)
 
 // ArticleTagModel 表示文章和标签之间的关联关系
 type ArticleTagModel struct {

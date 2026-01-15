@@ -24,11 +24,8 @@ func UploadArticles(am *model.ArticleModel) (string, error) {
 		global.Log.Errorf("article  start transaction err:%s\n", tx.Error.Error())
 		return "", tx.Error
 	}
-
-	// 生成 SN
-	am.SN = global.Snowflake.GetID()
-
 	now := time.Now()
+	am.SN = global.Snowflake.GetID()
 	err := tx.Create(&model.ArticleModel{
 		MODEL: model.MODEL{
 			SN:         am.SN,
@@ -42,9 +39,6 @@ func UploadArticles(am *model.ArticleModel) (string, error) {
 		CommentCount:  am.CommentCount,
 		DiggCount:     am.DiggCount,
 		CollectsCount: am.CollectsCount,
-		Category:      am.Category,
-		Source:        am.Source,
-		Link:          am.Link,
 		Tags:          am.Tags,
 		BannerSN:      am.BannerSN,
 		BannerUrl:     am.BannerUrl,
@@ -59,16 +53,31 @@ func UploadArticles(am *model.ArticleModel) (string, error) {
 	}
 
 	tagsStrList := []string(am.Tags)
-	n := len(am.Tags)
-	if n == 0 {
-		tx.Commit() // 如果没有标签，直接提交事务
-		return code.StrCreateSucceed, nil
+	// 自动创建不存在的标签
+	for _, tagTitle := range tagsStrList {
+		var tagCount int64
+		// 检查 tag 是否存在
+		if err := tx.Table("tag_models").Where("title = ?", tagTitle).Count(&tagCount).Error; err != nil {
+			tx.Rollback()
+			global.Log.Errorf("check tag existence err:%s\n", err.Error())
+			return "", err
+		}
+		// 如果不存在，创建 tag
+		if tagCount == 0 {
+			if err := tx.Create(&model.TagModel{Title: tagTitle}).Error; err != nil {
+				tx.Rollback()
+				global.Log.Errorf("auto create tag err:%s\n", err.Error())
+				return "", err
+			}
+			global.Log.Infof("Auto created tag: %s", tagTitle)
+		}
 	}
+
 	// 插入 ArticleTagModel 表
 	for i := range tagsStrList {
 		err = tx.Table("article_tag_models").
 			Create(&model.ArticleTagModel{
-				ArticleSN:    am.SN, // 使用生成的 SN
+				ArticleSN:    am.SN,
 				ArticleTitle: am.Title,
 				TagTitle:     tagsStrList[i],
 			}).Error

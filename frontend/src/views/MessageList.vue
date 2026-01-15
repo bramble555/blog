@@ -13,7 +13,11 @@
              <el-table-column prop="send_user_name" label="Sender" />
              <el-table-column prop="rev_user_name" label="Receiver" />
              <el-table-column prop="content" label="Content" />
-             <el-table-column prop="create_time" label="Time" />
+             <el-table-column label="Time">
+               <template #default="scope">
+                 {{ formatDate(scope.row.create_time) }}
+               </template>
+             </el-table-column>
           </el-table>
       </el-tab-pane>
     </el-tabs>
@@ -21,8 +25,17 @@
 </template>
 
 <script setup>
+/**
+ * MessageList.vue
+ * 
+ * @description 用户消息展示页面及管理员消息概览。
+ * @author GVB Admin
+ * @last_modified 2026-01-14
+ * @requires vue, element-plus, ../api/message
+ */
 import { ref, onMounted } from 'vue'
 import { getMessagesAll, getMyMessages } from '../api/message'
+import { formatDate } from '../utils/date'
 import { ElMessage } from 'element-plus'
 
 const activeTab = ref('my')
@@ -32,6 +45,9 @@ const myMessages = ref([
 ])
 const allMessages = ref([])
 
+/**
+ * 获取当前用户的消息
+ */
 const fetchMy = async () => {
    try {
       const res = await getMyMessages()
@@ -44,6 +60,9 @@ const fetchMy = async () => {
    }
 }
 
+/**
+ * 获取所有消息（管理员）
+ */
 const fetchAll = async () => {
    try {
       const res = await getMessagesAll({ page: 1, size: 20 })
@@ -55,13 +74,21 @@ const fetchAll = async () => {
    }
 }
 
+/**
+ * 处理标签页切换
+ * @param {Object} tab - 标签页实例
+ */
 const handleTabClick = (tab) => {
    if (tab.paneName === 'all') fetchAll()
    else fetchMy()
 }
 
+/**
+ * 查看消息详情
+ * @param {Object} grp - 消息组对象
+ */
 const viewDetail = (grp) => {
-   ElMessage.info('Detail view not implemented yet')
+   ElMessage.info('详情功能暂未实现')
 }
 
 onMounted(() => {

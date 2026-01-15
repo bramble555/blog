@@ -14,9 +14,13 @@
 
     <el-table :data="comments" style="width: 100%" v-loading="loading">
        <el-table-column prop="sn" label="SN" width="180" />
-       <el-table-column prop="username" label="User" />
+       <el-table-column prop="user_detail.username" label="User" />
        <el-table-column prop="content" label="Content" />
-       <el-table-column prop="create_time" label="Time" />
+       <el-table-column label="Time">
+          <template #default="scope">
+            {{ formatDateTime(scope.row.create_time) }}
+          </template>
+       </el-table-column>
        <el-table-column label="Actions">
           <template #default="scope">
              <el-button v-if="isAdmin || scope.row.user_sn === uSN" type="danger" link @click="remove(scope.row.sn)">Delete</el-button>
@@ -27,25 +31,39 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+/**
+ * CommentList.vue
+ * 
+ * @description 评论管理页面（管理员）。允许按文章SN查询评论并进行删除。
+ * @author GVB Admin
+ * @last_modified 2026-01-14
+ * @requires element-plus, vue, ../api/comment, ../stores/auth, @/utils/date
+ */
+import { ref, onMounted, computed } from 'vue'
 import { getComments, deleteComment } from '../api/comment'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { authStore } from '../stores/auth'
+import { formatDateTime } from '@/utils/date'
+
+const comments = ref([])
+const loading = ref(false)
+const articleSn = ref('')
+const pagination = ref({ page: 1, size: 20, total: 0 })
 
 const isAdmin = computed(() => authStore.role === 1)
 const uSN = computed(() => authStore.sn)
 
-const articleSn = ref('')
-const comments = ref([])
-const loading = ref(false)
-
+/**
+ * 获取评论数据
+ */
 const fetchData = async () => {
-  if (!articleSn.value) return
   loading.value = true
   try {
-    const res = await getComments({ article_sn: articleSn.value })
+    const res = await getComments(articleSn.value || undefined, { page: pagination.value.page, size: pagination.value.size })
     if (res.data.code === 10000) {
-      comments.value = res.data.data // Depending on structure, might be list or tree
+      const data = res.data.data || {}
+      comments.value = data.list || []
+      pagination.value.total = data.count || 0
     } else {
       ElMessage.error(res.data.msg)
     }
@@ -56,12 +74,22 @@ const fetchData = async () => {
   }
 }
 
+onMounted(() => {
+  fetchData()
+})
+
+/**
+ * 删除单个评论
+ * @param {string} sn - Comment serial number
+ */
 const remove = (sn) => {
-   ElMessageBox.confirm('Delete comment?', 'Warning').then(async () => {
+   ElMessageBox.confirm('确定删除该评论吗?', '提示', {
+      type: 'warning'
+   }).then(async () => {
       try {
          const res = await deleteComment(sn)
          if (res.data.code === 10000) {
-            ElMessage.success('Deleted')
+            ElMessage.success('删除成功')
             fetchData()
          }
       } catch (e) {

@@ -16,7 +16,7 @@
       },
       "workbench.tree.renderIndentGuides": "always",
       "workbench.colorCustomizations": {
-            "tree.indentGuidesStroke": "#ef050d"
+            "tree.indentGuidesStroke": "#ef0505"
       },
       "explorer.confirmDelete": false,
 }

@@ -5,9 +5,9 @@ import (
 	"strings"
 )
 
-type Array []string
+type ArrayString []string
 
-func (t *Array) Scan(value interface{}) error {
+func (t *ArrayString) Scan(value interface{}) error {
 	v, _ := value.([]byte)
 	if string(v) == "" {
 		*t = []string{}
@@ -17,7 +17,6 @@ func (t *Array) Scan(value interface{}) error {
 	return nil
 }
 
-func (t Array) Value() (driver.Value, error) {
-	//将数字转化为值
+func (t ArrayString) Value() (driver.Value, error) {
 	return strings.Join(t, "\n"), nil
 }

@@ -15,7 +15,9 @@ type MODEL struct {
 }
 
 // BeforeCreate hook to auto-generate Snowflake ID
+// 防御性赋值, 创建 article_tag_model 的时候,必须立马需要 SN
 func (m *MODEL) BeforeCreate(tx *gorm.DB) error {
+	// 防御性赋值
 	if m.SN == 0 {
 		m.SN = global.Snowflake.GetID()
 	}
@@ -34,5 +36,5 @@ type ParamSN struct {
 	SN int64 `json:"sn,string" binding:"required"`
 }
 
-// 默认按照创建时间降序排序
+// 默认按照最新时间排序
 const OrderByTime = "create_time DESC, sn DESC"

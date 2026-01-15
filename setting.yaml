@@ -73,4 +73,7 @@ jwt:
 
 upload:
   size: 2
-  path: ./uploads/file
+  # 图片上传路径
+  path: ./uploads/file  
+  # 广告上传路径
+  ad_path: ./uploads/ad

@@ -28,8 +28,8 @@ func InitRouter(mode string, wg *sync.WaitGroup) *gin.Engine {
 		store = cookie.NewStore([]byte("bbbbbb"))
 	}
 	r.Use(sessions.Sessions("sessiodddnd", store))
+	r.Static("/uploads", "./uploads")
 	apiGroup := r.Group("/api")
-	InitBaseRoutes(apiGroup)
 	InitBannerRoutes(apiGroup)
 	InitAdvertRoutes(apiGroup)
 	InitUserRoutes(apiGroup)

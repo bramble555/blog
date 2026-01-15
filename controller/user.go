@@ -80,7 +80,7 @@ func PostBindEmailHandler(c *gin.Context) {
 	}
 
 	// 更新邮箱（绑定或修改）
-	err = logic.PostBindEmail(claims.SN, pbe.Email) // claims.SN is int64
+	err = logic.PostBindEmail(claims.SN, pbe.Email)
 	if err != nil {
 		global.Log.Errorf("controller PostBindEmailHandler logic.PostBindEmail err:%s", err.Error())
 		ResponseError(c, CodeServerBusy)
@@ -90,17 +90,80 @@ func PostBindEmailHandler(c *gin.Context) {
 	ResponseSucceed(c, "邮箱修改成功")
 }
 
+func RegisterSendCodeHandler(c *gin.Context) {
+	var pre model.ParamRegisterEmail
+	err := c.ShouldBindJSON(&pre)
+	if err != nil {
+		global.Log.Errorf("controller RegisterSendCodeHandler ShouldBindJSON err:%s\n", err.Error())
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+	// 把发送的邮箱和验证码存储到 session
+	session := sessions.Default(c)
+	code, err := pkg.SendEmail(pre.Email)
+	if err != nil {
+		global.Log.Errorf("controller RegisterSendCodeHandler pkg.SendEmail err:%s", err.Error())
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	session.Set("register_email", pre.Email)
+	session.Set("register_code", strconv.Itoa(code))
+	session.Save()
+	ResponseSucceed(c, "验证码发送成功")
+}
+
+func RegisterHandler(c *gin.Context) {
+	var pr model.ParamRegister
+	err := c.ShouldBindJSON(&pr)
+	if err != nil {
+		global.Log.Errorf("controller RegisterHandler ShouldBindJSON err:%s\n", err.Error())
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+	session := sessions.Default(c)
+	storedEmail := session.Get("register_email")
+	storedCode := session.Get("register_code")
+	if storedEmail == nil || storedCode == nil {
+		global.Log.Errorf("controller RegisterHandler code not found in session\n")
+		ResponseError(c, CodeInvalidVerification)
+		return
+	}
+	if storedEmail != pr.Email {
+		global.Log.Errorf("controller RegisterHandler email mismatch\n")
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+	if storedCode != pr.Code {
+		global.Log.Errorf("controller RegisterHandler code mismatch\n")
+		ResponseError(c, CodeInvalidVerification)
+		return
+	}
+	data, err := logic.RegisterUser(&pr)
+	if err != nil {
+		if errors.Is(err, code.ErrorUserExit) {
+			ResponseErrorWithData(c, CodeUserExist, err)
+			return
+		}
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+	session.Delete("register_email")
+	session.Delete("register_code")
+	session.Save()
+	ResponseSucceed(c, data)
+}
+
 // UsernameLoginHandler 用户用用户名登录
 func UsernameLoginHandler(c *gin.Context) {
-	var peu model.ParamUsername
-	err := c.ShouldBindJSON(&peu)
+	var pu model.ParamUsername
+	err := c.ShouldBindJSON(&pu)
 	if err != nil {
 		global.Log.Errorf("controller UsernameLoginHandler ShouldBindJSON err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
 	// 业务处理
-	data, err := logic.UsernameLogin(&peu)
+	data, err := logic.UsernameLogin(&pu)
 	if err != nil {
 		if errors.Is(err, code.ErrorUserNotExit) {
 			ResponseErrorWithData(c, CodeUserNotExist, err)
@@ -136,7 +199,7 @@ func GetUserListHandler(c *gin.Context) {
 	ResponseSucceed(c, data)
 }
 
-// UpdateUserRoleHandler 管理员更新用户权限(其余均不更新)
+// UpdateUserRoleHandler 管理员更新用户权限
 func UpdateUserRoleHandler(c *gin.Context) {
 	puur := model.ParamUpdateUserRole{}
 	err := c.ShouldBindJSON(&puur)
@@ -199,19 +262,17 @@ func LogoutHandler(c *gin.Context) {
 	ResponseSucceed(c, "注销成功")
 }
 
-// DeleteUserListHandler admin 删除用户
-func DeleteUserListHandler(c *gin.Context) {
-	var pdl model.ParamDeleteList
-	err := c.ShouldBindJSON(&pdl)
+func DeleteUserHandler(c *gin.Context) {
+	var psn model.ParamSN
+	err := c.ShouldBindJSON(&psn)
 	if err != nil {
-		global.Log.Errorf("controller DeleteUserListHandler ShouldBindJSON err:%s\n", err.Error())
+		global.Log.Errorf("controller DeleteUserHandler ShouldBindJSON err:%s\n", err.Error())
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
-	var data string
-	data, err = logic.DeleteUserList(&pdl)
+	data, err := logic.DeleteUser(&psn)
 	if err != nil {
-		global.Log.Errorf("controller DeleteUserListHandler logic.DeleteUserList err:%s\n", err.Error())
+		global.Log.Errorf("controller DeleteUserHandler logic.DeleteUser err:%s\n", err.Error())
 		ResponseError(c, CodeServerBusy)
 		return
 	}

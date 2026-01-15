@@ -2,11 +2,14 @@
   <div class="flex h-screen bg-vscode-bg text-vscode-text overflow-hidden">
     <!-- Sidebar -->
     <aside class="w-64 bg-vscode-sidebar border-r border-vscode-border flex flex-col">
-      <div class="p-4 text-xl font-bold text-vscode-primary uppercase tracking-wider">
-        Blog Admin
+      <div class="p-4 flex items-center justify-between">
+        <span class="text-xl font-bold text-vscode-primary uppercase tracking-wider">Blog Admin</span>
+        <router-link to="/" class="text-gray-400 hover:text-white transition-colors" title="Exit to Portal">
+           <el-icon :size="20"><HomeFilled /></el-icon>
+        </router-link>
       </div>
       <nav class="flex-1 overflow-y-auto py-4">
-        <div class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 mt-2">Content</div>
+        <div class="px-4 text-xs font-semibold text-[#FFA500] uppercase tracking-wider mb-2 mt-2">Content</div>
         <router-link to="/admin/articles" class="nav-item" active-class="nav-active">
           <el-icon class="mr-3"><Document /></el-icon> Articles
         </router-link>
@@ -19,8 +22,11 @@
         <router-link to="/admin/tags" class="nav-item" active-class="nav-active">
           <el-icon class="mr-3"><CollectionTag /></el-icon> Tags
         </router-link>
+        <router-link to="/admin/banners" class="nav-item" active-class="nav-active">
+           <el-icon class="mr-3"><Picture /></el-icon> Banners
+        </router-link>
 
-        <div v-if="isAdmin" class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 mt-4">Messages</div>
+        <div v-if="isAdmin" class="px-4 text-xs font-semibold text-[#FFA500] uppercase tracking-wider mb-2 mt-4">Messages</div>
         <router-link v-if="isAdmin" to="/admin/messages" class="nav-item" active-class="nav-active">
            <el-icon class="mr-3"><Bell /></el-icon> Messages
         </router-link>
@@ -28,21 +34,18 @@
            <el-icon class="mr-3"><ChatDotRound /></el-icon> Chat
         </router-link>
 
-        <div v-if="isAdmin" class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 mt-4">Marketing</div>
-        <router-link v-if="isAdmin" to="/admin/banners" class="nav-item" active-class="nav-active">
-           <el-icon class="mr-3"><Picture /></el-icon> Banners
-        </router-link>
+        <div v-if="isAdmin" class="px-4 text-xs font-semibold text-[#FFA500] uppercase tracking-wider mb-2 mt-4">Marketing</div>
         <router-link v-if="isAdmin" to="/admin/adverts" class="nav-item" active-class="nav-active">
            <el-icon class="mr-3"><DataBoard /></el-icon> Adverts
         </router-link>
 
-        <div v-if="isAdmin" class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 mt-4">System</div>
-        <router-link v-if="isAdmin" to="/admin/users" class="nav-item" active-class="nav-active">
-           <el-icon class="mr-3"><User /></el-icon> Users
+        <div class="px-4 text-xs font-semibold text-[#FFA500] uppercase tracking-wider mb-2 mt-4">System</div>
+        <router-link to="/admin/users" class="nav-item" active-class="nav-active">
+           <el-icon class="mr-3"><User /></el-icon> User
         </router-link>
 
       </nav>
-      <div class="p-4 border-t border-vscode-border text-xs text-gray-500 text-center">
+      <div class="p-4 border-t border-vscode-border text-xs text-[#FFA500] text-center">
         GVB Admin v1.0
       </div>
     </aside>
@@ -52,7 +55,7 @@
       <header class="h-14 bg-vscode-bg border-b border-vscode-border flex items-center px-6 justify-between">
         <h1 class="text-lg font-medium text-white">{{ currentPageTitle }}</h1>
         <div class="flex items-center gap-6">
-            <router-link to="/" class="text-xs text-vscode-text/60 hover:text-white flex items-center gap-1 transition-colors">
+            <router-link to="/" class="text-xs text-[#FFA500] hover:text-white flex items-center gap-1 transition-colors">
               <el-icon><Back /></el-icon> Exit to Portal
             </router-link>
             <div class="h-4 w-px bg-vscode-border"></div>
@@ -71,11 +74,19 @@
 </template>
 
 <script setup>
+/**
+ * AdminLayout.vue
+ * 
+ * @description 后台管理布局组件。包含侧边栏导航和顶部导航栏。
+ * @author GVB Admin
+ * @last_modified 2026-01-14
+ * @requires vue, vue-router, @element-plus/icons-vue, ../stores/auth
+ */
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { 
   Document, ChatLineSquare, CollectionTag, Picture, 
-  DataBoard, User, Bell, ChatDotRound, Back, UserFilled, Star
+  DataBoard, User, Bell, ChatDotRound, Back, UserFilled, Star, HomeFilled
 } from '@element-plus/icons-vue'
 import { authStore } from '../stores/auth'
 
@@ -89,14 +100,14 @@ const currentPageTitle = computed(() => route.meta?.title || route.name || 'Dash
   display: flex;
   align-items: center;
   padding: 0.75rem 1rem;
-  font-size: 0.875rem;
-  line-height: 1.25rem;
+  font-size: var(--text-sm);
+  line-height: 1.5;
   transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
   border-left-width: 2px;
   border-color: transparent;
-  color: #9ca3af; /* text-gray-400 */
+  color: #FFA500; /* Replaced text-gray-400 with #FFA500 */
 }
 .nav-item:hover {
   background-color: var(--color-vscode-bg);

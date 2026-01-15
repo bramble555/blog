@@ -8,10 +8,7 @@ import (
 
 func InitBannerRoutes(r *gin.RouterGroup) gin.IRoutes {
 	r.POST("/images", middleware.JWTAuthorMiddleware(), controller.UploadBannersHandler)
-	// 分页查询
-	r.GET("/images", controller.GetBannerListHandler)
-	// 不分页，并且不包含 create_time 等信息
-	r.GET("/images_detail", controller.GetBannerDetailHandler)
-	r.DELETE("/images", middleware.JWTAdminMiddleware(), controller.DeleteBannerListHander)
+	r.GET("/images", middleware.JWTAuthorMiddleware(), controller.GetBannerListHandler)
+	r.DELETE("/images", middleware.JWTAdminMiddleware(), controller.DeleteBannerListHandler)
 	return r
 }
