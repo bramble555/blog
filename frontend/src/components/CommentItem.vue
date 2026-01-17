@@ -18,7 +18,7 @@
   <div class="comment-item">
     <div class="comment-content p-4 border-b border-gray-100/10">
       <div class="user-info flex items-center mb-2">
-        <el-avatar :src="comment.user_detail?.avatar" size="small" class="mr-2"></el-avatar>
+        <el-avatar :src="formatUrl(comment.user_detail?.avatar)" size="small" class="mr-2"></el-avatar>
         <span class="username font-bold mr-2 text-vscode-text">{{ comment.user_detail?.username }}</span>
         <span class="time text-[#FF6600] text-xs">{{ formatDateTime(comment.create_time) }}</span>
       </div>
@@ -90,8 +90,8 @@ import DiggButton from './DiggButton.vue'
 import { createComment, deleteComment } from '@/api/comment'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/stores/user'
-import { ArrowDown, ArrowUp } from '@element-plus/icons-vue'
 import { formatDateTime } from '@/utils/date'
+import { formatUrl } from '@/utils/url'
 
 const props = defineProps({
   comment: Object

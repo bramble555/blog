@@ -7,6 +7,7 @@
   --color-vscode-sidebar: #16161e;
   --color-vscode-border: #292e42;
   --color-text-orange: #FFA500;
+  --color-brand-green: #42b883;
 
   /* Global Font Size Adjustment - Tailwind Overrides */
   --text-2xs: calc(0.625rem + var(--global-font-size-adjust));
@@ -70,4 +71,119 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background-color: var(--color-vscode-primary);
+}
+
+/* ==========================================================================
+   Design System & Global Overrides
+   ========================================================================== */
+
+:root {
+  /* Spacing System (Visual Priority) */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+
+  /* Button System */
+  --btn-border-radius: 4px;
+  /* Consistent radius */
+  --btn-icon-gap: 6px;
+  /* Gap between icon and text */
+}
+
+/* 
+ * Button Visual Optimization 
+ * Target: All el-button instances
+ */
+.el-button {
+  /* Ensure visual alignment of icon and text */
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  /* Use gap for spacing instead of margins on icons */
+  gap: var(--btn-icon-gap);
+
+  /* Visual compensation for text alignment */
+  vertical-align: middle;
+
+  /* Consistent border radius */
+  border-radius: var(--btn-border-radius) !important;
+
+  /* Transition for hover/active states */
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Remove default margin from icons inside buttons to rely on gap */
+.el-button [class*="el-icon"]+span,
+.el-button span+[class*="el-icon"] {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* 
+ * Multi-select Checkbox Optimization (Green Style)
+ * Target: BannerList and other multi-select scenarios
+ */
+.custom-checkbox .el-checkbox__inner {
+  border-color: #4b5563;
+  /* Default gray border (Tailwind gray-600) */
+  background-color: transparent;
+  transition: all 0.2s ease;
+  border-width: 2px;
+  /* Thicker border for better visibility */
+}
+
+/* Hover state */
+.custom-checkbox .el-checkbox__input:not(.is-disabled):hover .el-checkbox__inner {
+  border-color: var(--color-brand-green);
+}
+
+/* Checked state */
+.custom-checkbox .el-checkbox__input.is-checked .el-checkbox__inner {
+  background-color: var(--color-brand-green);
+  border-color: var(--color-brand-green);
+}
+
+/* Focus state - visual balance */
+.custom-checkbox .el-checkbox__input.is-focus .el-checkbox__inner {
+  border-color: var(--color-brand-green);
+  box-shadow: 0 0 0 2px rgba(66, 184, 131, 0.2);
+  /* Visual weight compensation */
+}
+
+/* Checkbox label (if present) alignment */
+.custom-checkbox .el-checkbox__label {
+  vertical-align: middle;
+  padding-left: var(--spacing-sm);
+}
+
+/* 
+ * Shape-specific Optimizations
+ */
+.el-button.is-circle {
+  /* Visual float for circle buttons */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.el-button.is-circle:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* 
+ * Visual Weight Compensation for Primary/Danger Actions 
+ */
+.el-button--primary,
+.el-button--danger {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.el-button--primary:active,
+.el-button--danger:active {
+  transform: translateY(0);
+  box-shadow: none;
 }

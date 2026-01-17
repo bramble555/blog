@@ -13,6 +13,7 @@ import (
 )
 
 // UploadArticleHandler 上传文章
+// 上传的文章对应的 tag  如果不存在,数据库会自动创建
 func UploadArticleHandler(c *gin.Context) {
 	var pa model.ParamArticle
 	err := c.ShouldBindJSON(&pa)
@@ -45,7 +46,7 @@ func UploadArticleHandler(c *gin.Context) {
 	ResponseSucceed(c, data)
 }
 
-// GetArticlesListHandler 获取文章列表，如果有 title ，page 等字段也会根据其进行搜索
+// GetArticlesListHandler 获取文章列表，如果有 title tags,content 字段也会根据其进行搜索
 func GetArticlesListHandler(c *gin.Context) {
 	paq := new(model.ParamArticleQuery)
 	err := c.ShouldBindQuery(paq)
@@ -105,23 +106,10 @@ func GetArticlesCalendarHandler(c *gin.Context) {
 	}
 	ResponseSucceed(c, data)
 }
-func GetArticlesTagsListHandler(c *gin.Context) {
-	pl, err := validateListParams(c)
-	if err != nil {
-		global.Log.Errorf("controller GetArticlesTagsListHandler validateListParams err:%s\n", err.Error())
-		ResponseError(c, CodeInvalidParam)
-		return
-	}
-	data, err := logic.GetArticlesTagsList(pl)
-	if err != nil {
-		global.Log.Errorf("controller GetArticlesTagsListHandler logic.GetArticlesTagsList err:%s\n", err.Error())
-		ResponseError(c, CodeServerBusy)
-		return
-	}
-	ResponseSucceed(c, data)
-}
+
+// UpdateArticlesHandler  更新文章
+// 更新的 tag 必须已经存在,如果传入 不存在的 tag 会报错
 func UpdateArticlesHandler(c *gin.Context) {
-	// http://localhost:8080/articles/1
 	articleSN := c.Param("sn")
 	// 将 articleSN 转换为整型
 	sn, err := strconv.ParseInt(articleSN, 10, 64)
@@ -136,8 +124,12 @@ func UpdateArticlesHandler(c *gin.Context) {
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
-	data, err := logic.UpdateArticles(int64(sn), uf)
+	data, err := logic.UpdateArticles(sn, uf)
 	if err != nil {
+		if errors.Is(err, code.ErrorTagNotExit) {
+			ResponseError(c, CodeTagNotExist)
+			return
+		}
 		global.Log.Errorf("controller UpdateArticlesHandler logic.UpdateArticles err:%s\n", err.Error())
 		ResponseErrorWithData(c, CodeServerBusy, err.Error())
 		return

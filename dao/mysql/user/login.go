@@ -55,7 +55,7 @@ func CheckPwdExistBySN(sn int64, pwd string) (bool, error) {
 	return true, nil
 }
 
-// QueryPasswordByUsername 传入username 和 密码 检验密码是否正确，实现登录功能
+// QueryPasswordByUsername 传入 username 和 密码 检验密码是否正确，实现登录功能
 func QueryPasswordByUsername(peu *model.ParamUsername) (bool, error) {
 	var encryPassword string
 	err := global.DB.Table("user_models").Where("username = ?", peu.Username).
@@ -72,12 +72,14 @@ func QueryPasswordByUsername(peu *model.ParamUsername) (bool, error) {
 	}
 	return true, nil
 }
-func GetToken(peu *model.ParamUsername) (model.ResponseLogin, error) {
+
+func GetUserDetail(peu *model.ParamUsername) (model.ResponseLogin, error) {
 	// 内存对齐
 	type paramUserDetail struct {
 		Username string
 		SN       int64
 		Role     int64
+		Avatar   string
 	}
 
 	// 使用 var 块统一声明所有变量
@@ -91,7 +93,7 @@ func GetToken(peu *model.ParamUsername) (model.ResponseLogin, error) {
 	// 1. 查询数据库
 	// 使用 First/Token 进行查询是否存在,如果不存在 error 是 gorm.ErrRecordNotFound, 不用 Find/Scan
 	err = global.DB.Table("user_models").
-		Select("sn", "username", "role").
+		Select("sn", "username", "role", "avatar").
 		Where("username = ?", peu.Username).
 		Take(&pud).Error
 
@@ -117,30 +119,33 @@ func GetToken(peu *model.ParamUsername) (model.ResponseLogin, error) {
 	res.SN = pud.SN
 	res.Username = pud.Username
 	res.Role = pud.Role
+	res.Avatar = pud.Avatar
 
 	return res, nil
 }
-func PostLogin(username string) error {
-	type data struct {
-		Username string
-	}
-	d := data{}
-	d.Username = username
-	err := global.DB.Table("login_models").Create(&d).Error
-	if err != nil {
-		global.Log.Errorf("create login_models err:%s\n", err.Error())
-	}
-	return nil
-}
+
+// func PostLogin(username string) error {
+// 	type data struct {
+// 		Username string
+// 	}
+// 	d := data{}
+// 	d.Username = username
+// 	err := global.DB.Table("login_models").Create(&d).Error
+// 	if err != nil {
+// 		global.Log.Errorf("create login_models err:%s\n", err.Error())
+// 		return err
+// 	}
+// 	return nil
+// }
 
 func GetUserLoginData() ([]model.DailyLoginCount, error) {
 	var queryResults []model.DailyLoginCount
 
 	// 查询数据库，获取过去 7 天有记录的日期和登录次数
 	err := global.DB.Table("login_models").
-		Select("DATE(created_at) AS login_date, COUNT(*) AS login_count").
-		Where("created_at >= ?", time.Now().AddDate(0, 0, -7)).
-		Group("DATE(created_at)").
+		Select("DATE(create_time) AS login_date, COUNT(*) AS login_count").
+		Where("create_time >= ?", time.Now().AddDate(0, 0, -7)).
+		Group("DATE(create_time)").
 		Order("login_date").
 		Scan(&queryResults).Error
 

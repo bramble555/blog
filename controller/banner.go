@@ -49,6 +49,7 @@ func GetBannerListHandler(c *gin.Context) {
 	ResponseSucceed(c, data)
 }
 
+// 删除图片列表的时候,不需要删除文章的引用
 func DeleteBannerListHandler(c *gin.Context) {
 	var pdl model.ParamDeleteList
 	err := c.ShouldBindJSON(&pdl)

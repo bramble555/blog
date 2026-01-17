@@ -1,9 +1,6 @@
 package model
 
 import (
-	"os"
-
-	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model/ctype"
 	"gorm.io/gorm"
 )
@@ -16,23 +13,15 @@ type BannerModel struct {
 	Path      string           `json:"path" gorm:"-"`
 }
 
+func (BannerModel) TableName() string {
+	return "banner_models"
+}
+
 func (b *BannerModel) AfterFind(tx *gorm.DB) (err error) {
 	if b.ImageType == ctype.Local {
 		b.Path = "/uploads/file/" + b.Name
 	}
 	return
-}
-
-func (b *BannerModel) BeforeDelete(tx *gorm.DB) (err error) {
-	if b.ImageType == ctype.Local {
-		// 如果是本地图片,删除本地存储图片
-		err = os.Remove(global.Config.Upload.Path + "/" + b.Name)
-		if err != nil {
-			global.Log.Errorf("BeforeDelete err:%s\n", err.Error())
-			return err
-		}
-	}
-	return nil
 }
 
 type FileUploadResponse struct {

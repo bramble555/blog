@@ -64,11 +64,16 @@ type DailyLoginCount struct {
 	LoginCount int64     `json:"login_count"` // 登录次数
 }
 
+type ParamSelectBanner struct {
+	BannerSN int64 `json:"banner_sn,string"`
+}
+
 type ResponseLogin struct {
 	Token    string `json:"token"`
 	SN       int64  `json:"sn,string"` // Snowflake ID as string
 	Username string `json:"username"`
 	Role     int64  `json:"role"`
+	Avatar   string `json:"avatar"`
 }
 
 // TableName 实现 gorm.Tabler 接口,就不用写 tx.Table("user_models")了

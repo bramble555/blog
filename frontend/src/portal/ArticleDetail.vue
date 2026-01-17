@@ -6,7 +6,7 @@
         <h1 class="text-4xl md:text-5xl font-extrabold mb-6 leading-tight">{{ article.title }}</h1>
         <div class="flex items-center justify-center gap-6 text-sm text-[#FF6600]">
            <div class="flex items-center gap-2">
-              <el-avatar :size="32" :src="article.user_avatar">{{ article.username?.[0] }}</el-avatar>
+              <el-avatar :size="32" :src="formatUrl(article.user_avatar)">{{ article.username?.[0] }}</el-avatar>
               <span>{{ article.username }}</span>
            </div>
            <span>•</span>
@@ -22,6 +22,13 @@
               @update:count="val => article.digg_count = val"
               @update:isDigg="val => article.is_digg = val"
            />
+           <span>•</span>
+           <div class="flex items-center gap-1 cursor-pointer hover:text-[#FFA500] transition-colors" @click="handleCollect" title="Collect">
+              <el-icon :size="16" :class="{'text-[#FFA500]': article.is_collect}">
+                 <component :is="article.is_collect ? StarFilled : Star" />
+              </el-icon>
+              <span>{{ article.collects_count }}</span>
+           </div>
         </div>
       </header>
 
@@ -106,7 +113,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { getArticle } from '../api/article'
 import { getComments, createComment } from '../api/comment'
-import { View, PictureFilled } from '@element-plus/icons-vue'
+import { View, PictureFilled, Star, StarFilled } from '@element-plus/icons-vue'
 import { authStore } from '../stores/auth'
 import { ElMessage } from 'element-plus'
 import DiggButton from '@/components/DiggButton.vue'
@@ -114,7 +121,7 @@ import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import CommentItem from '@/components/CommentItem.vue'
 import { formatUrl } from '@/utils/url'
 import { formatDate } from '@/utils/date'
-// ... (imports)
+import { postCollect } from '../api/article'
 
 const route = useRoute()
 const article = ref(null)
@@ -232,6 +239,31 @@ const postComment = async () => {
       // 4. 捕获网络或其他未知错误
       console.error('Post comment error:', e)
       ElMessage.error('Failed to post comment')
+   }
+}
+
+/**
+ * 处理收藏点击
+ */
+const handleCollect = async () => {
+   if (!article.value) return
+   if (!authStore.isLoggedIn) {
+      ElMessage.warning('Please login first')
+      return
+   }
+   
+   try {
+      const res = await postCollect({ sn: String(article.value.sn) })
+      if (res.data.code === 10000) {
+         article.value.is_collect = !article.value.is_collect
+         article.value.collects_count += article.value.is_collect ? 1 : -1
+         ElMessage.success(article.value.is_collect ? 'Collected successfully' : 'Uncollected successfully')
+      } else {
+         ElMessage.error(res.data.msg)
+      }
+   } catch (e) {
+      console.error('Collect error:', e)
+      ElMessage.error('Operation failed')
    }
 }
 

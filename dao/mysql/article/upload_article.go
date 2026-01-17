@@ -6,6 +6,7 @@ import (
 	"github.com/bramble555/blog/dao/mysql/code"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
+	"gorm.io/gorm"
 )
 
 func TitleIsExist(title string) (bool, error) {
@@ -24,8 +25,11 @@ func UploadArticles(am *model.ArticleModel) (string, error) {
 		global.Log.Errorf("article  start transaction err:%s\n", tx.Error.Error())
 		return "", tx.Error
 	}
+	// 组装数据,其中 SN 必须现在就要创建了
 	now := time.Now()
 	am.SN = global.Snowflake.GetID()
+	tagsStrList := []string(am.Tags)
+
 	err := tx.Create(&model.ArticleModel{
 		MODEL: model.MODEL{
 			SN:         am.SN,
@@ -51,8 +55,6 @@ func UploadArticles(am *model.ArticleModel) (string, error) {
 		global.Log.Errorf("article  UploadArticles err:%s\n", err.Error())
 		return "", err
 	}
-
-	tagsStrList := []string(am.Tags)
 	// 自动创建不存在的标签
 	for _, tagTitle := range tagsStrList {
 		var tagCount int64
@@ -96,4 +98,72 @@ func UploadArticles(am *model.ArticleModel) (string, error) {
 	}
 
 	return code.StrCreateSucceed, nil
+}
+
+func PostArticleCollect(uSN int64, articleSN int64) (string, error) {
+	tx := global.DB.Begin()
+
+	// 1. 检查是否已经收藏
+	var count int64
+	if err := tx.Table("user_collect_models").
+		Where("article_sn = ? and user_sn = ?", articleSN, uSN).Count(&count).Error; err != nil {
+		global.Log.Errorf("user_collect_models count err: %s\n", err.Error())
+		tx.Rollback()
+		return "", err
+	}
+
+	if count > 0 {
+		// 已收藏，执行取消收藏逻辑
+		if err := tx.Table("user_collect_models").
+			Where("article_sn = ? and user_sn = ?", articleSN, uSN).
+			Delete(&model.UserCollectModel{}).Error; err != nil {
+			global.Log.Errorf("user_collect_models delete err: %s\n", err.Error())
+			tx.Rollback()
+			return "", err
+		}
+
+		// 更新收藏计数 -1
+		if err := tx.Table("article_models").
+			Where("sn = ?", articleSN).
+			UpdateColumn("collects_count", gorm.Expr("collects_count - ?", 1)).Error; err != nil {
+			tx.Rollback()
+			global.Log.Errorf("article_models update collects_count -1 err: %s\n", err.Error())
+			return "", err
+		}
+
+		if err := tx.Commit().Error; err != nil {
+			global.Log.Errorf("tx.Commit() error: %s\n", err.Error())
+			tx.Rollback()
+			return "", err
+		}
+		return "取消收藏成功", nil
+	}
+
+	// 2. 未收藏，执行创建收藏逻辑
+	if err := tx.Create(&model.UserCollectModel{
+		UserSN:    uSN,
+		ArticleSN: articleSN,
+	}).Error; err != nil {
+		global.Log.Errorf("UserCollectModel create err: %s\n", err.Error())
+		tx.Rollback()
+		return "", err
+	}
+
+	// 3. 更新收藏计数 +1
+	if err := tx.Table("article_models").
+		Where("sn = ?", articleSN).
+		UpdateColumn("collects_count", gorm.Expr("collects_count + ?", 1)).Error; err != nil {
+		tx.Rollback()
+		global.Log.Errorf("article_models update collects_count +1 err: %s\n", err.Error())
+		return "", err
+	}
+
+	// 提交事务
+	if err := tx.Commit().Error; err != nil {
+		global.Log.Errorf("tx.Commit() error: %s\n", err.Error())
+		tx.Rollback()
+		return "", err
+	}
+
+	return "收藏成功", nil
 }

@@ -20,6 +20,8 @@ import TagList from '../views/TagList.vue'
 import CommentList from '../views/CommentList.vue'
 import MessageList from '../views/MessageList.vue'
 import ChatView from '../views/ChatView.vue'
+import CalendarView from '../views/CalendarView.vue'
+import Dashboard from '../views/Dashboard.vue'
 
 const routes = [
     // Portal Routes
@@ -58,8 +60,14 @@ const routes = [
     {
         path: '/admin',
         component: AdminLayout,
-        redirect: '/admin/articles',
+        redirect: '/admin/dashboard',
         children: [
+            {
+                path: 'dashboard',
+                name: 'AdminDashboard',
+                component: Dashboard,
+                meta: { title: 'Dashboard', requiresAuth: true, role: 2 }
+            },
             {
                 path: 'articles',
                 name: 'AdminArticles',
@@ -113,6 +121,12 @@ const routes = [
                 name: 'AdminComments',
                 component: CommentList,
                 meta: { title: 'Comment Management', requiresAuth: true, role: 2 }
+            },
+            {
+                path: 'calendar',
+                name: 'AdminCalendar',
+                component: CalendarView,
+                meta: { title: 'Article Calendar', requiresAuth: true, role: 2 }
             },
             {
                 path: 'messages',

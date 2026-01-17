@@ -33,7 +33,7 @@
       <div v-for="banner in banners" :key="banner.sn" class="border border-vscode-border rounded p-2 bg-[#2d2d2d] group relative">
         <!-- 多选框：仅管理员可见 -->
         <div v-if="isAdmin" class="absolute top-2 left-2 z-10">
-          <el-checkbox v-model="selectedBanners" :value="banner.sn" size="large" />
+          <el-checkbox v-model="selectedBanners" :value="banner.sn" size="large" class="custom-checkbox" />
         </div>
         <!-- 图片展示 -->
         <!-- 使用 formatUrl 处理图片路径，支持预览 -->

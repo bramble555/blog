@@ -15,6 +15,11 @@ type ChatModel struct {
 	Addr     string        `json:"addr"`
 	MsgType  ctype.MsgType `json:"msg_type" binding:"required"`
 }
+
+func (ChatModel) TableName() string {
+	return "chat_models"
+}
+
 type ParamChatGroup struct {
 	NickName string        `json:"nick_name"`
 	Avatar   string        `json:"avatar"`

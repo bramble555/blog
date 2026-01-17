@@ -84,3 +84,15 @@ export const logout = () => {
 export const bindEmail = (data) => {
     return service.post('/user_bind_email', data);
 };
+
+/**
+ * 选择用户头像 Banner
+ * 
+ * @param {string|number} bannerSN - Banner SN
+ * @returns {Promise} Axios 响应 Promise
+ */
+export const selectUserBanner = (bannerSN) => {
+    return service.put('/user/banner/select', {
+        banner_sn: String(bannerSN)
+    });
+};

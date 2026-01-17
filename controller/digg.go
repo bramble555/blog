@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// PostArticleDigHandler 实现了用户对文章点赞或取消点赞
 func PostArticleDigHandler(c *gin.Context) {
 	pi := model.ParamSN{}
 	err := c.ShouldBindJSON(&pi)

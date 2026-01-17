@@ -11,3 +11,7 @@ type ParamUpdateAdvertShow struct {
 	SN     int64 `json:"sn,string" binding:"required"`
 	IsShow bool  `json:"is_show"`
 }
+
+func (AdvertModel) TableName() string {
+	return "advert_models"
+}

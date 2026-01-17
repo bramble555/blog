@@ -8,7 +8,7 @@ import (
 	"github.com/bramble555/blog/pkg"
 )
 
-const defaultAvatorPath = "./upload/avator/default.png"
+const defaultAvatorPath = "https://i.postimg.cc/nzwnF92j/dog.jpg"
 
 func CreateUser(role int64, username, password string) error {
 	// 先检验 username 是否存在

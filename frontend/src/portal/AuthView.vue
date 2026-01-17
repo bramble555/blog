@@ -112,8 +112,8 @@ const handleSubmit = async () => {
     if (isRegister.value) {
 	   const res = await register({ username: form.username, password: form.password, email: form.email, code: form.code })
 	   if (res.data.code === 10000) {
-		  const { token, username, role, sn } = res.data.data
-		  authStore.setAuth(token, username, role, sn)
+		  const { token, username, role, sn, avatar } = res.data.data
+		  authStore.setAuth(token, username, role, sn, avatar)
 		  ElMessage.success('Registration successful')
 		  router.push('/')
 	   } else {
@@ -122,8 +122,8 @@ const handleSubmit = async () => {
     } else {
        const res = await login({ username: form.username, password: form.password })
        if (res.data.code === 10000) {
-          const { token, username, role, sn } = res.data.data
-          authStore.setAuth(token, username, role, sn) 
+          const { token, username, role, sn, avatar } = res.data.data
+          authStore.setAuth(token, username, role, sn, avatar) 
           ElMessage.success('Welcome back!')
           router.push('/')
        } else {

@@ -9,3 +9,7 @@ type UserCollectModel struct {
 	UserSN    int64 `json:"user_sn,string"`
 	ArticleSN int64 `json:"article_sn,string"`
 }
+
+func (UserCollectModel) TableName() string {
+	return "user_collect_models"
+}

@@ -30,14 +30,15 @@ func InitRouter(mode string, wg *sync.WaitGroup) *gin.Engine {
 	r.Use(sessions.Sessions("sessiodddnd", store))
 	r.Static("/uploads", "./uploads")
 	apiGroup := r.Group("/api")
+	InitUserRoutes(apiGroup)
 	InitBannerRoutes(apiGroup)
 	InitAdvertRoutes(apiGroup)
-	InitUserRoutes(apiGroup)
-	InitMessageRoutes(apiGroup)
-	InitArticleRoutes(apiGroup)
 	InitTagRoutes(apiGroup)
+	InitArticleRoutes(apiGroup)
+	InitMessageRoutes(apiGroup)
 	InitCommentRoutes(apiGroup)
 	InitChatGroupRouters(apiGroup)
 	InitMetricsRoutes(apiGroup)
+	InitStatisticRoutes(apiGroup)
 	return r
 }

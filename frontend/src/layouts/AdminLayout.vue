@@ -9,9 +9,16 @@
         </router-link>
       </div>
       <nav class="flex-1 overflow-y-auto py-4">
+        <router-link to="/admin/dashboard" class="nav-item" active-class="nav-active">
+          <el-icon class="mr-3"><Odometer /></el-icon> Dashboard
+        </router-link>
+
         <div class="px-4 text-xs font-semibold text-[#FFA500] uppercase tracking-wider mb-2 mt-2">Content</div>
         <router-link to="/admin/articles" class="nav-item" active-class="nav-active">
           <el-icon class="mr-3"><Document /></el-icon> Articles
+        </router-link>
+        <router-link to="/admin/calendar" class="nav-item" active-class="nav-active">
+          <el-icon class="mr-3"><Calendar /></el-icon> Calendar
         </router-link>
         <router-link to="/admin/comments" class="nav-item" active-class="nav-active">
           <el-icon class="mr-3"><ChatLineSquare /></el-icon> Comments
@@ -61,7 +68,7 @@
             <div class="h-4 w-px bg-vscode-border"></div>
             <div class="flex items-center gap-3">
                <span class="text-xs font-semibold text-vscode-primary">{{ isAdmin ? 'ADMIN' : 'USER' }}</span>
-               <el-avatar :size="28" src="" icon="UserFilled" class="border border-vscode-border" />
+               <el-avatar :size="28" :src="formatUrl(avatar)" :icon="UserFilled" class="border border-vscode-border" />
             </div>
         </div>
       </header>
@@ -86,12 +93,14 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { 
   Document, ChatLineSquare, CollectionTag, Picture, 
-  DataBoard, User, Bell, ChatDotRound, Back, UserFilled, Star, HomeFilled
+  DataBoard, User, Bell, ChatDotRound, Back, UserFilled, Star, HomeFilled, Calendar, Odometer
 } from '@element-plus/icons-vue'
 import { authStore } from '../stores/auth'
+import { formatUrl } from '@/utils/url'
 
 const route = useRoute()
 const isAdmin = computed(() => authStore.role === 1)
+const avatar = computed(() => authStore.avatar)
 const currentPageTitle = computed(() => route.meta?.title || route.name || 'Dashboard')
 </script>
 

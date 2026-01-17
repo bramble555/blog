@@ -4,6 +4,7 @@ export const authStore = reactive({
     token: localStorage.getItem('token') || '',
     username: localStorage.getItem('username') || 'Guest',
     sn: localStorage.getItem('sn') || '0',  // Renamed from id to sn
+    avatar: localStorage.getItem('avatar') || '',
     role: (() => {
         const r = localStorage.getItem('role');
         if (r === '管理员' || r === 'admin') return 1;
@@ -13,16 +14,18 @@ export const authStore = reactive({
     })(),
     isLoggedIn: !!localStorage.getItem('token'),
 
-    setAuth(token, username, role, sn) {
+    setAuth(token, username, role, sn, avatar) {
         this.token = token
         this.username = username
         this.role = role
         this.sn = sn
+        this.avatar = avatar || ''
         this.isLoggedIn = true
         localStorage.setItem('token', token)
         localStorage.setItem('username', username)
         localStorage.setItem('role', role.toString())
         localStorage.setItem('sn', sn)
+        localStorage.setItem('avatar', this.avatar)
     },
 
     clearAuth() {
@@ -30,10 +33,12 @@ export const authStore = reactive({
         this.username = 'Guest'
         this.sn = '0'
         this.role = 2
+        this.avatar = ''
         this.isLoggedIn = false
         localStorage.removeItem('token')
         localStorage.removeItem('username')
         localStorage.removeItem('role')
         localStorage.removeItem('sn')
+        localStorage.removeItem('avatar')
     }
 })

@@ -85,6 +85,25 @@ export const deleteCollectArticle = (snList) => {
 };
 
 /**
+ * 获取文章日历数据
+ * 
+ * @returns {Promise} Axios 响应 Promise
+ */
+export const getArticlesCalendar = () => {
+    return service.get('/articles/calendar');
+};
+
+/**
+ * 收藏/取消收藏文章
+ * 
+ * @param {Object} data - { sn: "article_sn" }
+ * @returns {Promise} Axios 响应 Promise
+ */
+export const postCollect = (data) => {
+    return service.post('/articles/collects', data);
+};
+
+/**
  * 获取用户收藏的文章列表
  * 
  * @returns {Promise} Axios 响应 Promise
@@ -92,3 +111,5 @@ export const deleteCollectArticle = (snList) => {
 export const getCollects = () => {
     return service.get('/articles/collects');
 };
+
+

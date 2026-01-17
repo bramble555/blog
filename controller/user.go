@@ -262,6 +262,44 @@ func LogoutHandler(c *gin.Context) {
 	ResponseSucceed(c, "注销成功")
 }
 
+func SelectUserBannerHandler(c *gin.Context) {
+	var psb model.ParamSelectBanner
+	if err := c.ShouldBindJSON(&psb); err != nil {
+		global.Log.Errorf("controller SelectUserBannerHandler ShouldBindJSON err:%s\n", err.Error())
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+
+	_claims, ok := c.Get("claims")
+	if !ok {
+		ResponseError(c, CodeNeedLogin)
+		return
+	}
+	claims := _claims.(*pkg.MyClaims)
+	if psb.BannerSN <= 0 {
+		ResponseError(c, CodeInvalidID)
+		return
+	}
+	avatar, err := logic.SelectUserBanner(claims.SN, psb.BannerSN)
+	if err != nil {
+		if errors.Is(err, code.ErrorUserNotExit) {
+			ResponseError(c, CodeUserNotExist)
+			return
+		}
+		if errors.Is(err, code.ErrorSNNotExit) {
+			ResponseError(c, CodeInvalidID)
+			return
+		}
+		global.Log.Errorf("controller SelectUserBannerHandler logic.SelectUserBanner err:%s\n", err.Error())
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+
+	ResponseSucceed(c, map[string]any{
+		"avatar": avatar,
+	})
+}
+
 func DeleteUserHandler(c *gin.Context) {
 	var psn model.ParamSN
 	err := c.ShouldBindJSON(&psn)

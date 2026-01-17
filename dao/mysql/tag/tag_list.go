@@ -2,11 +2,11 @@ package tag
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/bramble555/blog/dao/mysql"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
+	"github.com/bramble555/blog/model/ctype"
 	"github.com/bramble555/blog/pkg"
 )
 
@@ -78,15 +78,10 @@ func DeleteTagsList(pdl *model.ParamDeleteList) (string, error) {
 				Where("article_sn = ?", aSN).
 				Pluck("tag_title", &currentTitles)
 
-			// 将剩下的标签数组转为逗号分隔的字符串
-			newTagsStr := strings.Join(currentTitles, ",")
-			if newTagsStr == "" {
-				newTagsStr = "无标签待更新"
-			}
-			// 更新到文章表
+			tagsValue := ctype.ArrayString(currentTitles)
 			if err := tx.Table("article_models").
 				Where("sn = ?", aSN).
-				Update("tags", newTagsStr).Error; err != nil {
+				Update("tags", tagsValue).Error; err != nil {
 				tx.Rollback()
 				global.Log.Errorf("Update article tags redundancy err: %s", err.Error())
 				return "", err

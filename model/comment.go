@@ -10,6 +10,10 @@ type CommentModel struct {
 	UserSN          int64  `json:"user_sn,string"`           // 评论的用户ID
 	IsDigg          bool   `gorm:"-" json:"is_digg"`         // 是否点赞
 }
+
+func (CommentModel) TableName() string {
+	return "comment_models"
+}
 type ParamPostComment struct {
 	ArticleSN       int64  `json:"article_sn,string" binding:"required"` // 文章ID
 	ParentCommentSN int64  `json:"parent_comment_sn,string"`             // 父级评论ID

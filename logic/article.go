@@ -11,6 +11,7 @@ import (
 	"github.com/bramble555/blog/dao/mysql/user"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
+	"github.com/bramble555/blog/model/ctype"
 	"github.com/bramble555/blog/pkg"
 )
 
@@ -56,15 +57,18 @@ func UploadArticles(claims *pkg.MyClaims, pa *model.ParamArticle, bannerList *[]
 	} else {
 		// 无可用 banner 时，降级为无封面，避免异常
 		pa.BannerSN = 0
-		bannerUrl = ""
-		global.Log.Warnf("no banner available, article will use empty cover")
+		// 默认图片
+		bannerUrl = "https://i.postimg.cc/nzwnF92j/dog.jpg"
+		global.Log.Warnf("no banner available, article will use default cover")
 	}
-	// 组装数据
+
+	tagList := pkg.ParseTagsStringSlice(pa.Tags)
+
 	am := model.ArticleModel{
 		Title:      pa.Title,
 		Abstract:   pa.Abstract,
 		Content:    rawContent,
-		Tags:       pa.Tags,
+		Tags:       ctype.ArrayString(tagList),
 		BannerSN:   pa.BannerSN,
 		BannerUrl:  bannerUrl,
 		UserSN:     claims.SN,
@@ -96,27 +100,26 @@ func GetArticlesDetail(sn string, uSN int64) (*model.ArticleModel, error) {
 	// Parse Markdown
 	am.ParsedContent = pkg.MarkdownToHTML(am.Content)
 
+	// 检查用户是否登录,俩者页面是不一样的
 	if uSN != 0 {
 		// 检查用户是否收藏
 		isCollect, err := article.IsUserCollect(uSN, am.SN)
-		if err == nil {
+		if err == nil && isCollect == true {
 			am.IsCollect = isCollect
 		}
 		// 检查用户是否点赞
 		isDigg, err := digg.IsUserDigg(uSN, am.SN)
-		if err == nil {
+		if err == nil && isDigg == true {
 			am.IsDigg = isDigg
 		}
 	}
 	return am, nil
 }
 
-func GetArticlesCalendar() (*map[string]int, error) {
+func GetArticlesCalendar() (map[string]int, error) {
 	return article.GetArticlesCalendar()
 }
-func GetArticlesTagsList(paq *model.ParamList) (*[]model.ResponseArticleTags, error) {
-	return article.GetArticlesTagsList(paq)
-}
+
 func UpdateArticles(sn int64, uf map[string]any) (string, error) {
 	ok, err := article.CheckSNExist(sn)
 	if err != nil {
@@ -125,16 +128,12 @@ func UpdateArticles(sn int64, uf map[string]any) (string, error) {
 	if !ok {
 		return "", code.ErrorSNNotExit
 	}
-	// 清理已经移除的字段，防止旧前端传入导致更新失败
-	delete(uf, "category")
-	delete(uf, "source")
-	delete(uf, "link")
 	return article.UpdateArticles(sn, uf)
 }
 func DeleteArticlesList(pdl *model.ParamDeleteList) (string, error) {
 	// 检查 SNList 是否为空
 	if len(pdl.SNList) == 0 {
-		return "", code.ErrorSNNotExit
+		return "", nil
 	}
 	// 查询 SNList 是否存在
 	ok, err := article.SNListExist(pdl)

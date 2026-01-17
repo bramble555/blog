@@ -27,12 +27,17 @@ type ArticleModel struct {
 	IsCollect bool `gorm:"-" json:"is_collect"` // 是否收藏，不入库
 	IsDigg    bool `gorm:"-" json:"is_digg"`    // 是否点赞，不入库
 }
+
+func (ArticleModel) TableName() string {
+	return "article_models"
+}
+
 type ParamArticle struct {
-	Title    string            `json:"title" binding:"required"`   // 文章标题
-	Abstract string            `json:"abstract"`                   // 文章简介
-	Content  string            `json:"content" binding:"required"` // 文章内容
-	Tags     ctype.ArrayString `json:"tags"`                       // 文章标签
-	BannerSN int64             `json:"banner_sn,string"`           // 文章封面 SN
+	Title    string `json:"title" binding:"required"`   // 文章标题
+	Abstract string `json:"abstract"`                   // 文章简介
+	Content  string `json:"content" binding:"required"` // 文章内容
+	Tags     string `json:"tags"`                       // 文章标签，前端传入逗号分隔的字符串
+	BannerSN int64  `json:"banner_sn,string"`           // 文章封面 SN
 }
 type ResponseArticle struct {
 	SN            int64             `gorm:"column:sn" json:"sn,string"`
@@ -62,19 +67,6 @@ type ResponseArticleList struct {
 	List  []ResponseArticle `json:"list"`
 	Count int64             `json:"count"`
 }
-
-// func (ra *ResponseArticle) ParseTags() ([]string, error) {
-// 	var tags []string
-// 	if err := json.Unmarshal(ra.Tags, &tags); err != nil {
-// 		// 如果是字符串而不是数组，尝试将其解析为单一字符串
-// 		var tag string
-// 		if err := json.Unmarshal(ra.Tags, &tag); err != nil {
-// 			return nil, err
-// 		}
-// 		tags = []string{tag}
-// 	}
-// 	return tags, nil
-// }
 
 type CalendarCount struct {
 	Date  string `json:"data"`

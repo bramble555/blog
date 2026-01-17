@@ -78,7 +78,15 @@ const form = reactive({
   title: '',
   abstract: '',
   content: '',
-  tags: [] // Array of strings
+  tags: []
+})
+
+// Store original data for change detection
+const originalForm = reactive({
+  title: '',
+  abstract: '',
+  content: '',
+  tags: []
 })
 
 // Initialize
@@ -92,8 +100,30 @@ onMounted(async () => {
         form.title = d.title
         form.abstract = d.abstract
         form.content = d.content
-        form.tags = d.tags || []
-        tagsInput.value = (form.tags || []).join(', ')
+        let serverTags = d.tags
+        let tagArr = []
+        if (Array.isArray(serverTags)) {
+          tagArr = serverTags
+        } else if (typeof serverTags === 'string') {
+          try {
+            const parsed = JSON.parse(serverTags)
+            if (Array.isArray(parsed)) {
+              tagArr = parsed
+            } else if (typeof parsed === 'string') {
+              tagArr = parsed.split(/[,，]/).map(t => t.trim()).filter(t => t)
+            }
+          } catch {
+            tagArr = serverTags.split(/[,，]/).map(t => t.trim()).filter(t => t)
+          }
+        }
+        form.tags = tagArr
+        tagsInput.value = tagArr.join(', ')
+        
+        // Save original state
+        originalForm.title = form.title
+        originalForm.abstract = form.abstract
+        originalForm.content = form.content
+        originalForm.tags = [...tagArr]
       } else {
         alert('Failed to load article')
       }
@@ -113,27 +143,41 @@ const submit = async () => {
   }
 
   submitting.value = true
-  
-  // Process tags
-  const tags = tagsInput.value.split(',').map(t => t.trim()).filter(t => t)
-
-  const payload = {
-    title: form.title,
-    abstract: form.abstract,
-    content: form.content,
-    tags: tags,
-    banner_sn: "1" // Default placeholder as string because backend uses json:"banner_sn,string"
-  }
 
   try {
     let res
     if (isEdit.value) {
-      // Update
+      // Update: Only send changed fields
+      const changes = {}
+      if (form.title !== originalForm.title) changes.title = form.title
+      if (form.abstract !== originalForm.abstract) changes.abstract = form.abstract
+      if (form.content !== originalForm.content) changes.content = form.content
+      
+      // Check tags change
+      const currentTags = tagsInput.value.split(/[,，]/).map(t => t.trim()).filter(t => t)
+      const tagsChanged = JSON.stringify(currentTags) !== JSON.stringify(originalForm.tags)
+      
+      if (tagsChanged) {
+        changes.tags = tagsInput.value
+      }
+
+      if (Object.keys(changes).length === 0) {
+        ElMessage.info('No changes detected')
+        submitting.value = false
+        return
+      }
+
       // Using generic object map for PUT
-      res = await updateArticle(route.params.sn, payload)
+      res = await updateArticle(route.params.sn, changes)
     } else {
-      // Create
-      // ParamArticle struct matches
+      // Create: Send full payload
+      const payload = {
+        title: form.title,
+        abstract: form.abstract,
+        content: form.content,
+        tags: tagsInput.value,
+        banner_sn: "1" // Default placeholder
+      }
       res = await createArticle(payload)
     }
 

@@ -12,3 +12,7 @@ type LoginDataModel struct {
 	Addr      string           `json:"addr"`
 	LoginType ctype.SignStatus `json:"login_type"` // 登录方式
 }
+
+func (LoginDataModel) TableName() string {
+	return "login_models"
+}

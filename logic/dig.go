@@ -8,7 +8,7 @@ import (
 )
 
 func PostArticleDig(uSN, sn int64) (string, error) {
-	// 查询 sn 是否存在
+	// 查询文章 sn 是否存在
 	ok, err := article.CheckSNExist(sn)
 	if err != nil {
 		return "", err

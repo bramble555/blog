@@ -6,6 +6,14 @@
         <button @click="fetchArticles" class="px-3 py-1 bg-vscode-sidebar border border-vscode-border hover:bg-vscode-bg rounded text-sm transition-colors">
           Refresh
         </button>
+        <button
+          v-if="isAdmin"
+          :disabled="selectedSNList.length === 0"
+          @click="deleteSelectedArticles"
+          class="px-3 py-1 bg-red-600/30 border border-red-600/60 hover:bg-red-600/40 rounded text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          Delete Selected<span v-if="selectedSNList.length"> ({{ selectedSNList.length }})</span>
+        </button>
         <router-link v-if="isAdmin" to="/admin/create" class="px-4 py-2 bg-vscode-primary hover:bg-opacity-90 text-white rounded text-sm font-medium transition-colors">
           + New Article
         </router-link>
@@ -23,6 +31,14 @@
       <table class="w-full text-left border-collapse">
         <thead class="bg-[#2d2d2d]">
           <tr>
+            <th v-if="isAdmin" class="p-3 border-b border-vscode-border font-medium text-[#FFA500] w-10">
+              <input
+                type="checkbox"
+                :checked="isAllSelected"
+                @change="toggleSelectAll"
+                class="accent-[#FFA500] cursor-pointer"
+              />
+            </th>
             <th class="p-3 border-b border-vscode-border font-medium text-[#FFA500] w-16">SN</th>
             <th class="p-3 border-b border-vscode-border font-medium text-[#FFA500]">Title</th>
             <th class="p-3 border-b border-vscode-border font-medium text-[#FFA500]">Tags</th>
@@ -32,6 +48,14 @@
         </thead>
         <tbody>
           <tr v-for="article in articles" :key="article.sn" class="hover:bg-vocab-bg/50 transition-colors group">
+            <td v-if="isAdmin" class="p-3 border-b border-vscode-border border-opacity-50">
+              <input
+                type="checkbox"
+                :checked="isSelected(article.sn)"
+                @change="toggleSelected(article.sn)"
+                class="accent-[#FFA500] cursor-pointer"
+              />
+            </td>
             <td class="p-3 border-b border-vscode-border border-opacity-50 text-[#FFA500] font-mono text-xs">
               {{ article.sn }}
             </td>
@@ -67,7 +91,7 @@
             </td>
           </tr>
           <tr v-if="articles.length === 0">
-            <td colspan="5" class="p-8 text-center text-gray-500">
+            <td :colspan="isAdmin ? 6 : 5" class="p-8 text-center text-gray-500">
               No articles found. Create one to get started.
             </td>
           </tr>
@@ -99,6 +123,7 @@ const articles = ref([])
 const loading = ref(false)
 const error = ref(null)
 const searchKeyword = ref('')
+const selectedSNList = ref([])
 const pagination = reactive({
   page: 1,
   size: 10,
@@ -155,6 +180,7 @@ const fetchArticles = async () => {
     if (res.data.code === 10000) {
        articles.value = res.data.data.list
        pagination.total = res.data.data.count
+       selectedSNList.value = []
     } else {
        error.value = res.data.msg || '获取文章失败'
     }
@@ -204,8 +230,53 @@ const deleteArticle = (id) => {
     if (res.data.code === 10000) {
       ElMessage.success('删除成功')
       fetchArticles()
+      selectedSNList.value = selectedSNList.value.filter(sn => sn !== id)
     }
   })
+}
+
+const isSelected = (sn) => {
+  return selectedSNList.value.includes(sn)
+}
+
+const toggleSelected = (sn) => {
+  if (isSelected(sn)) {
+    selectedSNList.value = selectedSNList.value.filter(v => v !== sn)
+    return
+  }
+  selectedSNList.value = [...selectedSNList.value, sn]
+}
+
+const isAllSelected = computed(() => {
+  return articles.value.length > 0 && selectedSNList.value.length === articles.value.length
+})
+
+const toggleSelectAll = () => {
+  if (isAllSelected.value) {
+    selectedSNList.value = []
+    return
+  }
+  selectedSNList.value = articles.value.map(a => a.sn)
+}
+
+const deleteSelectedArticles = async () => {
+  if (selectedSNList.value.length === 0) return
+  try {
+    await ElMessageBox.confirm(`确定删除选中的 ${selectedSNList.value.length} 篇文章吗?`, '提示', { type: 'warning' })
+    const res = await deleteArticles(selectedSNList.value)
+    if (res.data.code === 10000) {
+      ElMessage.success('删除成功')
+      selectedSNList.value = []
+      fetchArticles()
+      return
+    }
+    ElMessage.error(res.data.msg || '删除失败')
+  } catch (err) {
+    if (err !== 'cancel') {
+      console.error(err)
+      ElMessage.error('删除失败')
+    }
+  }
 }
 
 onMounted(() => {

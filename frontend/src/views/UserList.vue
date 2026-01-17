@@ -14,9 +14,20 @@
           <span v-else>{{ scope.row.sn }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="Avatar" width="80">
+      <el-table-column label="Avatar" width="160">
         <template #default="scope">
-          <el-avatar :size="40" :src="scope.row.avatar" />
+          <div class="flex items-center gap-2">
+            <el-avatar :size="40" :src="formatUrl(scope.row.avatar)" />
+            <el-button
+              v-if="scope.row.sn == authStore.sn"
+              type="primary"
+              link
+              size="small"
+              @click="openAvatarDialog(scope.row)"
+            >
+              Choose
+            </el-button>
+          </div>
         </template>
       </el-table-column>
       <el-table-column prop="username" label="Username" />
@@ -159,6 +170,68 @@
             </span>
         </template>
     </el-dialog>
+
+    <el-dialog v-model="avatarDialogVisible" title="Select Avatar Banner" width="720px">
+      <div class="space-y-4">
+        <div class="flex justify-between items-center">
+          <span class="text-sm text-[#FFA500]">选择一张 Banner 作为头像</span>
+          <el-button size="small" @click="refreshBanners" :loading="bannerLoading">Refresh</el-button>
+        </div>
+        <div class="grid grid-cols-3 md:grid-cols-4 gap-4 min-h-[140px]" v-loading="bannerLoading">
+          <div
+            v-for="banner in bannerList"
+            :key="banner.sn"
+            class="relative border border-vscode-border rounded-lg overflow-hidden cursor-pointer group"
+            :class="banner.sn === selectedBannerSN ? 'ring-2 ring-[#22c55e] border-[#22c55e]' : ''"
+            @click="handleSelectBanner(banner.sn)"
+          >
+            <el-image
+              :src="formatUrl(banner.path || ('/uploads/file/' + banner.name))"
+              fit="cover"
+              class="w-full h-24 bg-black/50"
+              lazy
+            />
+            <div
+              class="absolute inset-0 bg-black/40 flex items-center justify-center text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              {{ banner.name }}
+            </div>
+            <div
+              v-if="banner.sn === selectedBannerSN"
+              class="absolute top-1 right-1 px-2 py-0.5 rounded-full text-[10px] bg-[#22c55e] text-black font-semibold"
+            >
+              Selected
+            </div>
+          </div>
+          <div
+            v-if="!bannerLoading && bannerList.length === 0"
+            class="col-span-full text-center text-sm text-gray-400 py-8"
+          >
+            No banners available. Please upload images first.
+          </div>
+        </div>
+        <div class="flex justify-between items-center mt-2">
+          <el-button
+            size="small"
+            :disabled="!bannerHasMore || bannerLoading"
+            @click="loadMoreBanners"
+          >
+            {{ bannerHasMore ? 'Load More' : 'No More' }}
+          </el-button>
+          <div class="text-xs text-gray-400">
+            Loaded {{ bannerList.length }} items
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="avatarDialogVisible = false">Cancel</el-button>
+          <el-button type="primary" :disabled="!selectedBannerSN" :loading="selectingAvatar" @click="confirmSelectBanner">
+            Save
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -172,10 +245,12 @@
  * @requires vue, element-plus, ../api/user
  */
 import { ref, reactive, onMounted } from 'vue'
-import { getUsers, deleteUser as deleteUserApi, updateUserRole, updateUserPassword, bindEmail } from '../api/user'
+import { getUsers, deleteUser as deleteUserApi, updateUserRole, updateUserPassword, bindEmail, selectUserBanner } from '../api/user'
+import { getBanners } from '../api/banner'
 import { formatDate } from '../utils/date'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { authStore } from '../stores/auth'
+import { formatUrl } from '@/utils/url'
 
 const users = ref([])
 const loading = ref(false)
@@ -278,6 +353,114 @@ const bindEmailRules = {
     code: [
         { required: true, message: 'Please input verification code', trigger: 'blur' }
     ]
+}
+
+const avatarDialogVisible = ref(false)
+const bannerList = ref([])
+const bannerLoading = ref(false)
+const bannerPage = ref(1)
+const bannerPageSize = 12
+const bannerHasMore = ref(true)
+const selectedBannerSN = ref(null)
+const selectingAvatar = ref(false)
+
+const openAvatarDialog = (row) => {
+  if (row.sn != authStore.sn) {
+    ElMessage.warning('You can only change your own avatar.')
+    return
+  }
+  avatarDialogVisible.value = true
+  selectedBannerSN.value = null
+  if (bannerList.value.length === 0) {
+    bannerPage.value = 1
+    bannerHasMore.value = true
+    loadBanners(true)
+  }
+}
+
+const loadBanners = async (reset = false) => {
+  if (bannerLoading.value) return
+  bannerLoading.value = true
+  try {
+    const page = reset ? 1 : bannerPage.value
+    const res = await getBanners({ page, size: bannerPageSize })
+    if (res.data.code === 10000) {
+      const d = res.data.data
+      const list = Array.isArray(d) ? d : (d.list || [])
+      if (reset) {
+        bannerList.value = list
+      } else {
+        bannerList.value = bannerList.value.concat(list)
+      }
+      if (list.length < bannerPageSize) {
+        bannerHasMore.value = false
+      } else {
+        bannerHasMore.value = true
+        bannerPage.value = page + 1
+      }
+    } else {
+      ElMessage.error(res.data.msg || '获取 Banner 失败')
+    }
+  } catch (e) {
+    ElMessage.error('获取 Banner 失败')
+  } finally {
+    bannerLoading.value = false
+  }
+}
+
+const loadMoreBanners = () => {
+  if (!bannerHasMore.value) return
+  loadBanners(false)
+}
+
+const refreshBanners = () => {
+  bannerPage.value = 1
+  bannerHasMore.value = true
+  loadBanners(true)
+}
+
+const handleSelectBanner = (sn) => {
+  const exists = bannerList.value.some(b => b.sn === sn)
+  if (!exists) {
+    ElMessage.error('Invalid banner id')
+    return
+  }
+  selectedBannerSN.value = sn
+}
+
+const confirmSelectBanner = async () => {
+  if (!selectedBannerSN.value) {
+    ElMessage.warning('Please choose a banner first.')
+    return
+  }
+  const exists = bannerList.value.some(b => b.sn === selectedBannerSN.value)
+  if (!exists) {
+    ElMessage.error('Invalid banner id')
+    return
+  }
+  selectingAvatar.value = true
+  try {
+    const res = await selectUserBanner(selectedBannerSN.value)
+    if (res.data.code === 10000) {
+      const avatar = res.data.data && res.data.data.avatar
+      if (avatar) {
+        authStore.avatar = avatar
+        localStorage.setItem('avatar', avatar)
+        const idx = users.value.findIndex(u => u.sn === authStore.sn)
+        if (idx !== -1) {
+          users.value[idx].avatar = avatar
+        }
+      }
+      ElMessage.success(res.data.msg || 'Avatar updated.')
+      avatarDialogVisible.value = false
+    } else {
+      ElMessage.error(res.data.msg || 'Failed to update avatar')
+    }
+  } catch (e) {
+    ElMessage.error('Failed to update avatar')
+  } finally {
+    selectingAvatar.value = false
+  }
 }
 
 const openBindEmailDialog = () => {

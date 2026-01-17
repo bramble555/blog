@@ -11,6 +11,10 @@ type MessageModel struct {
 	IsRead         bool   `json:"is_read"`                    // 接收方是否查看
 	Content        string `json:"content" binding:"required"` // 消息内容
 }
+
+func (MessageModel) TableName() string {
+	return "message_models"
+}
 type ParamMessage struct {
 	SendUserSN int64  `json:"send_user_sn,string"`        // 发送人SN
 	RevUserSN  int64  `json:"rev_user_sn,string"`         // 接收人SN

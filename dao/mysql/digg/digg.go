@@ -2,13 +2,14 @@ package digg
 
 import (
 	"errors"
+
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
 	"gorm.io/gorm"
 )
 
 // PostArticleDig 文章点赞/取消点赞
-// 返回: true=点赞成功, false=取消点赞成功, error
+// 返回: true = 点赞成功, false = 取消点赞成功, error
 func PostArticleDig(uSN, articleSN int64) (bool, error) {
 	var userDigg model.UserDiggModel
 	err := global.DB.Where("user_sn = ? AND article_sn = ?", uSN, articleSN).First(&userDigg).Error

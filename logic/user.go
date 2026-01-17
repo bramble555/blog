@@ -3,6 +3,7 @@ package logic
 import (
 	"time"
 
+	"github.com/bramble555/blog/dao/mysql/banner"
 	"github.com/bramble555/blog/dao/mysql/code"
 	"github.com/bramble555/blog/dao/mysql/user"
 	"github.com/bramble555/blog/dao/redis"
@@ -43,7 +44,7 @@ func UsernameLogin(peu *model.ParamUsername) (model.ResponseLogin, error) {
 	if !ok {
 		return resp, code.ErrorPasswordWrong
 	}
-	return user.GetToken(peu)
+	return user.GetUserDetail(peu)
 }
 func RegisterUser(pr *model.ParamRegister) (model.ResponseLogin, error) {
 	resp := model.ResponseLogin{}
@@ -56,7 +57,7 @@ func RegisterUser(pr *model.ParamRegister) (model.ResponseLogin, error) {
 		Username: pr.Username,
 		Password: pr.Password,
 	}
-	resp, err = user.GetToken(&pu)
+	resp, err = user.GetUserDetail(&pu)
 	if err != nil {
 		return resp, err
 	}
@@ -103,12 +104,32 @@ func UpdateUserPwd(puup *model.ParamUpdateUserPwd, sn int64) (string, error) {
 	if err != nil || !ok {
 		return "你输入的密码有误,请重新尝试", err
 	}
-	var data string
-	data, err = user.UpdateUserPwd(puup, sn)
+	data, err := user.UpdateUserPwd(puup, sn)
 	if err != nil {
 		return "", err
 	}
 	return data, nil
+}
+
+func SelectUserBanner(userSN int64, bannerSN int64) (string, error) {
+	ok, err := user.CheckUserExistBySN(userSN)
+	if err != nil {
+		return "", err
+	}
+	if !ok {
+		return "", code.ErrorUserNotExit
+	}
+
+	if bannerSN <= 0 {
+		return "", code.ErrorSNNotExit
+	}
+
+	bd, err := banner.GetBannerBySN(&bannerSN)
+	if err != nil {
+		return "", err
+	}
+	avatarPath := "/uploads/file/" + bd.Name
+	return user.UpdateUserAvatar(userSN, avatarPath)
 }
 
 // Logout 针对注销的操作

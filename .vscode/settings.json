@@ -19,4 +19,5 @@
             "tree.indentGuidesStroke": "#ef0505"
       },
       "explorer.confirmDelete": false,
+      "Codegeex.RepoIndex": true,
 }

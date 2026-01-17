@@ -80,3 +80,16 @@ func DeleteUser(sn int64) (string, error) {
 	}
 	return fmt.Sprintf("删除用户 %d 及其文章和评论成功", sn), nil
 }
+
+// UpdateUserAvatar 更新用户头像
+func UpdateUserAvatar(userSN int64, avatarPath string) (string, error) {
+	tx := global.DB.Begin()
+	if err := tx.Where("sn = ?", userSN).Update("avatar", avatarPath).Error; err != nil {
+		tx.Rollback()
+		return "", err
+	}
+	if err := tx.Commit().Error; err != nil {
+		return "", err
+	}
+	return avatarPath, nil
+}

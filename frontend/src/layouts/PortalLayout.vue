@@ -50,7 +50,7 @@
                 </button>
                 <div class="h-6 w-px bg-vscode-border mx-1"></div>
                 <div class="flex items-center gap-2">
-                   <el-avatar :size="32" icon="UserFilled" />
+                   <el-avatar :size="32" :src="formatUrl(avatar)" :icon="UserFilled" />
                    <span class="text-sm font-medium hidden lg:inline">{{ username }}</span>
                 </div>
              </div>
@@ -87,6 +87,7 @@ import { useRouter } from 'vue-router'
 import { Search, UserFilled } from '@element-plus/icons-vue'
 import { authStore } from '../stores/auth'
 import { ElMessage } from 'element-plus'
+import { formatUrl } from '@/utils/url'
 
 const router = useRouter()
 const searchQuery = ref('')
@@ -95,6 +96,7 @@ const isLoggedIn = computed(() => authStore.isLoggedIn)
 const isAdmin = computed(() => authStore.role === 1)
 const isUser = computed(() => authStore.role === 2)
 const username = computed(() => authStore.username)
+const avatar = computed(() => authStore.avatar)
 
 /**
  * 处理搜索跳转

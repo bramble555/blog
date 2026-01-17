@@ -12,6 +12,10 @@ type ArticleTagModel struct {
 	CreateTime   time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 	UpdateTime   time.Time `gorm:"default:CURRENT_TIMESTAMP;on_update:CURRENT_TIMESTAMP"`
 }
+
+func (ArticleTagModel) TableName() string {
+	return "article_tag_models"
+}
 type ResponseArticleTags struct {
 	TagTitle         string    `json:"tag_title"`
 	Count            int64     `json:"count"`

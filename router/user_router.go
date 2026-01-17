@@ -16,5 +16,6 @@ func InitUserRoutes(r *gin.RouterGroup) gin.IRoutes {
 	r.POST("/logout", middleware.JWTAuthorMiddleware(), controller.LogoutHandler)
 	r.DELETE("/users", middleware.JWTAdminMiddleware(), controller.DeleteUserHandler)
 	r.POST("/user_bind_email", middleware.JWTAuthorMiddleware(), controller.PostBindEmailHandler)
+	r.PUT("/user/banner/select", middleware.JWTAuthorMiddleware(), controller.SelectUserBannerHandler)
 	return r
 }

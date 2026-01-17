@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// CheckSnListExist 检查文章 SNList 是否存在
 func SNListExist(pdl *model.ParamDeleteList) (bool, error) {
 	// 转换 SNList 为 []int64
 	snList, err := pkg.StringSliceToInt64Slice(pdl.SNList)
@@ -17,7 +18,7 @@ func SNListExist(pdl *model.ParamDeleteList) (bool, error) {
 		global.Log.Errorf("SNListExist StringSliceToInt64Slice err: %s\n", err.Error())
 		return false, err
 	}
-
+	// 查询文章数量
 	var count int64
 	err = global.DB.Table("article_models").Where("sn IN ?", snList).Count(&count).Error
 	if err != nil {
@@ -27,7 +28,7 @@ func SNListExist(pdl *model.ParamDeleteList) (bool, error) {
 	return int(count) == len(snList), nil
 }
 
-// mysql 对应字段为 sn
+// CheckArticleExist 检查文章是否存在
 func CheckSNExist(sn int64) (bool, error) {
 	var count int64
 	err := global.DB.Table("article_models").Where("sn = ?", sn).Count(&count).Error
@@ -76,58 +77,109 @@ func GetArticlesList(pl *model.ParamList) (*[]model.ResponseArticle, error) {
 	return &res, nil
 }
 
+// GetArticlesListByParam 获取文章列表 ,也可以通过 title tags content 进行搜索
 func GetArticlesListByParam(paq *model.ParamArticleQuery, uSN int64) (*model.ResponseArticleList, error) {
 	articles := make([]model.ResponseArticle, 0)
 	var count int64
 	db := global.DB.Table("article_models")
 
+	hasTagFilter := false
+
 	if paq.Title != "" {
-		db = db.Where("title LIKE ?", "%"+paq.Title+"%")
+		db = db.Where("article_models.title LIKE ?", "%"+paq.Title+"%")
 	}
 	if paq.Tags != "" {
-		db = db.Where("tags LIKE ?", "%"+paq.Tags+"%")
+		tagList := pkg.ParseTagsStringSlice(paq.Tags)
+		if len(tagList) > 0 {
+			hasTagFilter = true
+			db = db.Joins("JOIN article_tag_models atm ON atm.article_sn = article_models.sn").
+				Where("atm.tag_title IN ?", tagList)
+		}
 	}
 	if paq.Content != "" {
-		db = db.Where("content LIKE ?", "%"+paq.Content+"%")
+		db = db.Where("article_models.content LIKE ?", "%"+paq.Content+"%")
 	}
 
-	if err := db.Count(&count).Error; err != nil {
+	if hasTagFilter {
+		if err := db.Distinct("article_models.sn").Count(&count).Error; err != nil {
+			global.Log.Errorf("GetArticlesListByParam count failed: %v", err)
+			return nil, err
+		}
+	} else if err := db.Count(&count).Error; err != nil {
 		global.Log.Errorf("GetArticlesListByParam count failed: %v", err)
 		return nil, err
 	}
 
 	offset := (paq.Page - 1) * paq.Size
 	// 默认按创建时间降序排序
-	err := db.Order("create_time DESC").Limit(paq.Size).Offset(offset).Find(&articles).Error
+	query := db
+	if hasTagFilter {
+		query = query.Distinct("article_models.sn")
+	}
+	err := query.Order("article_models.create_time DESC").
+		Limit(paq.Size).
+		Offset(offset).
+		Find(&articles).Error
 	if err != nil {
 		global.Log.Errorf("GetArticlesListByParam failed: %v", err)
 		return nil, err
 	}
 
-	// 如果用户登录了，检查是否收藏
+	// 如果用户登录了，检查是否收藏和点赞
 	if uSN != 0 && len(articles) > 0 {
 		var articleSNs []int64
 		for _, article := range articles {
 			articleSNs = append(articleSNs, article.SN)
 		}
 
+		// 查询用户收藏的文章
 		var collectSNs []int64
-		global.DB.Table("user_collect_models").
+		err := global.DB.Table("user_collect_models").
 			Where("user_sn = ? AND article_sn IN (?)", uSN, articleSNs).
-			Pluck("article_sn", &collectSNs)
+			Pluck("article_sn", &collectSNs).Error
+		if err != nil {
+			global.Log.Errorf("GetArticlesCollectListByParam pluck failed: %v", err)
+			return nil, err
+		}
 
-		collectMap := make(map[int64]bool)
+		// 如果有收藏的文章，设置 IsCollect 为 true
+		// 使用 map, 避免 O(n^2)复杂度
+		collectMap := make(map[int64]bool, len(collectSNs)) // 给 map 预设容量，性能更好
 		for _, sn := range collectSNs {
 			collectMap[sn] = true
 		}
 
 		for i := range articles {
-			if collectMap[articles[i].SN] {
-				articles[i].IsCollect = true
-			}
+			// 这样即便 Map 是空的，逻辑也成立（返回 false）
+			articles[i].IsCollect = collectMap[articles[i].SN]
 		}
-	}
 
+		// 查询用户是否有点赞的文章
+		var diggSNs []int64
+		err = global.DB.Table("user_digg_models").
+			Where("user_sn = ? AND article_sn IN (?)", uSN, articleSNs).
+			Pluck("article_sn", &diggSNs).Error
+		if err != nil {
+			global.Log.Errorf("GetArticlesDiggListByParam pluck failed: %v", err)
+			return nil, err
+		}
+
+		// 如果有点赞的文章, 设置 IsDigg 为 true
+		diggMap := make(map[int64]bool, len(diggSNs))
+		for _, sn := range diggSNs {
+			diggMap[sn] = true
+		}
+		for i := range articles {
+			articles[i].IsDigg = diggMap[articles[i].SN]
+		}
+
+		// 最后统一一次遍历，填充 IsCollect 和 IsDigg
+		for i := range articles {
+			articles[i].IsCollect = collectMap[articles[i].SN]
+			articles[i].IsDigg = diggMap[articles[i].SN]
+		}
+
+	}
 	return &model.ResponseArticleList{
 		List:  articles,
 		Count: count,
@@ -170,64 +222,55 @@ func GetArticlesDetail(sn string) (*model.ArticleModel, error) {
 	return am, nil
 }
 
-func GetArticlesCalendar() (*map[string]int, error) {
-	// 想要包含今天，那就 + 1 天
-	tomorrow := time.Now().AddDate(0, 0, 1)
-	yearAgo := tomorrow.AddDate(-1, 0, 0)
-	format := "2006-01-02"
-	days := int(tomorrow.Sub(yearAgo).Hours() / 24)
-	dateStrings := make(map[string]int, days)
-	for i := 0; i < days; i++ {
-		date := yearAgo.AddDate(0, 0, i) // 获取当前日期
-		dateStr := date.Format(format)
-		dateStrings[dateStr] = 0 // 格式化并加入到字符串切片
-	}
-	var result = []model.CalendarCount{}
-	err := global.DB.Raw(`
-		SELECT DATE_FORMAT(create_time, '%Y-%m-%d') as date, COUNT(sn) as count
-		FROM article_models
-		WHERE create_time >= ? AND create_time <= ?
-		GROUP BY date
-	`, yearAgo, tomorrow).Scan(&result).Error
-	for i := 0; i < len(result); i++ {
-		if _, exists := dateStrings[result[i].Date]; exists {
-			dateStrings[result[i].Date] = result[i].Count
-		}
+// GetArticlesCalendar 获取文章发布日历
+func GetArticlesCalendar() (map[string]int, error) {
+	// 1. 确定时间范围
+	// 统一以 "天" 为单位处理，忽略时分秒带来的边缘计算复杂性
+	now := time.Now()
+	// 获取当天的 00:00:00 (作为基准)
+	todayStart := time.Date(now.Year(), now.Month(),
+		now.Day(), 0, 0, 0, 0, now.Location())
+
+	// 结束时间: 今天的 23:59:59 (用于 SQL 过滤)
+	endDate := todayStart.AddDate(0, 0, 1).Add(-time.Nanosecond)
+	// 开始时间: 365天前 (用于 SQL 过滤)
+	startDate := todayStart.AddDate(-1, 0, 0)
+
+	// 2. 初始化 Map 并预填充 0
+	// 预分配容量，避免 map 在扩容时重新哈希，366 涵盖闰年
+	dateMap := make(map[string]int, 366)
+
+	// 使用 AddDate 循环，
+	for d := startDate; !d.After(todayStart); d = d.AddDate(0, 0, 1) {
+		dateMap[d.Format("2006-01-02")] = 0
 	}
 
-	// 如果只想获取 有文章的日期，那就下面这个方法
-	// err := global.DB.Table("article_models").
-	// 	Select("DATE_FORMAT(create_time, '%Y-%m-%d') as date, count(sn) as count").
-	// 	Group("date").
-	// 	Scan(&result).Error
+	// 3. 执行 SQL 查询
+	var results []model.CalendarCount
+
+	// date 字段直接映射到 model，无需再手动 Scan 进特定变量
+	err := global.DB.Model(&model.ArticleModel{}).
+		Select("DATE_FORMAT(create_time, '%Y-%m-%d') as date, COUNT(*) as count").
+		Where("create_time BETWEEN ? AND ?", startDate, endDate).
+		Group("date").
+		Scan(&results).Error
 
 	if err != nil {
-		global.Log.Errorf("get calendar mysql err:%s\n", err.Error())
-		return nil, err
-	}
-	return &dateStrings, nil
-}
-
-func GetArticlesTagsList(pl *model.ParamList) (*[]model.ResponseArticleTags, error) {
-	offset := (pl.Page - 1) * pl.Size
-	res := []model.ResponseArticleTags{}
-
-	// 查询每个标签的文章数量以及文章标题列表
-	err := global.DB.Table("article_tag_models").
-		Select("tag_title, COUNT(article_title) AS count, GROUP_CONCAT(article_title ORDER BY article_title ASC) AS article_title_list, MIN(create_time) AS create_time").
-		Group("tag_title").  // 按 tag_title 分组
-		Order("count DESC"). // 根据请求的排序方式排序
-		Limit(pl.Size).      // 限制返回的条目数
-		Offset(offset).      // 分页偏移量
-		Scan(&res).Error     // 执行查询并将结果扫描到 res 中
-
-	if err != nil {
-		global.Log.Errorf("select err:%s\n", err.Error())
+		global.Log.Errorf("GetArticlesCalendar db query err: %s", err.Error())
 		return nil, err
 	}
 
-	return &res, nil
+	// 4. 合并数据
+	for _, r := range results {
+		// 发表文章多的天数,颜色越深,交给前端处理
+		dateMap[r.Date] = r.Count
+	}
+
+	// 直接返回 map，不需要指针
+	return dateMap, nil
 }
+
+// DeleteArticlesList 删除文章列表
 func DeleteArticlesList(pdl *model.ParamDeleteList) (string, error) {
 	// 转换 SNList 为 []int64
 	snList, err := pkg.StringSliceToInt64Slice(pdl.SNList)
@@ -235,22 +278,80 @@ func DeleteArticlesList(pdl *model.ParamDeleteList) (string, error) {
 		global.Log.Errorf("DeleteArticlesList StringSliceToInt64Slice err: %s\n", err.Error())
 		return "", err
 	}
-
-	// 删除 article_models 表中数据
-	err = global.DB.Table("article_models").
-		Where("sn In ?", snList).Delete(model.ArticleModel{}).Error
-	if err != nil {
-		global.Log.Errorf("delete article_models err:%s\n", err.Error())
+	// 开启事务
+	tx := global.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+	// 避免下面重复写回滚
+	rollbackOnError := func(err error) (string, error) {
+		tx.Rollback()
 		return "", err
+	}
+
+	var commentSNList []int64
+	if err := tx.Table("comment_models").
+		Where("article_sn IN ?", snList).
+		Pluck("sn", &commentSNList).Error; err != nil {
+		global.Log.Errorf("DeleteArticlesList pluck comment sn err:%s\n", err.Error())
+		return rollbackOnError(err)
+	}
+	// 删除 user_comment_digg_models 表中数据
+	if len(commentSNList) > 0 {
+		if err := tx.Table("user_comment_digg_models").
+			Where("comment_sn IN ?", commentSNList).
+			Delete(&model.UserCommentDiggModel{}).Error; err != nil {
+			global.Log.Errorf("DeleteArticlesList delete user_comment_digg_models err:%s\n", err.Error())
+			return rollbackOnError(err)
+		}
+	}
+	// 删除 comment_models 表中数据
+	if err := tx.Table("comment_models").
+		Where("article_sn IN ?", snList).
+		Delete(&model.CommentModel{}).Error; err != nil {
+		global.Log.Errorf("DeleteArticlesList delete comment_models err:%s\n", err.Error())
+		return rollbackOnError(err)
+	}
+
+	// 删除 user_digg_models 表中数据
+	if err := tx.Table("user_digg_models").
+		Where("article_sn IN ?", snList).
+		Delete(&model.UserDiggModel{}).Error; err != nil {
+		global.Log.Errorf("DeleteArticlesList delete user_digg_models err:%s\n", err.Error())
+		return rollbackOnError(err)
+	}
+
+	// 删除 user_collect_models 表中数据
+	if err := tx.Table("user_collect_models").
+		Where("article_sn IN ?", snList).
+		Delete(&model.UserCollectModel{}).Error; err != nil {
+		global.Log.Errorf("DeleteArticlesList delete user_collect_models err:%s\n", err.Error())
+		return rollbackOnError(err)
 	}
 
 	// 删除 article_tag_models 表中数据
-	err = global.DB.Table("article_tag_models").
-		Where("article_sn In ?", snList).Delete(model.ArticleTagModel{}).Error
-	if err != nil {
-		global.Log.Errorf("delete article_tag_models err:%s\n", err.Error())
+	if err := tx.Table("article_tag_models").
+		Where("article_sn IN ?", snList).
+		Delete(&model.ArticleTagModel{}).Error; err != nil {
+		global.Log.Errorf("DeleteArticlesList delete article_tag_models err:%s\n", err.Error())
+		return rollbackOnError(err)
+	}
+
+	// 删除 article_models 表中数据
+	if err := tx.Table("article_models").
+		Where("sn IN ?", snList).
+		Delete(&model.ArticleModel{}).Error; err != nil {
+		global.Log.Errorf("DeleteArticlesList delete article_models err:%s\n", err.Error())
+		return rollbackOnError(err)
+	}
+	// 提交事务
+	if err := tx.Commit().Error; err != nil {
+		global.Log.Errorf("DeleteArticlesList commit err:%s\n", err.Error())
 		return "", err
 	}
+
 	return "删除成功", nil
 }
 func GetArticleCollect(uSN int64) ([]model.ResponseArticle, error) {
