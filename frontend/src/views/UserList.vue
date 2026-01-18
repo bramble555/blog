@@ -89,6 +89,18 @@
       </el-table-column>
     </el-table>
 
+    <!-- Pagination -->
+    <div class="mt-4 flex justify-center">
+      <el-pagination
+        background
+        layout="total, prev, pager, next"
+        :total="pagination.total"
+        :page-size="pagination.size"
+        :current-page="pagination.page"
+        @current-change="handlePageChange"
+      />
+    </div>
+
     <!-- Role Edit Dialog -->
     <el-dialog v-model="roleDialogVisible" title="Update User Role" width="30%">
       <el-form :model="roleForm">
@@ -250,15 +262,24 @@ import { getBanners } from '../api/banner'
 import { formatDate } from '../utils/date'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { authStore } from '../stores/auth'
-import { formatUrl } from '@/utils/url'
+import { formatUrl } from '../utils/url'
+import { Edit } from '@element-plus/icons-vue'
+
+// Removed incorrect useAuthStore usage
+const loading = ref(false)
+const roleDialogVisible = ref(false)
+const pwdDialogVisible = ref(false)
+const roleForm = reactive({
+  user_sn: '',
+  role: 2
+})
+const pagination = reactive({
+  page: 1,
+  size: 10,
+  total: 0
+})
 
 const users = ref([])
-const loading = ref(false)
-
-const roleDialogVisible = ref(false)
-const roleForm = reactive({ user_sn: 0, role: 1 })
-
-const pwdDialogVisible = ref(false)
 const pwdLoading = ref(false)
 const pwdFormRef = ref(null)
 const pwdForm = reactive({
@@ -522,18 +543,22 @@ const handleBindEmail = async () => {
 const fetchData = async () => {
   loading.value = true
   try {
-    const res = await getUsers({ page: 1, size: 100 })
+    const res = await getUsers({ page: pagination.page, size: pagination.size })
     if (res.data.code === 10000) {
        const d = res.data.data
        // Robust data handling: d can be array, or object with list, or object with data
        if (Array.isArray(d)) {
          users.value = d
+         pagination.total = d.length
        } else if (d && Array.isArray(d.list)) {
          users.value = d.list
+         pagination.total = d.count || d.total || d.list.length
        } else if (d && d.data && Array.isArray(d.data)) {
          users.value = d.data
+         pagination.total = d.count || d.total || d.data.length
        } else {
          users.value = []
+         pagination.total = 0
        }
     }
   } catch (error) {
@@ -542,6 +567,11 @@ const fetchData = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const handlePageChange = (page) => {
+  pagination.page = page
+  fetchData()
 }
 
 /**

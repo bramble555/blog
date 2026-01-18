@@ -10,6 +10,6 @@ func InitCommentRoutes(r *gin.RouterGroup) gin.IRoutes {
 	r.POST("/comments", middleware.JWTAuthorMiddleware(), controller.PostArticleCommentsHandler)
 	r.GET("/comments", controller.GetArticleCommentsHandler)
 	r.POST("/comments/digg", middleware.JWTAuthorMiddleware(), controller.PostArticleCommentsDiggHandler)
-	r.DELETE("/comments", middleware.JWTAuthorMiddleware(), controller.DeleteArticleCommentsHandler)
+	r.DELETE("/comments", middleware.JWTAuthorMiddleware(), controller.DeleteCommentsHandler)
 	return r
 }

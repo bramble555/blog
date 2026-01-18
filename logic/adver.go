@@ -16,8 +16,15 @@ func CreateAdvert(ad *model.AdvertModel) (string, error) {
 	return advert.CreateAdvert(ad)
 }
 
-func GetAdvertList(pl *model.ParamList, isShow bool) ([]model.AdvertModel, error) {
-	return advert.GetAdvertList(pl, isShow)
+func GetAdvertList(pl *model.ParamList, isShow bool) (*model.PageResult[model.AdvertModel], error) {
+	list, count, err := advert.GetAdvertList(pl, isShow)
+	if err != nil {
+		return nil, err
+	}
+	return &model.PageResult[model.AdvertModel]{
+		List:  list,
+		Count: count,
+	}, nil
 }
 
 func DeleteAdvertList(pdl *model.ParamDeleteList) (string, error) {

@@ -6,7 +6,7 @@ import (
 	"github.com/bramble555/blog/model"
 )
 
-func MessageListAll(pl *model.ParamList) ([]model.RespondMessage, error) {
+func MessageListAll(pl *model.ParamList) ([]model.RespondMessage, int64, error) {
 	return mysql.GetTableList[model.RespondMessage]("message_models", pl, "")
 }
 func MessageList(sn int64) ([]model.RespondMessage, error) {

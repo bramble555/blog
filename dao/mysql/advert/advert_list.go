@@ -5,7 +5,7 @@ import (
 	"github.com/bramble555/blog/model"
 )
 
-func GetAdvertList(pl *model.ParamList, isShow bool) ([]model.AdvertModel, error) {
+func GetAdvertList(pl *model.ParamList, isShow bool) ([]model.AdvertModel, int64, error) {
 	var condition string
 	var args []any
 	// isShow = true 返回 数据库中 isShow = true or false
@@ -15,11 +15,7 @@ func GetAdvertList(pl *model.ParamList, isShow bool) ([]model.AdvertModel, error
 		args = append(args, true) // 添加过滤条件的值
 	}
 	// 调用 GetTableList 时，只有在 condition 不为空时才传递条件和参数
-	ad, err := mysql.GetTableList[model.AdvertModel]("advert_models", pl, condition, args...)
-	if err != nil {
-		return nil, err
-	}
-	return ad, nil
+	return mysql.GetTableList[model.AdvertModel]("advert_models", pl, condition, args...)
 }
 
 func DeleteAdvertList(pdl *model.ParamDeleteList) (string, error) {

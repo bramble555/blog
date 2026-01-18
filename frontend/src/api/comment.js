@@ -60,5 +60,6 @@ export const diggComment = (sn) => {
  * @returns {Promise} Axios 响应 Promise
  */
 export const removeCommentBatch = (ids) => {
-    return service.delete('/comments', { data: { id_list: ids } });
+    const snList = (ids || []).map(String)
+    return service.delete('/comments', { data: { sn_list: snList } });
 };

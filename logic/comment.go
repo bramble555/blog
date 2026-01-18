@@ -8,6 +8,8 @@ import (
 	"github.com/bramble555/blog/dao/mysql/comment"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
+	"github.com/bramble555/blog/model/ctype"
+	"github.com/bramble555/blog/pkg"
 )
 
 func PostArticleComments(uSN int64, pc *model.ParamPostComment) (string, error) {
@@ -18,16 +20,16 @@ func PostArticleComments(uSN int64, pc *model.ParamPostComment) (string, error) 
 	}
 	if !ok {
 		global.Log.Errorf("文章:%d不存在", pc.ArticleSN)
-		return "", code.ErrorSNNotExit
+		return "", code.ErrorSNNotExist
 	}
-	// 判断父评论是否存在
+	// 当该评论不是父评论的时候,判断父评论是否存在
 	if pc.ParentCommentSN != -1 {
 		ok, err := comment.CheckSNExist(pc.ParentCommentSN)
 		if err != nil {
 			return "", err
 		}
 		if !ok {
-			return "", code.ErrorSNNotExit
+			return "", code.ErrorSNNotExist
 		}
 		// 获取父评论的文章 SN
 		articleSN, err := comment.GetArticleSNBySN(pc.ParentCommentSN)
@@ -53,18 +55,24 @@ func GetArticleComments(pcl *model.ParamCommentList, uSN int64) (*model.Response
 	}
 	if !ok {
 		global.Log.Errorf("文章:%d不存在", pcl.ArticleSN)
-		return nil, code.ErrorSNNotExit
+		return nil, code.ErrorSNNotExist
 	}
 	return comment.GetArticleComments(pcl, uSN)
 }
-func DeleteArticleComments(uSN int64, role int64, psn *model.ParamSN, articleSN int64) (string, error) {
-	// 如果 articleSN 为 0，说明是从控制器传来的，需要查询
-	if articleSN == 0 {
-		var err error
-		articleSN, err = comment.GetArticleSNBySN(psn.SN)
-		if err != nil {
-			return "", err
-		}
+
+// DeleteArticleComments 删除文章下的评论（包括子评论）
+func DeleteArticleComments(uSN int64, role int64, sn int64, articleSN int64) (string, error) {
+	return comment.DeleteArticleComments(uSN, role, sn, articleSN)
+}
+
+// 批量删除评论（后台用途）
+func DeleteCommentsList(uSN int64, role int64, pdl *model.ParamDeleteList) (string, error) {
+	if role != int64(ctype.PermissionAdmin) {
+		return "", errors.New("无权批量删除评论")
 	}
-	return comment.DeleteArticleComments(uSN, role, psn, articleSN)
+	snList, err := pkg.StringSliceToInt64Slice(pdl.SNList)
+	if err != nil {
+		return "", err
+	}
+	return comment.DeleteCommentsList(uSN, role, snList)
 }

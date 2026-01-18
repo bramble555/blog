@@ -11,12 +11,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func GetBannerList(pl *model.ParamList) (*[]model.BannerModel, error) {
-	bml, err := mysql.GetTableList[model.BannerModel]("banner_models", pl, "")
-	if err != nil {
-		return nil, err
-	}
-	return &bml, nil
+func GetBannerList(pl *model.ParamList) ([]model.BannerModel, int64, error) {
+	return mysql.GetTableList[model.BannerModel]("banner_models", pl, "")
 }
 
 func GetBannerBySN(sn *int64) (*model.ResponseBanner, error) {
@@ -24,7 +20,7 @@ func GetBannerBySN(sn *int64) (*model.ResponseBanner, error) {
 	err := global.DB.Table("banner_models").Select("sn, name").Where("sn = ?", sn).First(&bd).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, code.ErrorSNNotExit
+			return nil, code.ErrorSNNotExist
 		}
 		global.Log.Errorf("banner GetBannerDetail err:%s\n", err.Error())
 		return nil, err
@@ -60,7 +56,7 @@ func DeleteBannerList(pdl *model.ParamDeleteList) (string, error) {
 	if resultB.Error != nil {
 		t.Rollback()
 		global.Log.Errorf("删除 banner_models 时出错:%v\n", resultB.Error)
-		return "删除 banner_models 时出错", code.ErrorSNNotExit
+		return "删除 banner_models 时出错", code.ErrorSNNotExist
 	}
 	// 提交事务
 	t.Commit()

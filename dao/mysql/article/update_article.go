@@ -95,7 +95,7 @@ func UpdateArticles(sn int64, uf map[string]any) (string, error) {
 				return "", err
 			}
 
-			// 如果数据库中没有某些现在需要上传标签，返回 code.ErrorTagNotExit
+			// 如果数据库中没有某些现在需要上传标签，返回 code.ErrorTagNotExist
 			if len(dbTags) != len(uniqueTags) {
 				dbTagMap := make(map[string]struct{}, len(dbTags))
 				for _, t := range dbTags {
@@ -105,7 +105,7 @@ func UpdateArticles(sn int64, uf map[string]any) (string, error) {
 					if _, ok := dbTagMap[reqTag]; !ok {
 						global.Log.Errorf("tag not found in tag_models: %s", reqTag)
 						tx.Rollback()
-						return "", code.ErrorTagNotExit
+						return "", code.ErrorTagNotExist
 					}
 				}
 			}

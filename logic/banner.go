@@ -77,8 +77,15 @@ func UploadImages(c *gin.Context, fileList []*multipart.FileHeader) (*[]model.Fi
 	}
 	return resFileList, nil
 }
-func GetBannerList(pl *model.ParamList) (*[]model.BannerModel, error) {
-	return banner.GetBannerList(pl)
+func GetBannerList(pl *model.ParamList) (*model.PageResult[model.BannerModel], error) {
+	list, count, err := banner.GetBannerList(pl)
+	if err != nil {
+		return nil, err
+	}
+	return &model.PageResult[model.BannerModel]{
+		List:  list,
+		Count: count,
+	}, nil
 }
 
 func DeleteBannerList(pdl *model.ParamDeleteList) (string, error) {

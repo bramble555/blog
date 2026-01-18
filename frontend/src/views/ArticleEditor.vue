@@ -198,12 +198,12 @@ const submit = async () => {
             } else {
                ElMessage.success('Published successfully')
             }
-            router.push('/admin/articles')
+            router.push('/')
          } catch(e) {
             console.warn('Response parsing error:', e)
             // Fallback success
             ElMessage.success('Published successfully')
-            router.push('/admin/articles')
+            router.push('/')
          }
       }
     } else {

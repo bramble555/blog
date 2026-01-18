@@ -1,18 +1,25 @@
 package model
 
-import "github.com/bramble555/blog/model/ctype"
+import (
+	"time"
 
-type LoginDataModel struct {
-	MODEL
-	UserSN    int64            `json:"user_sn"`
-	IP        string           `json:"ip"` // 登录的 IP
-	NickName  string           `json:"nick_name"`
-	Token     string           `json:"token"`
-	Device    string           `json:"device"` // 登录设备
-	Addr      string           `json:"addr"`
-	LoginType ctype.SignStatus `json:"login_type"` // 登录方式
+	"github.com/bramble555/blog/global"
+	"gorm.io/gorm"
+)
+
+type LoginModel struct {
+	SN         int64     `json:"sn"`
+	CreateTime time.Time `gorm:"autoCreateTime" json:"create_time"`
+	Username   string    `json:"username"`
 }
 
-func (LoginDataModel) TableName() string {
+func (l *LoginModel) BeforeCreate(tx *gorm.DB) error {
+	// 防御性赋值
+	if l.SN == 0 {
+		l.SN = global.Snowflake.GetID()
+	}
+	return nil
+}
+func (LoginModel) TableName() string {
 	return "login_models"
 }

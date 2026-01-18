@@ -2,7 +2,7 @@
   <div>
     <h2 class="text-xl font-semibold mb-6">My Collections</h2>
     
-    <el-table :data="articles" style="width: 100%" v-loading="loading">
+    <el-table :data="pagedArticles" style="width: 100%" v-loading="loading">
        <el-table-column prop="title" label="Article Title" />
        <el-table-column prop="create_time" label="Collect Time" width="180">
           <template #default="scope">
@@ -16,11 +16,22 @@
           </template>
        </el-table-column>
     </el-table>
+
+    <div v-if="pagination.total > pagination.size" class="mt-4 flex justify-center">
+      <el-pagination
+        background
+        layout="total, prev, pager, next"
+        :total="pagination.total"
+        :page-size="pagination.size"
+        :current-page="pagination.page"
+        @current-change="handlePageChange"
+      />
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, reactive, computed } from 'vue'
 import { getCollects, deleteCollectArticle } from '../api/article'
 import { collectionStore } from '../stores/collection'
 import { formatDate } from '../utils/date'
@@ -28,6 +39,20 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 
 const articles = ref([])
 const loading = ref(false)
+const pagination = reactive({
+  page: 1,
+  size: 10,
+  total: 0
+})
+
+const pagedArticles = computed(() => {
+  const start = (pagination.page - 1) * pagination.size
+  return articles.value.slice(start, start + pagination.size)
+})
+
+const handlePageChange = (page) => {
+  pagination.page = page
+}
 
 const fetchData = async () => {
   loading.value = true
@@ -42,6 +67,9 @@ const fetchData = async () => {
            list = d.list
         }
         articles.value = list
+        pagination.total = list.length
+        const totalPage = Math.max(1, Math.ceil(pagination.total / pagination.size))
+        if (pagination.page > totalPage) pagination.page = totalPage
         // Update global store
         collectionStore.setCollections(list.map(a => a.article_sn || a.sn))
      }
@@ -59,6 +87,9 @@ const remove = (row) => {
       // Optimistic remove from local list and store
       const originalArticles = [...articles.value]
       articles.value = articles.value.filter(a => (a.article_sn || a.sn) !== sn)
+      pagination.total = articles.value.length
+      const totalPage = Math.max(1, Math.ceil(pagination.total / pagination.size))
+      if (pagination.page > totalPage) pagination.page = totalPage
       collectionStore.remove(sn)
 
       try {

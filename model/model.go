@@ -36,5 +36,10 @@ type ParamSN struct {
 	SN int64 `json:"sn,string" binding:"required"`
 }
 
+type PageResult[T any] struct {
+	List  []T   `json:"list"`
+	Count int64 `json:"count"`
+}
+
 // 默认按照最新时间排序
 const OrderByTime = "create_time DESC, sn DESC"

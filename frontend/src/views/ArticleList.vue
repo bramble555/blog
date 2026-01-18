@@ -98,6 +98,18 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Pagination -->
+    <div class="mt-4 flex justify-center">
+      <el-pagination
+        background
+        layout="total, prev, pager, next"
+        :total="pagination.total"
+        :page-size="pagination.size"
+        :current-page="pagination.page"
+        @current-change="handlePageChange"
+      />
+    </div>
   </div>
 </template>
 

@@ -34,8 +34,9 @@ func UsernameLogin(peu *model.ParamUsername) (model.ResponseLogin, error) {
 		return resp, err
 	}
 	if !ok {
-		return resp, code.ErrorUserNotExit
+		return resp, code.ErrorUserNotExist
 	}
+
 	// 用户存在,判断密码是否错误
 	ok, err = user.QueryPasswordByUsername(peu)
 	if err != nil {
@@ -43,6 +44,12 @@ func UsernameLogin(peu *model.ParamUsername) (model.ResponseLogin, error) {
 	}
 	if !ok {
 		return resp, code.ErrorPasswordWrong
+	}
+
+	// 登录成功,记录登录信息
+	err = user.PostLogin(peu.Username)
+	if err != nil {
+		return resp, err
 	}
 	return user.GetUserDetail(peu)
 }
@@ -68,26 +75,29 @@ func RegisterUser(pr *model.ParamRegister) (model.ResponseLogin, error) {
 	}
 	return resp, nil
 }
-func GetUserList(role int64, pl *model.ParamList) (*[]model.UserModel, error) {
-	udl, err := user.GetUserList(pl)
+func GetUserList(role int64, pl *model.ParamList) (*model.PageResult[model.UserModel], error) {
+	list, count, err := user.GetUserList(pl)
 	if err != nil {
 		return nil, err
 	}
 
 	// 手机号和邮箱脱敏处理
-	for i := range *udl {
-		(*udl)[i].Email = pkg.DesensitizeEmail((*udl)[i].Email)
-		(*udl)[i].Phone = pkg.DesensitizePhone((*udl)[i].Phone)
+	for i := range list {
+		list[i].Email = pkg.DesensitizeEmail(list[i].Email)
+		list[i].Phone = pkg.DesensitizePhone(list[i].Phone)
 	}
 
 	// 如果是普通用户，username 返回 "****"
 	if role == int64(ctype.PermissionUser) {
-		for i := range *udl {
-			(*udl)[i].Username = "****"
+		for i := range list {
+			list[i].Username = "****"
 		}
 	}
 
-	return udl, nil
+	return &model.PageResult[model.UserModel]{
+		List:  list,
+		Count: count,
+	}, nil
 }
 func UpdateUserRole(puur *model.ParamUpdateUserRole) (string, error) {
 	ok, err := user.CheckUserExistBySN(puur.UserSN)
@@ -95,7 +105,7 @@ func UpdateUserRole(puur *model.ParamUpdateUserRole) (string, error) {
 		return "", err
 	}
 	if !ok {
-		return "", code.ErrorSNNotExit
+		return "", code.ErrorSNNotExist
 	}
 	return user.UpdateUserRole(puur)
 }
@@ -117,11 +127,11 @@ func SelectUserBanner(userSN int64, bannerSN int64) (string, error) {
 		return "", err
 	}
 	if !ok {
-		return "", code.ErrorUserNotExit
+		return "", code.ErrorUserNotExist
 	}
 
 	if bannerSN <= 0 {
-		return "", code.ErrorSNNotExit
+		return "", code.ErrorSNNotExist
 	}
 
 	bd, err := banner.GetBannerBySN(&bannerSN)
@@ -142,7 +152,7 @@ func DeleteUser(psn *model.ParamSN) (string, error) {
 		return "", err
 	}
 	if !ok {
-		return "", code.ErrorSNNotExit
+		return "", code.ErrorSNNotExist
 	}
 	return user.DeleteUser(psn.SN)
 }

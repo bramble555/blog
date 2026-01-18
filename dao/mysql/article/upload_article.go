@@ -14,7 +14,7 @@ func TitleIsExist(title string) (bool, error) {
 	err := global.DB.Table("article_models").Where("title = ?", title).Count(&count).Error
 	if err != nil {
 		global.Log.Errorf("Error checking if title exists: %v\n", err)
-		return false, code.ErrorTitleExit
+		return false, code.ErrorTitleExist
 	}
 	return count > 0, nil
 }

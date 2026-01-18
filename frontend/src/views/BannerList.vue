@@ -52,6 +52,18 @@
         </div>
       </div>
     </div>
+
+    <!-- Pagination -->
+    <div class="mt-4 flex justify-center">
+      <el-pagination
+        background
+        layout="total, prev, pager, next"
+        :total="pagination.total"
+        :page-size="pagination.size"
+        :current-page="pagination.page"
+        @current-change="handlePageChange"
+      />
+    </div>
   </div>
 </template>
 
@@ -64,12 +76,12 @@
  * @last_modified 2026-01-14
  * @requires vue, element-plus, ../api/banner, ../stores/auth, @/utils/url
  */
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, reactive } from 'vue'
 import { getBanners, uploadBanners, deleteBanners } from '../api/banner'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete } from '@element-plus/icons-vue'
 import { authStore } from '../stores/auth'
-import { formatUrl } from '@/utils/url'
+import { formatUrl } from '../utils/url'
 
 /**
  * 计算属性：是否为管理员
@@ -95,6 +107,12 @@ const selectedBanners = ref([])
  */
 const loading = ref(false)
 
+const pagination = reactive({
+  page: 1,
+  size: 12,
+  total: 0
+})
+
 /**
  * 获取 Banner 列表
  * @description 从后端获取图片列表数据
@@ -103,18 +121,29 @@ const loading = ref(false)
 const fetchData = async () => {
   loading.value = true
   try {
-    // 调用 API 获取列表，默认第一页，100条
-    const res = await getBanners({ page: 1, size: 100 })
+    // 调用 API 获取列表
+    const res = await getBanners({ page: pagination.page, size: pagination.size })
     if (res.data.code === 10000) {
        const d = res.data.data
        // 兼容不同的数据返回格式（数组或分页对象）
-       banners.value = Array.isArray(d) ? d : (d.list || [])
+       if (Array.isArray(d)) {
+          banners.value = d
+          pagination.total = d.length
+       } else if (d && Array.isArray(d.list)) {
+          banners.value = d.list
+          pagination.total = d.count || d.total || d.list.length
+       }
     }
   } catch (error) {
     ElMessage.error('获取图片失败')
   } finally {
     loading.value = false
   }
+}
+
+const handlePageChange = (page) => {
+  pagination.page = page
+  fetchData()
 }
 
 /**

@@ -6,13 +6,8 @@ import (
 	"github.com/bramble555/blog/model"
 )
 
-func GetUserList(pl *model.ParamList) (*[]model.UserModel, error) {
-	udl, err := mysql.GetTableList[model.UserModel]("user_models", pl, "")
-	if err != nil {
-		global.Log.Errorf("user GetUserList err:%s\n", err.Error())
-		return nil, err
-	}
-	return &udl, nil
+func GetUserList(pl *model.ParamList) ([]model.UserModel, int64, error) {
+	return mysql.GetTableList[model.UserModel]("user_models", pl, "")
 }
 func GetUserDetailBySN(sn int64) (*model.UserDetail, error) {
 	ud := model.UserDetail{}

@@ -10,13 +10,10 @@ import (
 	"github.com/bramble555/blog/pkg"
 )
 
-// GetTagsList 获取 tags 列表
-func GetTagsList(pl *model.ParamList) ([]model.TagModel, error) {
-	tml, err := mysql.GetTableList[model.TagModel]("tag_models", pl, "")
-	if err != nil {
-		return nil, err
-	}
-	return tml, nil
+// GetTags 获取所有 tags
+func GetTags(pl *model.ParamList) ([]model.TagModel, error) {
+	list, _, err := mysql.GetTableList[model.TagModel]("tag_models", pl, "")
+	return list, err
 }
 
 // DeleteTagsList 删除 tags 列表，并同步删除文章与标签的关联关系
@@ -57,13 +54,13 @@ func DeleteTagsList(pdl *model.ParamDeleteList) (string, error) {
 		Distinct("article_sn").
 		Pluck("article_sn", &affectedArticleSNs)
 
-	// 3. 删除关联关系
+	// 3. 删除关联关系 删除 article_tag_models
 	if err := tx.Table("article_tag_models").Where("tag_title IN ?", tagTitles).Delete(nil).Error; err != nil {
 		tx.Rollback()
 		return "", err
 	}
 
-	// 4. 删除标签本身
+	// 4. 删除标签本身 删除 tag_models
 	if err := tx.Where("sn IN ?", snList).Delete(&model.TagModel{}).Error; err != nil {
 		tx.Rollback()
 		return "", err
@@ -77,7 +74,7 @@ func DeleteTagsList(pdl *model.ParamDeleteList) (string, error) {
 			tx.Table("article_tag_models").
 				Where("article_sn = ?", aSN).
 				Pluck("tag_title", &currentTitles)
-
+			// 更新 article_models 表中的冗余 tags 字符串
 			tagsValue := ctype.ArrayString(currentTitles)
 			if err := tx.Table("article_models").
 				Where("sn = ?", aSN).

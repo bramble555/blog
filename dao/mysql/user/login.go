@@ -124,19 +124,16 @@ func GetUserDetail(peu *model.ParamUsername) (model.ResponseLogin, error) {
 	return res, nil
 }
 
-// func PostLogin(username string) error {
-// 	type data struct {
-// 		Username string
-// 	}
-// 	d := data{}
-// 	d.Username = username
-// 	err := global.DB.Table("login_models").Create(&d).Error
-// 	if err != nil {
-// 		global.Log.Errorf("create login_models err:%s\n", err.Error())
-// 		return err
-// 	}
-// 	return nil
-// }
+func PostLogin(username string) error {
+	var lm model.LoginModel
+	lm.Username = username
+	err := global.DB.Table("login_models").Create(&lm).Error
+	if err != nil {
+		global.Log.Errorf("create login_models err:%s\n", err.Error())
+		return err
+	}
+	return nil
+}
 
 func GetUserLoginData() ([]model.DailyLoginCount, error) {
 	var queryResults []model.DailyLoginCount

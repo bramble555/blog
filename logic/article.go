@@ -22,7 +22,7 @@ func UploadArticles(claims *pkg.MyClaims, pa *model.ParamArticle, bannerList *[]
 		return "", err
 	}
 	if ok {
-		return "", code.ErrorTitleExit
+		return "", code.ErrorTitleExist
 	}
 	username := claims.Username
 	// 查询用户头像
@@ -108,7 +108,7 @@ func GetArticlesDetail(sn string, uSN int64) (*model.ArticleModel, error) {
 			am.IsCollect = isCollect
 		}
 		// 检查用户是否点赞
-		isDigg, err := digg.IsUserDigg(uSN, am.SN)
+		isDigg, err := digg.IsUserArticleDigg(uSN, am.SN)
 		if err == nil && isDigg == true {
 			am.IsDigg = isDigg
 		}
@@ -126,7 +126,7 @@ func UpdateArticles(sn int64, uf map[string]any) (string, error) {
 		return "", err
 	}
 	if !ok {
-		return "", code.ErrorSNNotExit
+		return "", code.ErrorSNNotExist
 	}
 	return article.UpdateArticles(sn, uf)
 }
@@ -141,7 +141,7 @@ func DeleteArticlesList(pdl *model.ParamDeleteList) (string, error) {
 		return "", err
 	}
 	if !ok {
-		return "", code.ErrorSNNotExit
+		return "", code.ErrorSNNotExist
 	}
 	return article.DeleteArticlesList(pdl)
 }
@@ -153,7 +153,7 @@ func PostArticleCollect(uSN int64, articleSN int64) (string, error) {
 	}
 	if !ok {
 		global.Log.Errorf("文章 SN:%d不存在\n", articleSN)
-		return "", code.ErrorSNNotExit
+		return "", code.ErrorSNNotExist
 	}
 	return article.PostArticleCollect(uSN, articleSN)
 }
@@ -175,7 +175,7 @@ func DeleteArticleCollect(uSN int64, pdl *model.ParamDeleteList) (string, error)
 	}
 	if int(count) != len(snList) {
 		global.Log.Errorf("SNList 不存在")
-		return "", code.ErrorSNNotExit
+		return "", code.ErrorSNNotExist
 	}
 	return article.DeleteArticleCollect(uSN, snList)
 }

@@ -46,6 +46,7 @@ func PostArticleDig(uSN, articleSN int64) (bool, error) {
 }
 
 // PostCommentDig 评论点赞/取消点赞
+// 返回: true = 点赞成功, false = 取消点赞成功, error
 func PostCommentDig(uSN, commentSN int64) (bool, error) {
 	var userDigg model.UserCommentDiggModel
 	err := global.DB.Where("user_sn = ? AND comment_sn = ?", uSN, commentSN).First(&userDigg).Error
@@ -77,12 +78,14 @@ func PostCommentDig(uSN, commentSN int64) (bool, error) {
 	}
 }
 
-func IsUserDigg(uSN, articleSN int64) (bool, error) {
+// IsUserArticleDigg 是否点赞了文章
+func IsUserArticleDigg(uSN, articleSN int64) (bool, error) {
 	var count int64
 	err := global.DB.Model(&model.UserDiggModel{}).Where("user_sn = ? AND article_sn = ?", uSN, articleSN).Count(&count).Error
 	return count > 0, err
 }
 
+// IsUserCommentDigg 是否点赞了评论
 func IsUserCommentDigg(uSN, commentSN int64) (bool, error) {
 	var count int64
 	err := global.DB.Model(&model.UserCommentDiggModel{}).Where("user_sn = ? AND comment_sn = ?", uSN, commentSN).Count(&count).Error

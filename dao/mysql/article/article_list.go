@@ -23,7 +23,7 @@ func SNListExist(pdl *model.ParamDeleteList) (bool, error) {
 	err = global.DB.Table("article_models").Where("sn IN ?", snList).Count(&count).Error
 	if err != nil {
 		global.Log.Errorf("Error SNListExist: %v\n", err)
-		return false, code.ErrorSNNotExit
+		return false, code.ErrorSNNotExist
 	}
 	return int(count) == len(snList), nil
 }
@@ -34,7 +34,7 @@ func CheckSNExist(sn int64) (bool, error) {
 	err := global.DB.Table("article_models").Where("sn = ?", sn).Count(&count).Error
 	if err != nil {
 		global.Log.Errorf("Error SNExist: %v\n", err)
-		return false, code.ErrorSNNotExit
+		return false, code.ErrorSNNotExist
 	}
 	return count > 0, nil
 }
@@ -56,7 +56,7 @@ func IsUserCollect(uSN int64, articleSN int64) (bool, error) {
 // 	err := global.DB.Table("article_models").Where("sn = ?", sn).Count(&count).Error
 // 	if err != nil {
 // 		global.Log.Errorf("Error SNExist: %v\n", err)
-// 		return false, code.ErrorSNNotExit
+// 		return false, code.ErrorSNNotExist
 // 	}
 // 	return count > 0, nil
 // }
@@ -114,9 +114,10 @@ func GetArticlesListByParam(paq *model.ParamArticleQuery, uSN int64) (*model.Res
 	// 默认按创建时间降序排序
 	query := db
 	if hasTagFilter {
-		query = query.Distinct("article_models.sn")
+		query = query.Distinct()
 	}
-	err := query.Order("article_models.create_time DESC").
+	selectCols := "article_models.sn, article_models.create_time, article_models.update_time, article_models.title, article_models.abstract, article_models.look_count, article_models.comment_count, article_models.digg_count, article_models.collects_count, article_models.tags, article_models.banner_sn, article_models.banner_url, article_models.user_sn, article_models.username, article_models.user_avatar"
+	err := query.Select(selectCols).Order("article_models.create_time DESC").
 		Limit(paq.Size).
 		Offset(offset).
 		Find(&articles).Error
@@ -180,9 +181,16 @@ func GetArticlesListByParam(paq *model.ParamArticleQuery, uSN int64) (*model.Res
 		}
 
 	}
+	totalPage := 0
+	if paq.Size > 0 {
+		totalPage = int((count + int64(paq.Size) - 1) / int64(paq.Size))
+	}
 	return &model.ResponseArticleList{
-		List:  articles,
-		Count: count,
+		List:      articles,
+		Count:     count,
+		Page:      paq.Page,
+		PageSize:  paq.Size,
+		TotalPage: totalPage,
 	}, nil
 }
 

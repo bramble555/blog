@@ -140,7 +140,7 @@ func RegisterHandler(c *gin.Context) {
 	}
 	data, err := logic.RegisterUser(&pr)
 	if err != nil {
-		if errors.Is(err, code.ErrorUserExit) {
+		if errors.Is(err, code.ErrorUserExist) {
 			ResponseErrorWithData(c, CodeUserExist, err)
 			return
 		}
@@ -162,10 +162,11 @@ func UsernameLoginHandler(c *gin.Context) {
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
+	global.Log.Infof("login request username=%s ip=%s ua=%s ts=%s", pu.Username, c.ClientIP(), c.GetHeader("User-Agent"), time.Now().Format(time.RFC3339Nano))
 	// 业务处理
 	data, err := logic.UsernameLogin(&pu)
 	if err != nil {
-		if errors.Is(err, code.ErrorUserNotExit) {
+		if errors.Is(err, code.ErrorUserNotExist) {
 			ResponseErrorWithData(c, CodeUserNotExist, err)
 			return
 		} else if errors.Is(err, code.ErrorPasswordWrong) {
@@ -176,6 +177,7 @@ func UsernameLoginHandler(c *gin.Context) {
 			return
 		}
 	}
+	global.Log.Infof("login success username=%s user_sn=%d ts=%s", pu.Username, data.SN, time.Now().Format(time.RFC3339Nano))
 	ResponseSucceed(c, data)
 }
 func GetUserListHandler(c *gin.Context) {
@@ -211,8 +213,12 @@ func UpdateUserRoleHandler(c *gin.Context) {
 	data, err := logic.UpdateUserRole(&puur)
 	if err != nil {
 		global.Log.Errorf("controller UpdateUserRoleHandler logic.UpdateUserRole err:%s\n", err.Error())
-		if errors.Is(err, code.ErrorSNNotExit) {
-			ResponseErrorWithData(c, CodeUserNotExist, code.ErrorSNNotExit)
+		if errors.Is(err, code.ErrorUserNotExist) {
+			ResponseErrorWithData(c, CodeUserNotExist, code.ErrorUserNotExist)
+			return
+		}
+		if errors.Is(err, code.ErrorSNNotExist) {
+			ResponseErrorWithData(c, CodeUserNotExist, code.ErrorSNNotExist)
 			return
 		}
 		ResponseError(c, CodeServerBusy)
@@ -282,11 +288,11 @@ func SelectUserBannerHandler(c *gin.Context) {
 	}
 	avatar, err := logic.SelectUserBanner(claims.SN, psb.BannerSN)
 	if err != nil {
-		if errors.Is(err, code.ErrorUserNotExit) {
+		if errors.Is(err, code.ErrorUserNotExist) {
 			ResponseError(c, CodeUserNotExist)
 			return
 		}
-		if errors.Is(err, code.ErrorSNNotExit) {
+		if errors.Is(err, code.ErrorSNNotExist) {
 			ResponseError(c, CodeInvalidID)
 			return
 		}

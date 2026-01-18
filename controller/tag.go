@@ -17,6 +17,10 @@ func CreateTagsHandle(c *gin.Context) {
 	}
 	data, err := logic.CreateTags(&tm)
 	if err != nil {
+		if err.Error() == "tag 已存在" {
+			ResponseError(c, CodeTagExist)
+			return
+		}
 		global.Log.Errorf("controller CreateTagsHandle logic.CreateTags err:%s\n", err.Error())
 		ResponseErrorWithData(c, CodeServerBusy, err.Error())
 		return
@@ -24,14 +28,9 @@ func CreateTagsHandle(c *gin.Context) {
 	ResponseSucceed(c, data)
 }
 
-func GetTagsListHandler(c *gin.Context) {
-	pl, err := validateListParams(c)
-	if err != nil {
-		global.Log.Errorf("controller GetTagsListHandler validateListParams err:%s\n", err.Error())
-		ResponseError(c, CodeInvalidParam)
-		return
-	}
-	data, err := logic.GetTagsList(pl)
+// 直接查询所有tag，不需要翻页
+func GetTagsHandler(c *gin.Context) {
+	data, err := logic.GetTags(nil)
 	if err != nil {
 		global.Log.Errorf("controller GetTagsListHandler logic.GetTagsList err:%s\n", err.Error())
 		ResponseError(c, CodeServerBusy)
@@ -41,6 +40,7 @@ func GetTagsListHandler(c *gin.Context) {
 	ResponseSucceed(c, data)
 }
 
+// DeleteTagsListHandler 删除 tags 列表，并同步删除文章与标签的关联关系
 func DeleteTagsListHandler(c *gin.Context) {
 	var pdl model.ParamDeleteList
 	err := c.ShouldBindJSON(&pdl)

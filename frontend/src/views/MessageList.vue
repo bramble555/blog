@@ -19,6 +19,17 @@
                </template>
              </el-table-column>
           </el-table>
+          
+          <div class="mt-4 flex justify-center">
+            <el-pagination
+              background
+              layout="total, prev, pager, next"
+              :total="pagination.total"
+              :page-size="pagination.size"
+              :current-page="pagination.page"
+              @current-change="handlePageChange"
+            />
+          </div>
       </el-tab-pane>
     </el-tabs>
   </div>
@@ -65,13 +76,19 @@ const fetchMy = async () => {
  */
 const fetchAll = async () => {
    try {
-      const res = await getMessagesAll({ page: 1, size: 20 })
+      const res = await getMessagesAll({ page: pagination.page, size: pagination.size })
       if (res.data.code === 10000) {
          allMessages.value = res.data.data.list
+         pagination.total = res.data.data.count
       }
    } catch(e) {
       console.log('Backend API not ready for AllMessages')
    }
+}
+
+const handlePageChange = (page) => {
+  pagination.page = page
+  fetchAll()
 }
 
 /**

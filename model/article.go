@@ -64,8 +64,11 @@ type ResponseArticle struct {
 }
 
 type ResponseArticleList struct {
-	List  []ResponseArticle `json:"list"`
-	Count int64             `json:"count"`
+	List      []ResponseArticle `json:"list"`
+	Count     int64             `json:"count"`
+	Page      int               `json:"page"`
+	PageSize  int               `json:"pageSize"`
+	TotalPage int               `json:"totalPage"`
 }
 
 type CalendarCount struct {

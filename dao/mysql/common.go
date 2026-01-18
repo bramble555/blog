@@ -6,28 +6,40 @@ import (
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
 	"github.com/bramble555/blog/pkg"
+	"gorm.io/gorm"
 )
 
-// DeleteTableList 获取列表
-func GetTableList[T any](tableName string, pl *model.ParamList, where string, args ...any) ([]T, error) {
+// GetTableList 获取列表
+// tableName 表名,pl 参数列表 如果为 nil 则是获取所有记录,where 条件, args 条件参数
+func GetTableList[T any](tableName string, pl *model.ParamList, where string, args ...any) ([]T, int64, error) {
 	var results []T
+	var count int64
+
+	db := global.DB.Table(tableName)
+	if where != "" {
+		db = db.Where(where, args...)
+	}
+
+	if err := db.Session(&gorm.Session{}).Count(&count).Error; err != nil {
+		global.Log.Errorf("查询总数出错: err:%v\n", err.Error())
+		return nil, 0, err
+	}
+
 	if pl != nil {
 		offset := (pl.Page - 1) * pl.Size
-		err := global.DB.Table(tableName).
-			Where(where, args...).
-			Order(pl.Order).
+		err := db.Order(pl.Order).
 			Limit(pl.Size).
 			Offset(offset).
 			Find(&results).Error
-		return results, err
+		return results, count, err
 	}
 	// 如果 pl 是 nil, 那就查询所有，不是分页查询
-	err := global.DB.Table(tableName).Where(where, args...).Find(&results).Error
+	err := db.Find(&results).Error
 	if err != nil {
 		global.Log.Errorf("查询时候出错: err:%v\n", err.Error())
-		return nil, err
+		return nil, 0, err
 	}
-	return results, nil
+	return results, count, nil
 }
 
 // DeleteTableList 删除列表

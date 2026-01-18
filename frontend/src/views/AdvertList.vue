@@ -25,6 +25,18 @@
       </el-table-column>
     </el-table>
 
+    <!-- Pagination -->
+    <div class="mt-4 flex justify-center">
+      <el-pagination
+        background
+        layout="total, prev, pager, next"
+        :total="pagination.total"
+        :page-size="pagination.size"
+        :current-page="pagination.page"
+        @current-change="handlePageChange"
+      />
+    </div>
+
     <el-dialog v-model="dialogVisible" title="New Advert" width="30%">
       <el-form :model="form" label-width="80px">
         <el-form-item label="Title">
@@ -69,9 +81,9 @@
  * @last_modified 2026-01-14
  * @requires element-plus, vue, ../api/advert, @element-plus/icons-vue
  */
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, reactive } from 'vue'
 import { getAdverts, deleteAdverts, createAdvert, updateAdvert, updateAdvertShow, uploadAdvertImage } from '../api/advert'
-import { formatUrl } from '@/utils/url'
+import { formatUrl } from '../utils/url'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Edit, Delete } from '@element-plus/icons-vue'
 
@@ -86,6 +98,11 @@ const form = ref({
 })
 const isEdit = ref(false)
 const editId = ref('')
+const pagination = reactive({
+  page: 1,
+  size: 10,
+  total: 0
+})
 
 /**
  * 获取广告列表
@@ -93,16 +110,28 @@ const editId = ref('')
 const fetchData = async () => {
     loading.value = true
     try {
-        const res = await getAdverts({ page: 1, size: 100 })
+        const res = await getAdverts({ page: pagination.page, size: pagination.size })
         if (res.data.code === 10000) {
             const d = res.data.data
-            adverts.value = Array.isArray(d) ? d : (d.list || [])
+            // Robust data handling
+            if (Array.isArray(d)) {
+                adverts.value = d
+                pagination.total = d.length
+            } else if (d && Array.isArray(d.list)) {
+                adverts.value = d.list
+                pagination.total = d.count || d.total || d.list.length
+            }
         }
     } catch (e) {
         ElMessage.error("获取广告失败")
     } finally {
         loading.value = false
     }
+}
+
+const handlePageChange = (page) => {
+    pagination.page = page
+    fetchData()
 }
 
 /**

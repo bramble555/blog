@@ -7,7 +7,7 @@
         target="_blank"
         class="block w-full h-full relative"
       >
-        <img :src="item.images" class="w-full h-full object-cover" :alt="item.title">
+        <img :src="formatUrl(item.images)" class="w-full h-full object-cover" :alt="item.title">
         <div class="absolute bottom-0 left-0 w-full bg-black bg-opacity-50 text-white p-2 text-center truncate">
             {{ item.title }}
         </div>
@@ -19,6 +19,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getAdverts } from '@/api/advert'
+import { formatUrl } from '@/utils/url'
 
 const adverts = ref([])
 

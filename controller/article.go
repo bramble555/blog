@@ -27,16 +27,16 @@ func UploadArticleHandler(c *gin.Context) {
 
 	// 获取 banner 列表，用于随机选择封面
 	pl := &model.ParamList{Page: 1, Size: 100}
-	bannerList, err := logic.GetBannerList(pl)
+	bannerResult, err := logic.GetBannerList(pl)
 	if err != nil {
 		global.Log.Errorf("controller UploadArticlesHandler logic.GetBannerList err:%s\n", err.Error())
 		ResponseError(c, CodeServerBusy)
 		return
 	}
 
-	data, err := logic.UploadArticles(claims, &pa, bannerList)
+	data, err := logic.UploadArticles(claims, &pa, &bannerResult.List)
 	if err != nil {
-		if errors.Is(err, code.ErrorTitleExit) {
+		if errors.Is(err, code.ErrorTitleExist) {
 			ResponseError(c, CodeTitleExist)
 			return
 		}
@@ -62,7 +62,21 @@ func GetArticlesListHandler(c *gin.Context) {
 		paq.Page = 1
 	}
 	if paq.Size <= 0 {
+		if ps := c.Query("pageSize"); ps != "" {
+			if v, err := strconv.Atoi(ps); err == nil {
+				paq.Size = v
+			}
+		} else if ps := c.Query("page_size"); ps != "" {
+			if v, err := strconv.Atoi(ps); err == nil {
+				paq.Size = v
+			}
+		}
+	}
+	if paq.Size <= 0 {
 		paq.Size = 10
+	}
+	if paq.Size > 100 {
+		paq.Size = 100
 	}
 
 	var uSN int64
@@ -126,7 +140,7 @@ func UpdateArticlesHandler(c *gin.Context) {
 	}
 	data, err := logic.UpdateArticles(sn, uf)
 	if err != nil {
-		if errors.Is(err, code.ErrorTagNotExit) {
+		if errors.Is(err, code.ErrorTagNotExist) {
 			ResponseError(c, CodeTagNotExist)
 			return
 		}

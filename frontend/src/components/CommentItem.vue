@@ -89,7 +89,7 @@ import { ref, computed } from 'vue'
 import DiggButton from './DiggButton.vue'
 import { createComment, deleteComment } from '@/api/comment'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { useUserStore } from '@/stores/user'
+import { authStore } from '@/stores/auth'
 import { formatDateTime } from '@/utils/date'
 import { formatUrl } from '@/utils/url'
 
@@ -98,7 +98,6 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['reply-success', 'delete-success'])
-const userStore = useUserStore()
 
 const showReply = ref(false)
 const replyContent = ref('')
@@ -108,7 +107,8 @@ const isExpanded = ref(false)
 const allSubComments = computed(() => props.comment.sub_comments || [])
 
 const canDelete = computed(() => {
-    return userStore.isAdmin || (userStore.sn && userStore.sn == props.comment.user_sn)
+    // Admin (role=1) or Owner (sn match)
+    return authStore.role === 1 || (authStore.sn && authStore.sn == props.comment.user_sn)
 })
 
 const updateCount = (val) => {

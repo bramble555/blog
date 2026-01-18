@@ -12,7 +12,7 @@ func CreateAdvert(ad *model.AdvertModel) (string, error) {
 	existingCount := global.DB.Take(&existingAdvert, "title = ?", ad.Title).RowsAffected
 	if existingCount == 1 {
 		global.Log.Errorf("mysql global.DB.Create(&model.AdvertModel error\n")
-		return "", code.ErrorTitleExit
+		return "", code.ErrorTitleExist
 	}
 	global.DB.Table("advert_models").Where("title = ?", ad.Title)
 	// 不存在就创建

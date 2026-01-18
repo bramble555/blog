@@ -14,7 +14,7 @@ func PostArticleDig(uSN, sn int64) (string, error) {
 		return "", err
 	}
 	if !ok {
-		return "", code.ErrorSNNotExit
+		return "", code.ErrorSNNotExist
 	}
 	isDigg, err := digg.PostArticleDig(uSN, sn)
 	if err != nil {
@@ -26,21 +26,20 @@ func PostArticleDig(uSN, sn int64) (string, error) {
 	return "取消点赞成功", nil
 }
 
-func PostArticleCommentDig(uSN, sn int64) (string, error) {
+// PostArticleCommentDigg 点赞评论或者取消点赞评论，返回点赞状态和错误信息
+// true 是现在点赞了, false 是现在取消点赞了
+func PostArticleCommentDigg(uSN, sn int64) (bool, error) {
 	// 查询 sn 是否存在
 	ok, err := comment.CheckSNExist(sn)
 	if err != nil {
-		return "", err
+		return false, err
 	}
 	if !ok {
-		return "", code.ErrorSNNotExit
+		return false, code.ErrorSNNotExist
 	}
 	isDigg, err := digg.PostCommentDig(uSN, sn)
 	if err != nil {
-		return "", err
+		return false, err
 	}
-	if isDigg {
-		return "点赞成功", nil
-	}
-	return "取消点赞成功", nil
+	return isDigg, nil
 }

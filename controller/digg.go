@@ -31,6 +31,7 @@ func PostArticleDigHandler(c *gin.Context) {
 	ResponseSucceed(c, data)
 }
 
+// PostArticleCommentsDiggHandler 实现了用户对文章评论点赞或取消点赞
 func PostArticleCommentsDiggHandler(c *gin.Context) {
 	ps := model.ParamSN{}
 	err := c.ShouldBindJSON(&ps)
@@ -43,12 +44,12 @@ func PostArticleCommentsDiggHandler(c *gin.Context) {
 	claims := _claims.(*pkg.MyClaims)
 	uSN := claims.SN
 
-	var data string
-	data, err = logic.PostArticleCommentDig(uSN, ps.SN)
+	var ok bool
+	ok, err = logic.PostArticleCommentDigg(uSN, ps.SN)
 	if err != nil {
 		global.Log.Errorf("controller PostArticleCommentsDiggHandler logic.PostArticleCommentDig err:%s\n", err.Error())
 		ResponseErrorWithData(c, CodeServerBusy, err.Error())
 		return
 	}
-	ResponseSucceed(c, data)
+	ResponseSucceed(c, ok)
 }

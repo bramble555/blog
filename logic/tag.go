@@ -8,8 +8,8 @@ import (
 func CreateTags(tm *model.TagModel) (string, error) {
 	return tag.CreateTags(tm)
 }
-func GetTagsList(pl *model.ParamList) ([]model.TagModel, error) {
-	return tag.GetTagsList(pl)
+func GetTags(pl *model.ParamList) ([]model.TagModel, error) {
+	return tag.GetTags(pl)
 }
 func DeleteTagsList(pdl *model.ParamDeleteList) (string, error) {
 	return tag.DeleteTagsList(pdl)

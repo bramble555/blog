@@ -35,12 +35,17 @@ const handleDigg = async () => {
     const api = props.type === 'article' ? postArticleDigg : postCommentDigg
     const res = await api(props.sn)
     if (res.data.code === 10000) {
-      const newIsDigg = !props.isDigg
+      const serverState = res.data.data
+      const newIsDigg = typeof serverState === 'boolean' ? serverState : !props.isDigg
       const newCount = newIsDigg ? props.count + 1 : props.count - 1
       
       emit('update:isDigg', newIsDigg)
       emit('update:count', newCount)
-      ElMessage.success(res.data.data)
+      if (typeof serverState === 'boolean') {
+        ElMessage.success(serverState ? '点赞成功' : '取消点赞成功')
+      } else {
+        ElMessage.success(serverState)
+      }
     } else {
       ElMessage.error(res.data.msg)
     }

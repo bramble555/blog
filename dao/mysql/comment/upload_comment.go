@@ -12,7 +12,7 @@ func CheckSNExist(sn int64) (bool, error) {
 	err := global.DB.Table("comment_models").Where("sn = ?", sn).Count(&count).Error
 	if err != nil {
 		global.Log.Errorf("Error SNExist: %v\n", err)
-		return false, code.ErrorSNNotExit
+		return false, code.ErrorSNNotExist
 	}
 	return count > 0, nil
 }
@@ -30,6 +30,8 @@ func PostArticleComments(uSN int64, pc *model.ParamPostComment) (string, error) 
 		tx.Rollback()
 		return "", err
 	}
+
+	// 更新文章的评论数
 	err = tx.Table("article_models").Where("sn = ?", pc.ArticleSN).
 		UpdateColumn("comment_count", gorm.Expr("comment_count + ?", 1)).
 		Error
@@ -38,6 +40,7 @@ func PostArticleComments(uSN int64, pc *model.ParamPostComment) (string, error) 
 		tx.Rollback()
 		return "", err
 	}
+
 	// 更新父级评论的 CommentCount
 	if err = updateParentCommentCount(tx, pc.ParentCommentSN); err != nil {
 		global.Log.Errorf("updateParentCommentCount err:%s\n", err.Error())

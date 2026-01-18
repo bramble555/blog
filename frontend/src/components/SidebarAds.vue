@@ -53,8 +53,9 @@ onMounted(async () => {
     // 请求广告列表，默认获取前5条显示的广告
     const res = await getAdverts({ page: 1, limit: 5, is_show: true })
     if (res.data.code === 10000) {
-      // 兼容处理返回数据，确保为数组
-      const list = Array.isArray(res.data.data) ? res.data.data : []
+      // 兼容处理返回数据
+      const d = res.data.data
+      const list = Array.isArray(d) ? d : (d.list || [])
       // 截取前5个展示
       ads.value = list.slice(0, 5)
     }

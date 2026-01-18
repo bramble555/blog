@@ -14,14 +14,14 @@ func SendMessage(pm *model.ParamMessage) (string, error) {
 		return "", err
 	}
 	if !ok {
-		return "", errcode.ErrorUserNotExit
+		return "", errcode.ErrorUserNotExist
 	}
 	ok, err = user.CheckUserExistBySN(int64(pm.RevUserSN))
 	if err != nil {
 		return "", err
 	}
 	if !ok {
-		return "", errcode.ErrorUserNotExit
+		return "", errcode.ErrorUserNotExist
 	}
 	sud, err := user.GetUserDetailBySN(int64(pm.SendUserSN))
 	if err != nil {
@@ -36,9 +36,15 @@ func SendMessage(pm *model.ParamMessage) (string, error) {
 	udl[1] = rud
 	return message.SendMessage(pm)
 }
-func MessageListAll(pl *model.ParamList) ([]model.RespondMessage, error) {
-	return message.MessageListAll(pl)
-
+func MessageListAll(pl *model.ParamList) (*model.PageResult[model.RespondMessage], error) {
+	list, count, err := message.MessageListAll(pl)
+	if err != nil {
+		return nil, err
+	}
+	return &model.PageResult[model.RespondMessage]{
+		List:  list,
+		Count: count,
+	}, nil
 }
 func MessageList(sn int64) ([]model.RespondMessage, error) {
 	return message.MessageList(sn)

@@ -3,17 +3,18 @@ package code
 import "errors"
 
 var (
-	ErrorSNExit = errors.New("SN 已存在")
+	ErrorSNExist = errors.New("SN 已存在")
 
-	ErrorSNNotExit     = errors.New("SN 不存在")
-	ErrorUserExit      = errors.New("用户已存在")
-	ErrorUserNotExit   = errors.New("用户不存在")
+	ErrorSNNotExist    = errors.New("SN 不存在")
+	ErrorUserExist     = errors.New("用户已存在")
+	ErrorUserNotExist  = errors.New("用户不存在")
 	ErrorPasswordWrong = errors.New("密码错误")
-	ErrorTitleExit     = errors.New("主题已存在")
+	ErrorTitleExist    = errors.New("主题已存在")
 
 	ErrorCreateWrong     = errors.New("创建错误")
 	ErrorAssertionFailed = errors.New("断言失败")
-	ErrorTagNotExit      = errors.New("tag 不存在")
+	ErrorTagNotExist     = errors.New("tag 不存在")
+	ErrorTagExist        = errors.New("tag 已存在")
 )
 var (
 	StrCreateSucceed = "创建成功"

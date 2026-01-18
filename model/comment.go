@@ -14,20 +14,26 @@ type CommentModel struct {
 func (CommentModel) TableName() string {
 	return "comment_models"
 }
+
 type ParamPostComment struct {
 	ArticleSN       int64  `json:"article_sn,string" binding:"required"` // 文章ID
 	ParentCommentSN int64  `json:"parent_comment_sn,string"`             // 父级评论ID
 	Content         string `json:"content" binding:"required"`           // 评论内容
 }
 type ParamCommentList struct {
-    ParamList
-    ArticleSN int64 `form:"article_sn"` // 文章ID（可选，未提供则查询所有评论）
+	ParamList
+	ArticleSN int64 `form:"article_sn"` // 文章ID（可选，未提供则查询所有评论）
+}
+type ParamDeleteComment struct {
+	SN     string   `json:"sn"`
+	SNList []string `json:"sn_list"`
 }
 type ResponseCommentList struct {
 	MODEL
 	Content         string                `json:"content"`
 	ParentCommentSN int64                 `json:"parent_comment_SN"`
 	ArticleSN       int64                 `json:"article_sn,string"`
+	UserSN          int64                 `json:"user_sn,string"`         // 评论的用户ID
 	DiggCount       int64                 `json:"digg_count"`             // 点赞数
 	CommentCount    int64                 `json:"comment_count"`          // 子评论数量
 	SubComments     []ResponseCommentList `json:"sub_comments,omitempty"` // 子评论列表，嵌套结构
