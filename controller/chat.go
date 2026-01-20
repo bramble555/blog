@@ -1,111 +1,44 @@
 package controller
 
 import (
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"time"
-
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/logic"
-	"github.com/bramble555/blog/model"
-	"github.com/bramble555/blog/model/ctype"
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 )
 
 func GetChatGroupHandler(c *gin.Context) {
-	// 升级为 websocket
-	upgrader := websocket.Upgrader{
-		CheckOrigin: func(r *http.Request) bool {
-			// true 表示放行
-			return true
-		},
+	if err := logic.HandleChatGroupWS(c); err != nil {
+		global.Log.Errorf("controller GetChatGroupHandler HandleChatGroupWS err:%s\n", err.Error())
+		ResponseErrorWithData(c, CodeServerBusy, err.Error())
+		return
 	}
-	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+}
+
+func GetChatGroupRecordsHandler(c *gin.Context) {
+	pl, err := validateListParams(c)
 	if err != nil {
-		global.Log.Errorf("controller GetChatGroupHandler upgrader.Upgrade err:%s\n", err.Error())
+		global.Log.Errorf("controller GetAdvertListHandler validateListParams err:%s\n", err.Error())
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+	res, err := logic.GetChatGroupRecords(pl)
+	if err != nil {
 		ResponseError(c, CodeServerBusy)
 		return
 	}
-	addr := conn.RemoteAddr().String()
-	global.Log.Debugf("controller GetChatGroupHandler %s connected", addr)
+	ResponseSucceed(c, res)
+}
 
-	// 添加到连接组
-	logic.AddUserConnection(addr, conn)
-	defer func() {
-		// 移除连接
-		logic.RemoveUserConnection(addr)
-		conn.Close()
-	}()
-
-	// 生成随机昵称和头像
-	name, avatar, err := logic.GetNameAvatar()
+func UploadChatGroupImageHandler(c *gin.Context) {
+	file, err := c.FormFile("image")
 	if err != nil {
-		global.Log.Errorf("controller GetChatGroupHandler logic.GetNameAvatar err:%s\n", err.Error())
-		ResponseError(c, CodeServerBusy)
+		ResponseError(c, CodeInvalidParam)
 		return
 	}
-
-	for {
-		_, p, err := conn.ReadMessage()
-		if err != nil {
-			// 用户断开
-			break
-		}
-
-		// 参数绑定
-		var pcg model.ParamChatGroup
-		if err := json.Unmarshal(p, &pcg); err != nil {
-			global.Log.Errorf("controller GetChatGroupHandler json.Unmarshal err:%s\n", err.Error())
-			continue
-		}
-
-		// 设置默认昵称和头像
-		if pcg.NickName == "" {
-			pcg.NickName = name
-		}
-		if pcg.Avatar == "" {
-			pcg.Avatar = avatar
-		}
-
-		// 初始化响应结构
-		response := model.ResponseChatGroup{
-			ParamChatGroup: pcg,
-			Date:           time.Now(),
-			OnlineCount:    len(logic.ConnGroupMap),
-		}
-		global.Log.Debugf("controller GetChatGroupHandler response:%+v", response)
-		// 根据消息类型处理
-		if pcg.MsgType == ctype.TextMsg || pcg.MsgType == ctype.ImageMsg {
-			// 处理测试消息或图片消息
-			logic.SendGroupMsg(&response)
-		} else if pcg.MsgType == ctype.InRoomMsg {
-			// 处理进入消息
-			response.ParamChatGroup.Content = fmt.Sprintf("欢迎%s来到聊天室", pcg.NickName)
-			logic.SendGroupMsg(&response)
-		} else if pcg.MsgType == ctype.OutRoomMsg {
-			logic.SendGroupMsg(&response)
-		} else {
-			// 处理未知消息类型
-			pcg.Content = "消息类型错误"
-			response.ParamChatGroup = pcg
-			logic.SendUserMsg(addr, &response)
-		}
-
-		// 保存聊天记录
-		chatModel := model.ChatModel{
-			NickName: response.ParamChatGroup.NickName,
-			Avatar:   response.ParamChatGroup.Avatar,
-			Content:  response.ParamChatGroup.Content,
-			IP:       logic.GetIP(addr),
-			Addr:     addr,
-			MsgType:  response.ParamChatGroup.MsgType,
-		}
-		if err := logic.UploadChat(&chatModel); err != nil {
-			global.Log.Errorf("controller GetChatGroupHandler logic.UploadChat err: %s", err.Error())
-			ResponseError(c, CodeServerBusy)
-			return
-		}
+	url, err := logic.UploadChatGroupImage(c, file)
+	if err != nil {
+		ResponseErrorWithData(c, CodeInvalidParam, err.Error())
+		return
 	}
+	ResponseSucceed(c, url)
 }

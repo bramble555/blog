@@ -7,23 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func CreateAdvertHandle(c *gin.Context) {
-	var ad model.AdvertModel
-	err := c.ShouldBindJSON(&ad)
-	if err != nil {
-		global.Log.Errorf("controller CreateAdvertHandle ShouldBindJSON err:%s\n", err.Error())
-		ResponseErrorWithData(c, CodeInvalidParam, err.Error())
-		return
-	}
-	data, err := logic.CreateAdvert(&ad)
-	if err != nil {
-		global.Log.Errorf("controller CreateAdvertHandle logic.CreateAdvert err:%s\n", err.Error())
-		ResponseErrorWithData(c, CodeServerBusy, err.Error())
-		return
-	}
-	ResponseSucceed(c, data)
-}
-
 // UploadAdvertImagesHandler 处理广告图片上传
 func UploadAdvertImagesHandler(c *gin.Context) {
 	form, err := c.MultipartForm()

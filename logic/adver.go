@@ -12,10 +12,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func CreateAdvert(ad *model.AdvertModel) (string, error) {
-	return advert.CreateAdvert(ad)
-}
-
 func GetAdvertList(pl *model.ParamList, isShow bool) (*model.PageResult[model.AdvertModel], error) {
 	list, count, err := advert.GetAdvertList(pl, isShow)
 	if err != nil {
