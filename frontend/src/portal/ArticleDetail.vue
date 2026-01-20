@@ -4,7 +4,7 @@
       <!-- Article Header -->
       <header class="mb-10 text-center">
         <h1 class="text-4xl md:text-5xl font-extrabold mb-6 leading-tight">{{ article.title }}</h1>
-        <div class="flex items-center justify-center gap-6 text-sm text-[#FF6600]">
+        <div class="flex items-center justify-center gap-6 text-base text-[#FF6600]">
            <div class="flex items-center gap-2">
               <el-avatar :size="32" :src="formatUrl(article.user_avatar)">{{ article.username?.[0] }}</el-avatar>
               <span>{{ article.username }}</span>
@@ -53,7 +53,7 @@
 
       <!-- Tags -->
       <div v-if="tags.length" class="flex gap-2 mb-16">
-         <el-tag v-for="t in tags" :key="t" size="small" type="info"># {{ t }}</el-tag>
+         <el-tag v-for="t in tags" :key="t" type="info"># {{ t }}</el-tag>
       </div>
 
       <el-divider />
@@ -63,7 +63,7 @@
       <!-- Comments Section -->
       <section class="mt-16">
          <h3 class="text-2xl font-bold mb-8 flex items-center gap-2">
-            Comments <span class="text-sm font-normal text-[#FF6600]">({{ article.comment_count }})</span>
+            Comments <span class="text-base font-normal text-[#FF6600]">({{ article.comment_count }})</span>
          </h3>
 
          <!-- Post Comment -->

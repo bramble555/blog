@@ -1,5 +1,8 @@
 export const formatUrl = (url) => {
   if (!url) return ''
-  if (url.startsWith('http')) return url
-  return 'http://localhost:8080' + url
+  const u = String(url).trim()
+  if (!u) return ''
+  if (u.startsWith('http')) return u
+  if (u.startsWith('/')) return 'http://localhost:8080' + u
+  return 'http://localhost:8080/' + u
 }

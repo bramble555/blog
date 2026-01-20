@@ -8,7 +8,6 @@
         <el-button 
           v-if="isAdmin" 
           type="danger" 
-          size="small" 
           :disabled="selectedBanners.length === 0"
           @click="handleBatchDelete"
         >
@@ -22,7 +21,7 @@
           accept="image/*"
           class="flex items-center"
         >
-          <el-button type="primary" size="small">Upload Image</el-button>
+          <el-button type="primary">Upload Image</el-button>
         </el-upload>
       </div>
     </h2>
@@ -44,11 +43,11 @@
           :preview-src-list="[formatUrl(banner.path)]"
         />
         <!-- 图片名称 -->
-        <div class="mt-2 text-xs truncate text-gray-400">{{ banner.name }}</div>
+        <div class="mt-2 text-base truncate text-gray-400">{{ banner.name }}</div>
         
         <!-- 删除按钮：仅管理员可见，悬停显示 -->
         <div v-if="isAdmin" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-           <el-button type="danger" circle size="small" icon="Delete" @click="remove(banner.sn)" />
+           <el-button type="danger" circle icon="Delete" @click="remove(banner.sn)" />
         </div>
       </div>
     </div>
@@ -237,6 +236,18 @@ const remove = (sn) => {
  * @description 初始化加载数据
  */
 onMounted(() => {
-  fetchData()
+   fetchData()
 })
 </script>
+
+<style scoped>
+:deep(.el-pagination) {
+  font-size: 16px;
+}
+:deep(.el-button) {
+  font-size: 16px;
+}
+:deep(.el-checkbox__label) {
+  font-size: 16px;
+}
+</style>

@@ -87,13 +87,6 @@ func GetUserList(role int64, pl *model.ParamList) (*model.PageResult[model.UserM
 		list[i].Phone = pkg.DesensitizePhone(list[i].Phone)
 	}
 
-	// 如果是普通用户，username 返回 "****"
-	if role == int64(ctype.PermissionUser) {
-		for i := range list {
-			list[i].Username = "****"
-		}
-	}
-
 	return &model.PageResult[model.UserModel]{
 		List:  list,
 		Count: count,

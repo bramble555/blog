@@ -10,10 +10,9 @@
   --color-brand-green: #42b883;
 
   /* Global Font Size Adjustment - Tailwind Overrides */
-  --text-2xs: calc(0.625rem + var(--global-font-size-adjust));
-  /* 10px + 5px = 15px */
-  --text-xs: calc(0.75rem + var(--global-font-size-adjust));
-  --text-sm: calc(0.875rem + var(--global-font-size-adjust));
+  --text-2xs: calc(1rem + var(--global-font-size-adjust));
+  --text-xs: calc(1rem + var(--global-font-size-adjust));
+  --text-sm: calc(1rem + var(--global-font-size-adjust));
   --text-base: calc(1rem + var(--global-font-size-adjust));
   --text-lg: calc(1.125rem + var(--global-font-size-adjust));
   --text-xl: calc(1.25rem + var(--global-font-size-adjust));
@@ -31,9 +30,9 @@
   --el-font-size-extra-large: calc(20px + var(--global-font-size-adjust));
   --el-font-size-large: calc(18px + var(--global-font-size-adjust));
   --el-font-size-medium: calc(16px + var(--global-font-size-adjust));
-  --el-font-size-base: calc(14px + var(--global-font-size-adjust));
-  --el-font-size-small: calc(13px + var(--global-font-size-adjust));
-  --el-font-size-extra-small: calc(12px + var(--global-font-size-adjust));
+  --el-font-size-base: calc(16px + var(--global-font-size-adjust));
+  --el-font-size-small: calc(16px + var(--global-font-size-adjust));
+  --el-font-size-extra-small: calc(16px + var(--global-font-size-adjust));
 }
 
 /* Element Plus Dark Mode Overrides */

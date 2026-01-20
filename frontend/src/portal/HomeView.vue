@@ -45,7 +45,7 @@
             <template #error>
               <div class="w-full h-full bg-vscode-sidebar flex flex-col items-center justify-center text-gray-500">
                 <el-icon class="text-3xl mb-1"><PictureFilled /></el-icon>
-                <span class="text-2xs">No Preview</span>
+                <span class="text-base">No Preview</span>
               </div>
             </template>
           </el-image>
@@ -55,20 +55,20 @@
         <div class="p-4 flex-1 flex flex-col justify-between">
           <div>
             <div class="flex items-center gap-2 mb-2">
-               <span class="text-xs text-gray-400">{{ formatDate(article.create_time) }}</span>
+               <span class="text-base text-gray-400">{{ formatDate(article.create_time) }}</span>
             </div>
             <!-- 标题：使用浅色字体 -->
             <h3 class="text-lg font-bold mb-2 text-gray-200 group-hover:text-blue-400 transition-colors line-clamp-1">
               {{ article.title }}
             </h3>
             <!-- 摘要：使用灰色字体 -->
-            <p class="text-gray-400 text-sm line-clamp-2 mb-3 leading-relaxed">
+            <p class="text-gray-400 text-base line-clamp-2 mb-3 leading-relaxed">
               {{ article.abstract }}
             </p>
           </div>
           
           <!-- 底部元数据 -->
-          <div class="flex items-center justify-between text-xs text-gray-500 mt-2">
+          <div class="flex items-center justify-between text-base text-gray-500 mt-2">
              <div class="flex items-center gap-3">
                 <span class="flex items-center gap-1 hover:text-blue-400 cursor-pointer"><el-icon><View /></el-icon> {{ article.look_count }}</span>
                 <span class="flex items-center gap-1 hover:text-blue-400 cursor-pointer"><el-icon><ChatLineSquare /></el-icon> {{ article.comment_count }}</span>

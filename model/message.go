@@ -15,10 +15,18 @@ type MessageModel struct {
 func (MessageModel) TableName() string {
 	return "message_models"
 }
+
 type ParamMessage struct {
 	SendUserSN int64  `json:"send_user_sn,string"`        // 发送人SN
 	RevUserSN  int64  `json:"rev_user_sn,string"`         // 接收人SN
 	Content    string `json:"content" binding:"required"` // 消息内容
+}
+type ParamSendMessage struct {
+	RevUserSN int64  `json:"rev_user_sn,string" binding:"required"`
+	Content   string `json:"content" binding:"required"`
+}
+type ParamBroadcastMessage struct {
+	Content string `json:"content" binding:"required"`
 }
 type RespondMessage struct {
 	MODEL

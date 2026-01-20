@@ -5,7 +5,6 @@
       <el-button
         v-if="isAdmin"
         type="danger"
-        size="small"
         :disabled="selectedSNList.length === 0"
         @click="removeBatch"
       >
@@ -144,3 +143,18 @@ onMounted(() => {
    fetchData()
 })
 </script>
+
+<style scoped>
+:deep(.el-table) {
+  font-size: 16px;
+}
+:deep(.el-input__inner) {
+  font-size: 16px;
+}
+:deep(.el-pagination) {
+  font-size: 16px;
+}
+:deep(.el-button) {
+  font-size: 16px;
+}
+</style>

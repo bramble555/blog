@@ -4,7 +4,6 @@
     :class="{ 'is-digged': isDigg }"
     @click="handleDigg"
     :loading="loading"
-    size="small"
     round
   >
     <el-icon class="mr-1"><Pointer /></el-icon>

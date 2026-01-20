@@ -21,10 +21,15 @@ export const getMessagesAll = (params) => {
 /**
  * 获取当前用户的消息
  * 
+ * @param {Object} params - 查询参数
  * @returns {Promise} Axios 响应 Promise
  */
-export const getMyMessages = () => {
-    return service.get('/messages');
+export const getMyMessages = (params) => {
+    return service.get('/messages', { params });
+};
+
+export const getSentMessages = (params) => {
+    return service.get('/messages_sent', { params });
 };
 
 /**
@@ -34,7 +39,7 @@ export const getMyMessages = () => {
  * @returns {Promise} Axios 响应 Promise
  */
 export const getMessageRecord = (userSN) => {
-    return service.get('/messages_record', { data: { user_sn: userSN } }); 
+    return service.get('/messages_record', { data: { user_sn: userSN } });
 };
 
 /**
@@ -44,5 +49,12 @@ export const getMessageRecord = (userSN) => {
  * @returns {Promise} Axios 响应 Promise
  */
 export const sendMessage = (data) => {
-    return service.post('/messages', data);
+    return service.post('/message/send', data);
+};
+
+export const broadcastMessage = (data) => {
+    return service.post('/message/broadcast', data);
+};
+export const readMessage = (sn) => {
+    return service.put('/message/read', { sn: String(sn) });
 };

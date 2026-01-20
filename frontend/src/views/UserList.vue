@@ -3,21 +3,21 @@
     <h2 class="text-xl font-semibold mb-6 flex justify-between">
       User Management
       <div class="flex gap-2">
-        <el-button type="primary" size="small" @click="fetchData">Refresh</el-button>
+        <el-button type="primary" @click="fetchData">Refresh</el-button>
       </div>
     </h2>
 
     <el-table :data="users" style="width: 100%" v-loading="loading">
-      <el-table-column label="SN" width="180">
+      <el-table-column label="SN" width="160" show-overflow-tooltip>
         <template #default="scope">
           <span v-if="scope.row.sn == authStore.sn" class="text-orange-500 font-bold">我</span>
-          <span v-else>{{ scope.row.sn }}</span>
+          <span class="text-base">{{ scope.row.sn }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="Avatar" width="160">
+      <el-table-column label="Avatar" width="120">
         <template #default="scope">
           <div class="flex items-center gap-2">
-            <el-avatar :size="40" :src="formatUrl(scope.row.avatar)" />
+            <el-avatar :size="32" :src="formatUrl(scope.row.avatar)" />
             <el-button
               v-if="scope.row.sn == authStore.sn"
               type="primary"
@@ -30,15 +30,14 @@
           </div>
         </template>
       </el-table-column>
-      <el-table-column prop="username" label="Username" />
-      <el-table-column label="Email" width="250">
+      <el-table-column prop="username" label="Username" min-width="100" show-overflow-tooltip />
+      <el-table-column label="Email" width="200" show-overflow-tooltip>
         <template #default="scope">
-           <span>{{ scope.row.email }}</span>
+           <span class="text-base">{{ scope.row.email }}</span>
            <el-button 
              v-if="scope.row.sn == authStore.sn" 
              type="primary" 
              link 
-             size="small"
              icon="Edit"
              @click="openBindEmailDialog"
              style="margin-left: 5px"
@@ -47,19 +46,19 @@
            </el-button>
         </template>
       </el-table-column>
-      <el-table-column prop="role" label="Role">
+      <el-table-column prop="role" label="Role" width="80">
         <template #default="scope">
-           <el-tag :type="scope.row.role === 1 ? 'danger' : 'info'">{{ scope.row.role === 1 ? 'Admin' : 'User' }}</el-tag>
+           <el-tag :type="scope.row.role === 1 ? 'danger' : 'info'" size="small">{{ scope.row.role === 1 ? 'Admin' : 'User' }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="ip" label="IP" />
-      <el-table-column label="Addr" prop="addr" />
-      <el-table-column label="Created At" width="180">
+      <el-table-column prop="ip" label="IP" width="130" show-overflow-tooltip />
+      <el-table-column label="Addr" prop="addr" min-width="120" show-overflow-tooltip />
+      <el-table-column label="Created At" width="160" show-overflow-tooltip>
         <template #default="scope">
           {{ formatDate(scope.row.create_time) }}
         </template>
       </el-table-column>
-      <el-table-column label="Actions" width="200" fixed="right">
+      <el-table-column label="Operations" width="240" fixed="right">
         <template #default="scope">
           <el-button 
             type="primary" 
@@ -68,6 +67,14 @@
             v-if="authStore.role === 1"
           >
             Role
+          </el-button>
+          <el-button 
+            type="success" 
+            link 
+            @click="openSendMsgDialog(scope.row)"
+            v-if="scope.row.sn !== authStore.sn"
+          >
+            Message
           </el-button>
           <el-button 
             type="warning" 
@@ -100,6 +107,28 @@
         @current-change="handlePageChange"
       />
     </div>
+
+    <!-- Send Message Dialog -->
+    <el-dialog v-model="sendMsgDialogVisible" :title="'Send Message to ' + sendMsgForm.rev_user_name" width="500px">
+        <el-form :model="sendMsgForm">
+            <el-form-item>
+                <el-input 
+                    v-model="sendMsgForm.content" 
+                    type="textarea" 
+                    rows="4" 
+                    placeholder="Enter message content..." 
+                    maxlength="500"
+                    show-word-limit
+                />
+            </el-form-item>
+        </el-form>
+        <template #footer>
+            <span class="dialog-footer">
+                <el-button @click="sendMsgDialogVisible = false">Cancel</el-button>
+                <el-button type="primary" :loading="sendingMsg" @click="handleSendMsg">Send</el-button>
+            </span>
+        </template>
+    </el-dialog>
 
     <!-- Role Edit Dialog -->
     <el-dialog v-model="roleDialogVisible" title="Update User Role" width="30%">
@@ -186,8 +215,8 @@
     <el-dialog v-model="avatarDialogVisible" title="Select Avatar Banner" width="720px">
       <div class="space-y-4">
         <div class="flex justify-between items-center">
-          <span class="text-sm text-[#FFA500]">选择一张 Banner 作为头像</span>
-          <el-button size="small" @click="refreshBanners" :loading="bannerLoading">Refresh</el-button>
+          <span class="text-base text-[#FFA500]">选择一张 Banner 作为头像</span>
+          <el-button @click="refreshBanners" :loading="bannerLoading">Refresh</el-button>
         </div>
         <div class="grid grid-cols-3 md:grid-cols-4 gap-4 min-h-[140px]" v-loading="bannerLoading">
           <div
@@ -204,33 +233,32 @@
               lazy
             />
             <div
-              class="absolute inset-0 bg-black/40 flex items-center justify-center text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity"
+              class="absolute inset-0 bg-black/40 flex items-center justify-center text-base text-white opacity-0 group-hover:opacity-100 transition-opacity"
             >
               {{ banner.name }}
             </div>
             <div
               v-if="banner.sn === selectedBannerSN"
-              class="absolute top-1 right-1 px-2 py-0.5 rounded-full text-[10px] bg-[#22c55e] text-black font-semibold"
+              class="absolute top-1 right-1 px-2 py-0.5 rounded-full text-[16px] bg-[#22c55e] text-black font-semibold"
             >
               Selected
             </div>
           </div>
           <div
             v-if="!bannerLoading && bannerList.length === 0"
-            class="col-span-full text-center text-sm text-gray-400 py-8"
+            class="col-span-full text-center text-base text-gray-400 py-8"
           >
             No banners available. Please upload images first.
           </div>
         </div>
         <div class="flex justify-between items-center mt-2">
           <el-button
-            size="small"
             :disabled="!bannerHasMore || bannerLoading"
             @click="loadMoreBanners"
           >
             {{ bannerHasMore ? 'Load More' : 'No More' }}
           </el-button>
-          <div class="text-xs text-gray-400">
+          <div class="text-base text-gray-400">
             Loaded {{ bannerList.length }} items
           </div>
         </div>
@@ -259,11 +287,52 @@
 import { ref, reactive, onMounted } from 'vue'
 import { getUsers, deleteUser as deleteUserApi, updateUserRole, updateUserPassword, bindEmail, selectUserBanner } from '../api/user'
 import { getBanners } from '../api/banner'
+import { sendMessage } from '../api/message'
 import { formatDate } from '../utils/date'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { authStore } from '../stores/auth'
 import { formatUrl } from '../utils/url'
 import { Edit } from '@element-plus/icons-vue'
+
+// Send Message Logic
+const sendMsgDialogVisible = ref(false)
+const sendingMsg = ref(false)
+const sendMsgForm = reactive({
+    rev_user_sn: '',
+    rev_user_name: '',
+    content: ''
+})
+
+const openSendMsgDialog = (row) => {
+    sendMsgForm.rev_user_sn = row.sn
+    sendMsgForm.rev_user_name = row.username
+    sendMsgForm.content = ''
+    sendMsgDialogVisible.value = true
+}
+
+const handleSendMsg = async () => {
+    if (!sendMsgForm.content.trim()) {
+        ElMessage.warning('Please enter message content')
+        return
+    }
+    sendingMsg.value = true
+    try {
+        const res = await sendMessage({
+            rev_user_sn: String(sendMsgForm.rev_user_sn),
+            content: sendMsgForm.content
+        })
+        if (res.data.code === 10000) {
+            ElMessage.success('Message sent successfully')
+            sendMsgDialogVisible.value = false
+        } else {
+            ElMessage.error(res.data.msg || 'Failed to send')
+        }
+    } catch (e) {
+        ElMessage.error('Failed to send message')
+    } finally {
+        sendingMsg.value = false
+    }
+}
 
 // Removed incorrect useAuthStore usage
 const loading = ref(false)
@@ -628,3 +697,21 @@ onMounted(() => {
   fetchData()
 })
 </script>
+
+<style scoped>
+:deep(.el-table) {
+  font-size: 16px;
+}
+:deep(.el-pagination) {
+  font-size: 16px;
+}
+:deep(.el-button) {
+  font-size: 16px;
+}
+:deep(.el-tag) {
+  font-size: 16px;
+}
+:deep(.el-input) {
+  font-size: 16px;
+}
+</style>

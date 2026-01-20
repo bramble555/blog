@@ -2,20 +2,19 @@
   <div>
     <div class="mb-6 flex justify-between items-center">
       <h2 class="text-xl font-semibold text-white">Articles</h2>
-      <div class="space-x-2">
-        <button @click="fetchArticles" class="px-3 py-1 bg-vscode-sidebar border border-vscode-border hover:bg-vscode-bg rounded text-sm transition-colors">
+      <div class="flex gap-4">
+        <button @click="fetchArticles" class="px-3 py-1 bg-vscode-sidebar border border-vscode-border hover:bg-vscode-bg rounded text-base transition-colors">
           Refresh
         </button>
-        <button
-          v-if="isAdmin"
-          :disabled="selectedSNList.length === 0"
-          @click="deleteSelectedArticles"
-          class="px-3 py-1 bg-red-600/30 border border-red-600/60 hover:bg-red-600/40 rounded text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        <button 
+          v-if="isAdmin && selectedSNList.length > 0"
+          @click="deleteSelectedArticles" 
+          class="px-3 py-1 bg-red-600/30 border border-red-600/60 hover:bg-red-600/40 rounded text-base transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          Delete Selected<span v-if="selectedSNList.length"> ({{ selectedSNList.length }})</span>
+          Delete Selected ({{ selectedSNList.length }})
         </button>
-        <router-link v-if="isAdmin" to="/admin/create" class="px-4 py-2 bg-vscode-primary hover:bg-opacity-90 text-white rounded text-sm font-medium transition-colors">
-          + New Article
+        <router-link v-if="isAdmin" to="/admin/create" class="px-4 py-2 bg-vscode-primary hover:bg-opacity-90 text-white rounded text-base font-medium transition-colors">
+          New Article
         </router-link>
       </div>
     </div>
@@ -56,23 +55,23 @@
                 class="accent-[#FFA500] cursor-pointer"
               />
             </td>
-            <td class="p-3 border-b border-vscode-border border-opacity-50 text-[#FFA500] font-mono text-xs">
+            <td class="p-3 border-b border-vscode-border border-opacity-50 text-[#FFA500] font-mono text-base">
               {{ article.sn }}
             </td>
             <td class="p-3 border-b border-vscode-border border-opacity-50 font-medium text-vscode-text">
               {{ article.title }}
-              <div class="text-xs text-[#FFA500] truncate max-w-xs mt-1">{{ article.abstract }}</div>
+              <div class="text-base text-[#FFA500] truncate max-w-xs mt-1">{{ article.abstract }}</div>
             </td>
-            <td class="p-3 border-b border-vscode-border border-opacity-50 text-sm">
+            <td class="p-3 border-b border-vscode-border border-opacity-50 text-base">
               <div class="flex flex-wrap gap-1">
                 <span v-for="tag in parseTags(article.tags)" :key="tag" 
-                  class="px-2 py-0.5 rounded bg-[#3e3e42] text-[#FFA500] text-2xs"
+                  class="px-2 py-0.5 rounded bg-[#3e3e42] text-[#FFA500] text-base"
                 >
                   {{ tag }}
                 </span>
               </div>
             </td>
-            <td class="p-3 border-b border-vscode-border border-opacity-50 text-xs text-[#FFA500] font-mono">
+            <td class="p-3 border-b border-vscode-border border-opacity-50 text-base text-[#FFA500] font-mono">
               {{ formatDate(article.create_time) }}
             </td>
             <td class="p-3 border-b border-vscode-border border-opacity-50 text-right">

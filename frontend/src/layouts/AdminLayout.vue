@@ -13,7 +13,7 @@
           <el-icon class="mr-3"><Odometer /></el-icon> Dashboard
         </router-link>
 
-        <div class="px-4 text-xs font-semibold text-[#FFA500] uppercase tracking-wider mb-2 mt-2">Content</div>
+        <div class="px-4 text-base font-semibold text-[#FFA500] uppercase tracking-wider mb-2 mt-2">Content</div>
         <router-link to="/admin/articles" class="nav-item" active-class="nav-active">
           <el-icon class="mr-3"><Document /></el-icon> Articles
         </router-link>
@@ -22,6 +22,9 @@
         </router-link>
         <router-link to="/admin/comments" class="nav-item" active-class="nav-active">
           <el-icon class="mr-3"><ChatLineSquare /></el-icon> Comments
+        </router-link>
+        <router-link to="/admin/chat" class="nav-item" active-class="nav-active">
+           <el-icon class="mr-3"><ChatDotRound /></el-icon> Chat
         </router-link>
         <router-link to="/admin/collections" class="nav-item" active-class="nav-active">
           <el-icon class="mr-3"><Star /></el-icon> Collections
@@ -33,26 +36,23 @@
            <el-icon class="mr-3"><Picture /></el-icon> Banners
         </router-link>
 
-        <div v-if="isAdmin" class="px-4 text-xs font-semibold text-[#FFA500] uppercase tracking-wider mb-2 mt-4">Messages</div>
-        <router-link v-if="isAdmin" to="/admin/messages" class="nav-item" active-class="nav-active">
+        <div class="px-4 text-base font-semibold text-[#FFA500] uppercase tracking-wider mb-2 mt-4">Messages</div>
+        <router-link to="/admin/messages" class="nav-item" active-class="nav-active">
            <el-icon class="mr-3"><Bell /></el-icon> Messages
         </router-link>
-         <router-link v-if="isAdmin" to="/admin/chat" class="nav-item" active-class="nav-active">
-           <el-icon class="mr-3"><ChatDotRound /></el-icon> Chat
-        </router-link>
 
-        <div v-if="isAdmin" class="px-4 text-xs font-semibold text-[#FFA500] uppercase tracking-wider mb-2 mt-4">Marketing</div>
+        <div v-if="isAdmin" class="px-4 text-base font-semibold text-[#FFA500] uppercase tracking-wider mb-2 mt-4">Marketing</div>
         <router-link v-if="isAdmin" to="/admin/adverts" class="nav-item" active-class="nav-active">
            <el-icon class="mr-3"><DataBoard /></el-icon> Adverts
         </router-link>
 
-        <div class="px-4 text-xs font-semibold text-[#FFA500] uppercase tracking-wider mb-2 mt-4">System</div>
+        <div class="px-4 text-base font-semibold text-[#FFA500] uppercase tracking-wider mb-2 mt-4">System</div>
         <router-link to="/admin/users" class="nav-item" active-class="nav-active">
            <el-icon class="mr-3"><User /></el-icon> User
         </router-link>
 
       </nav>
-      <div class="p-4 border-t border-vscode-border text-xs text-[#FFA500] text-center">
+      <div class="p-4 border-t border-vscode-border text-base text-[#FFA500] text-center">
         GVB Admin v1.0
       </div>
     </aside>
@@ -62,12 +62,12 @@
       <header class="h-14 bg-vscode-bg border-b border-vscode-border flex items-center px-6 justify-between">
         <h1 class="text-lg font-medium text-white">{{ currentPageTitle }}</h1>
         <div class="flex items-center gap-6">
-            <router-link to="/" class="text-xs text-[#FFA500] hover:text-white flex items-center gap-1 transition-colors">
+            <router-link to="/" class="text-base text-[#FFA500] hover:text-white flex items-center gap-1 transition-colors">
               <el-icon><Back /></el-icon> Exit to Portal
             </router-link>
             <div class="h-4 w-px bg-vscode-border"></div>
             <div class="flex items-center gap-3">
-               <span class="text-xs font-semibold text-vscode-primary">{{ isAdmin ? 'ADMIN' : 'USER' }}</span>
+               <span class="text-base font-semibold text-vscode-primary">{{ isAdmin ? 'ADMIN' : 'USER' }}</span>
                <el-avatar :size="28" :src="formatUrl(avatar)" :icon="UserFilled" class="border border-vscode-border" />
             </div>
         </div>
@@ -109,7 +109,7 @@ const currentPageTitle = computed(() => route.meta?.title || route.name || 'Dash
   display: flex;
   align-items: center;
   padding: 0.75rem 1rem;
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   line-height: 1.5;
   transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);

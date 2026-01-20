@@ -11,6 +11,7 @@ import (
 
 // GetTableList 获取列表
 // tableName 表名,pl 参数列表 如果为 nil 则是获取所有记录,where 条件, args 条件参数
+// 返回结果列表, 总数, 错误信息
 func GetTableList[T any](tableName string, pl *model.ParamList, where string, args ...any) ([]T, int64, error) {
 	var results []T
 	var count int64

@@ -9,7 +9,7 @@
               GVB BLOG
             </span>
           </router-link>
-          <nav class="hidden md:flex items-center space-x-6 text-sm font-medium">
+          <nav class="hidden md:flex items-center space-x-6 text-base font-medium">
             <router-link to="/" class="hover:text-vscode-primary transition-colors">Home</router-link>
           </nav>
         </div>
@@ -19,7 +19,6 @@
              <el-input
                v-model="searchQuery"
                placeholder="Search articles..."
-               size="small"
                prefix-icon="Search"
                class="w-64"
                @keyup.enter="handleSearch"
@@ -31,27 +30,27 @@
               <el-button link class="text-vscode-text">Login</el-button>
             </router-link>
             <router-link to="/register">
-              <el-button type="primary" size="small">Get Started</el-button>
+              <el-button type="primary">Get Started</el-button>
             </router-link>
           </template>
           <template v-else>
              <div class="flex items-center gap-4">
                 <router-link 
                   to="/admin/articles" 
-                  class="text-sm font-medium text-[#FF6600] hover:text-vscode-primary transition-colors"
+                  class="text-base font-medium text-[#FF6600] hover:text-vscode-primary transition-colors"
                 >
                   Dashboard
                 </router-link>
                 <button 
                   @click="handleLogout" 
-                  class="text-sm font-medium text-[#FF6600] hover:text-red-400 transition-colors cursor-pointer"
+                  class="text-base font-medium text-[#FF6600] hover:text-red-400 transition-colors cursor-pointer"
                 >
                   Logout
                 </button>
                 <div class="h-6 w-px bg-vscode-border mx-1"></div>
                 <div class="flex items-center gap-2">
                    <el-avatar :size="32" :src="formatUrl(avatar)" :icon="UserFilled" />
-                   <span class="text-sm font-medium hidden lg:inline">{{ username }}</span>
+                   <span class="text-base font-medium hidden lg:inline">{{ username }}</span>
                 </div>
              </div>
           </template>
@@ -66,7 +65,7 @@
 
     <!-- Footer -->
     <footer class="border-t border-vscode-border py-8 mt-auto">
-      <div class="container mx-auto px-4 text-center text-sm text-[#FF6600]">
+      <div class="container mx-auto px-4 text-center text-base text-[#FF6600]">
         © 2026 GVB Blog. Powered by Go & Vue 3.
       </div>
     </footer>

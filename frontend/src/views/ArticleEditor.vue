@@ -11,7 +11,7 @@
       
       <!-- Title -->
       <div>
-        <label class="block text-sm font-medium text-[#FFA500] mb-2">Title</label>
+        <label class="block text-base font-medium text-[#FFA500] mb-2">Title</label>
         <input v-model="form.title" type="text" placeholder="Enter article title"
           class="w-full bg-vscode-bg border border-vscode-border rounded p-2 text-vscode-text focus:border-vscode-primary focus:outline-none transition-colors"
         >
@@ -19,7 +19,7 @@
 
       <!-- Abstract -->
       <div>
-        <label class="block text-sm font-medium text-[#FFA500] mb-2">Abstract</label>
+        <label class="block text-base font-medium text-[#FFA500] mb-2">Abstract</label>
         <textarea v-model="form.abstract" rows="2" placeholder="Short summary..."
           class="w-full bg-vscode-bg border border-vscode-border rounded p-2 text-vscode-text focus:border-vscode-primary focus:outline-none transition-colors"
         ></textarea>
@@ -27,7 +27,7 @@
 
       <!-- Tags -->
       <div>
-        <label class="block text-sm font-medium text-[#FFA500] mb-2">Tags (comma separated)</label>
+        <label class="block text-base font-medium text-[#FFA500] mb-2">Tags (comma separated)</label>
         <input v-model="tagsInput" type="text" placeholder="e.g. tutorial, backend"
           class="w-full bg-vscode-bg border border-vscode-border rounded p-2 text-vscode-text focus:border-vscode-primary focus:outline-none transition-colors"
         >
@@ -35,14 +35,14 @@
       
       <!-- Content (Simple Textarea for Markdown) -->
       <div>
-         <label class="block text-sm font-medium text-[#FFA500] mb-2">Content (Markdown)</label>
+         <label class="block text-base font-medium text-[#FFA500] mb-2">Content (Markdown)</label>
          <div class="border border-vscode-border rounded bg-vscode-bg h-96 flex flex-col">
             <!-- Toolbar placeholder -->
-            <div class="border-b border-vscode-border p-2 bg-[#2d2d2d] text-xs text-[#FFA500] flex gap-2">
+            <div class="border-b border-vscode-border p-2 bg-[#2d2d2d] text-base text-[#FFA500] flex gap-2">
                <span>Markdown Supported</span>
             </div>
             <textarea v-model="form.content" 
-              class="flex-1 w-full bg-transparent p-4 text-vscode-text focus:outline-none font-mono text-sm resize-none"
+              class="flex-1 w-full bg-transparent p-4 text-vscode-text focus:outline-none font-mono text-base resize-none"
               placeholder="# Write your content here..."
             ></textarea>
          </div>

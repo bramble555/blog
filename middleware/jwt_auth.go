@@ -14,6 +14,9 @@ func JWTAuthorMiddleware() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		authHeader := c.Request.Header.Get("token")
 		if authHeader == "" {
+			authHeader = c.Query("token")
+		}
+		if authHeader == "" {
 			controller.ResponseError(c, controller.CodeNeedLogin)
 			c.Abort()
 			return
@@ -76,6 +79,9 @@ func JWTAdminMiddleware() func(c *gin.Context) {
 func JWTOptionalMiddleware() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		authHeader := c.Request.Header.Get("token")
+		if authHeader == "" {
+			authHeader = c.Query("token")
+		}
 		if authHeader != "" {
 			ok := redis.CheckLogout(authHeader)
 			if !ok {

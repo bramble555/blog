@@ -4,19 +4,19 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <div class="bg-vscode-sidebar p-4 rounded border border-vscode-border flex flex-col items-center justify-center hover:border-vscode-primary transition-colors cursor-default">
         <div class="text-3xl font-bold text-white mb-2">{{ sumData.article_count }}</div>
-        <div class="text-xs text-gray-400 uppercase tracking-wider">Articles</div>
+        <div class="text-base text-gray-400 uppercase tracking-wider">Articles</div>
       </div>
       <div class="bg-vscode-sidebar p-4 rounded border border-vscode-border flex flex-col items-center justify-center hover:border-vscode-primary transition-colors cursor-default">
         <div class="text-3xl font-bold text-white mb-2">{{ sumData.user_count }}</div>
-        <div class="text-xs text-gray-400 uppercase tracking-wider">Users</div>
+        <div class="text-base text-gray-400 uppercase tracking-wider">Users</div>
       </div>
       <div class="bg-vscode-sidebar p-4 rounded border border-vscode-border flex flex-col items-center justify-center hover:border-vscode-primary transition-colors cursor-default">
         <div class="text-3xl font-bold text-white mb-2">{{ sumData.message_count }}</div>
-        <div class="text-xs text-gray-400 uppercase tracking-wider">Messages</div>
+        <div class="text-base text-gray-400 uppercase tracking-wider">Messages</div>
       </div>
       <div class="bg-vscode-sidebar p-4 rounded border border-vscode-border flex flex-col items-center justify-center hover:border-vscode-primary transition-colors cursor-default">
         <div class="text-3xl font-bold text-white mb-2">{{ sumData.chat_group_count }}</div>
-        <div class="text-xs text-gray-400 uppercase tracking-wider">Chat Groups</div>
+        <div class="text-base text-gray-400 uppercase tracking-wider">Chat Groups</div>
       </div>
     </div>
 

@@ -139,6 +139,7 @@ CREATE TABLE IF NOT EXISTS chat_models (
     content TEXT NOT NULL,
     ip VARCHAR(20),
     addr VARCHAR(64),
+    user_sn BIGINT DEFAULT 0 COMMENT '对应user_models的sn',
     msg_type TINYINT NOT NULL,
     UNIQUE KEY `idx_sn` (`sn`)
 ) ENGINE = INNODB DEFAULT CHARSET = utf8mb4;
@@ -169,4 +170,3 @@ CREATE TABLE IF NOT EXISTS user_comment_digg_models (
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY `idx_user_comment` (user_sn, comment_sn)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4;
-

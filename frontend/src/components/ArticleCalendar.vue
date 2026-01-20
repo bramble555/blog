@@ -2,8 +2,8 @@
   <div class="calendar-container w-full bg-vscode-sidebar border border-vscode-border rounded-lg p-4">
     <div class="flex justify-between items-center mb-4">
       <h3 class="text-lg font-semibold text-white">Article Calendar</h3>
-      <div v-if="loading" class="text-sm text-gray-400">Loading...</div>
-      <div v-else-if="error" class="text-sm text-red-400">{{ error }}</div>
+      <div v-if="loading" class="text-base text-gray-400">Loading...</div>
+      <div v-else-if="error" class="text-base text-red-400">{{ error }}</div>
     </div>
     
     <div ref="chartRef" class="w-full h-48 md:h-64"></div>
@@ -12,8 +12,8 @@
       <h4 class="text-md font-medium text-[#FFA500] mb-2">
         {{ selectedDate }} ({{ selectedCount }} articles)
       </h4>
-      <div v-if="articlesLoading" class="text-gray-400 text-sm">Loading...</div>
-      <div v-else-if="selectedCount === 0" class="text-gray-400 text-sm">
+      <div v-if="articlesLoading" class="text-gray-400 text-base">Loading...</div>
+      <div v-else-if="selectedCount === 0" class="text-gray-400 text-base">
         No articles published on this day.
       </div>
       <div v-else class="space-y-2">
@@ -23,8 +23,8 @@
           @click="goToArticle(article.sn)"
           class="p-2 bg-[#2d2d2d] rounded cursor-pointer hover:bg-[#3d3d3d] transition-colors"
         >
-          <div class="text-sm font-medium text-white">{{ article.title }}</div>
-          <div class="text-xs text-gray-400">{{ article.abstract }}</div>
+          <div class="text-base font-medium text-white">{{ article.title }}</div>
+          <div class="text-base text-gray-400">{{ article.abstract }}</div>
         </div>
       </div>
     </div>
@@ -95,7 +95,7 @@ const initChart = () => {
       },
       textStyle: {
         color: '#ccc', // 文字颜色
-        fontSize: 12 // 文字大小
+        fontSize: 16 // 文字大小
       }
     },
     // 日历坐标系组件配置

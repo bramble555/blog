@@ -2,7 +2,7 @@
   <div>
     <h2 class="text-xl font-semibold mb-6 flex justify-between">
       Advert Management
-      <el-button type="primary" size="small" @click="handleAdd">Add Advert</el-button>
+      <el-button type="primary" @click="handleAdd">Add Advert</el-button>
     </h2>
 
     <el-table :data="adverts" style="width: 100%" v-loading="loading">
@@ -52,7 +52,7 @@
             :show-file-list="false"
             accept="image/*"
           >
-            <el-button type="primary" size="small">Upload Image</el-button>
+            <el-button type="primary">Upload Image</el-button>
           </el-upload>
           <div v-if="form.images" class="mt-3">
             <el-image :src="formatUrl(form.images)" class="w-24 h-16 rounded" fit="cover" />
@@ -243,3 +243,18 @@ onMounted(() => {
     fetchData()
 })
 </script>
+
+<style scoped>
+:deep(.el-table) {
+  font-size: 16px;
+}
+:deep(.el-pagination) {
+  font-size: 16px;
+}
+:deep(.el-button) {
+  font-size: 16px;
+}
+:deep(.el-input) {
+  font-size: 16px;
+}
+</style>

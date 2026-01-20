@@ -84,7 +84,7 @@ func DeleteUser(sn int64) (string, error) {
 // UpdateUserAvatar 更新用户头像
 func UpdateUserAvatar(userSN int64, avatarPath string) (string, error) {
 	tx := global.DB.Begin()
-	if err := tx.Where("sn = ?", userSN).Update("avatar", avatarPath).Error; err != nil {
+	if err := tx.Table("user_models").Where("sn = ?", userSN).Update("avatar", avatarPath).Error; err != nil {
 		tx.Rollback()
 		return "", err
 	}

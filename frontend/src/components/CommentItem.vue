@@ -20,7 +20,7 @@
       <div class="user-info flex items-center mb-2">
         <el-avatar :src="formatUrl(comment.user_detail?.avatar)" size="small" class="mr-2"></el-avatar>
         <span class="username font-bold mr-2 text-vscode-text">{{ comment.user_detail?.username }}</span>
-        <span class="time text-[#FF6600] text-xs">{{ formatDateTime(comment.create_time) }}</span>
+        <span class="time text-[#FF6600] text-base">{{ formatDateTime(comment.create_time) }}</span>
       </div>
       <div class="text mb-2 text-vscode-text break-all whitespace-pre-wrap">{{ comment.content }}</div>
       <div class="actions flex items-center gap-4">

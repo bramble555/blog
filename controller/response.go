@@ -1,15 +1,12 @@
 package controller
 
-import "github.com/gin-gonic/gin"
+import (
+	"errors"
 
-/*
- 包装一个函数 可以实现
- {
-	"resCode": 10000,
-	"msg": ...,
-	"data": ...,
- }
-*/
+	"github.com/bramble555/blog/dao/mysql/code"
+	"github.com/gin-gonic/gin"
+)
+
 type resCode int
 
 const (
@@ -46,13 +43,13 @@ var codeMsgMap = map[resCode]string{
 	CodeTagExist:            "tag 已存在",
 }
 
-type ResponseData struct {
+type responseData struct {
 	Code resCode `json:"code"`
 	Msg  any     `json:"msg"`
 	Data any     `json:"data"`
 }
 
-func (rc resCode) Msg() string {
+func (rc resCode) msg() string {
 	msg, ok := codeMsgMap[rc]
 	if !ok {
 		msg = codeMsgMap[CodeServerBusy]
@@ -60,9 +57,43 @@ func (rc resCode) Msg() string {
 	return msg
 }
 
+func codeFromError(err error) resCode {
+	if err == nil {
+		return CodeSucceed
+	}
+	switch {
+	case errors.Is(err, code.ErrorInvalidParam):
+		return CodeInvalidParam
+	case errors.Is(err, code.ErrorUserExist):
+		return CodeUserExist
+	case errors.Is(err, code.ErrorUserNotExist):
+		return CodeUserNotExist
+	case errors.Is(err, code.ErrorInvalidPassword):
+		return CodeInvalidPassword
+	case errors.Is(err, code.ErrorInvalidVerification):
+		return CodeInvalidVerification
+	case errors.Is(err, code.ErrorServerBusy):
+		return CodeServerBusy
+	case errors.Is(err, code.ErrorNeedLogin):
+		return CodeNeedLogin
+	case errors.Is(err, code.ErrorInvalidAuth):
+		return CodeInvalidAuth
+	case errors.Is(err, code.ErrorInvalidID):
+		return CodeInvalidID
+	case errors.Is(err, code.ErrorTitleExist):
+		return CodeTitleExist
+	case errors.Is(err, code.ErrorTagNotExist):
+		return CodeTagNotExist
+	case errors.Is(err, code.ErrorTagExist):
+		return CodeTagExist
+	default:
+		return CodeServerBusy
+	}
+}
+
 // ResponseSucceed 成功响应
 func ResponseSucceed(c *gin.Context, data any) {
-	c.JSON(200, &ResponseData{
+	c.JSON(200, &responseData{
 		Code: CodeSucceed,
 		Msg:  codeMsgMap[CodeSucceed],
 		Data: data,
@@ -71,18 +102,26 @@ func ResponseSucceed(c *gin.Context, data any) {
 
 // ResponseError 返回错误，但是不知道啥错误，所以要传入code
 func ResponseError(c *gin.Context, code resCode) {
-	c.JSON(200, &ResponseData{
+	c.JSON(200, &responseData{
 		Code: code,
-		Msg:  code.Msg(),
+		Msg:  code.msg(),
 		Data: "",
 	})
 }
 
+func ResponseErrorByErr(c *gin.Context, err error) {
+	ResponseError(c, codeFromError(err))
+}
+
 // 返回错误附带数据
 func ResponseErrorWithData(c *gin.Context, code resCode, data any) {
-	c.JSON(200, &ResponseData{
+	c.JSON(200, &responseData{
 		Code: code,
-		Msg:  code.Msg(),
+		Msg:  code.msg(),
 		Data: data,
 	})
+}
+
+func ResponseErrorWithErr(c *gin.Context, err error, data any) {
+	ResponseErrorWithData(c, codeFromError(err), data)
 }

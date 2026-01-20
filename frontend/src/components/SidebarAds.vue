@@ -14,14 +14,14 @@
           loading="lazy"
         >
           <template #error>
-            <div class="w-full h-full bg-vscode-sidebar flex items-center justify-center text-[#FF6600] text-xs">
+            <div class="w-full h-full bg-vscode-sidebar flex items-center justify-center text-[#FF6600] text-base">
                <el-icon class="mr-1"><PictureFilled /></el-icon> No Image
             </div>
           </template>
         </el-image>
         <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/80 to-transparent p-3">
-          <p class="text-white text-sm font-medium truncate">{{ ad.title }}</p>
-          <span class="text-2xs text-gray-300 uppercase tracking-wider">Advertisement</span>
+          <p class="text-white text-base font-medium truncate">{{ ad.title }}</p>
+          <span class="text-base text-gray-300 uppercase tracking-wider">Advertisement</span>
         </div>
       </component>
     </div>

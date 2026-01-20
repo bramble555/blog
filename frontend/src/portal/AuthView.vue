@@ -43,7 +43,7 @@
            </el-button>
         </div>
 
-        <div class="mt-6 text-center text-sm">
+        <div class="mt-6 text-center text-base">
            <span class="text-[#FFA500]">
              {{ isRegister ? 'Already have an account?' : "Don't have an account?" }}
            </span>

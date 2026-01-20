@@ -1,54 +1,113 @@
 package logic
 
 import (
-	errcode "github.com/bramble555/blog/dao/mysql/code"
+	"github.com/bramble555/blog/dao/mysql/code"
 	"github.com/bramble555/blog/dao/mysql/message"
 	"github.com/bramble555/blog/dao/mysql/user"
 	"github.com/bramble555/blog/model"
 )
 
-func SendMessage(pm *model.ParamMessage) (string, error) {
-	// 先判断发送方和接收方是否存在
-	ok, err := user.CheckUserExistBySN(int64(pm.SendUserSN))
+func SendMessage(userSN int64, p *model.ParamSendMessage) (string, error) {
+	if p == nil || p.RevUserSN == 0 || p.Content == "" {
+		return "", code.ErrorInvalidParam
+	}
+
+	// 检查发送者是否存在
+	sender, err := user.GetUserDetailBySN(userSN)
 	if err != nil {
 		return "", err
 	}
-	if !ok {
-		return "", errcode.ErrorUserNotExist
-	}
-	ok, err = user.CheckUserExistBySN(int64(pm.RevUserSN))
+
+	// 检查接收者是否存在
+	receiver, err := user.GetUserDetailBySN(p.RevUserSN)
 	if err != nil {
 		return "", err
 	}
-	if !ok {
-		return "", errcode.ErrorUserNotExist
+
+	// 创建消息
+	msg := model.MessageModel{
+		SendUserSN:     userSN,
+		SendUsername:   sender.Username,
+		SendUserAvatar: sender.Avatar,
+		RevUserSN:      receiver.SN,
+		RevUsername:    receiver.Username,
+		RevUserAvatar:  receiver.Avatar,
+		IsRead:         false,
+		Content:        p.Content,
 	}
-	sud, err := user.GetUserDetailBySN(int64(pm.SendUserSN))
-	if err != nil {
-		return "", err
-	}
-	rud, err := user.GetUserDetailBySN(int64(pm.RevUserSN))
-	if err != nil {
-		return "", err
-	}
-	udl := make([]*model.UserDetail, 2)
-	udl[0] = sud
-	udl[1] = rud
-	return message.SendMessage(pm)
+
+	return message.CreateMessage(&msg)
 }
-func MessageListAll(pl *model.ParamList) (*model.PageResult[model.RespondMessage], error) {
-	list, count, err := message.MessageListAll(pl)
+
+func BroadcastMessage(userSN int64, p *model.ParamBroadcastMessage) (string, error) {
+	if p == nil || p.Content == "" {
+		return "", code.ErrorInvalidParam
+	}
+
+	// 检查发送者是否存在
+	sender, err := user.GetUserDetailBySN(userSN)
+	if err != nil {
+		return "", err
+	}
+
+	// 获取所有用户
+	users, _, err := user.GetUserList(nil)
+	if err != nil {
+		return "", err
+	}
+
+	msgs := make([]model.MessageModel, 0, len(users))
+	for _, u := range users {
+		msgs = append(msgs, model.MessageModel{
+			SendUserSN:     userSN,
+			SendUsername:   sender.Username,
+			SendUserAvatar: sender.Avatar,
+			RevUserSN:      u.SN,
+			RevUsername:    u.Username,
+			RevUserAvatar:  u.Avatar,
+			IsRead:         false,
+			Content:        p.Content,
+		})
+	}
+	return message.CreateMessagesBatch(msgs)
+}
+
+func ReadMessage(userSN int64, sn int64) (string, error) {
+	if sn == 0 {
+		return "", code.ErrorInvalidParam
+	}
+	return message.UpdateMessageRead(sn, userSN)
+}
+
+func GetMyMessagesList(userSN int64, pl *model.ParamList) (*model.PageResult[model.MessageModel], error) {
+	list, count, err := message.GetUserMessageList(pl, userSN)
 	if err != nil {
 		return nil, err
 	}
-	return &model.PageResult[model.RespondMessage]{
+	return &model.PageResult[model.MessageModel]{
 		List:  list,
 		Count: count,
 	}, nil
 }
-func MessageList(sn int64) ([]model.RespondMessage, error) {
-	return message.MessageList(sn)
+
+func GetSentMessagesList(userSN int64, pl *model.ParamList) (*model.PageResult[model.MessageModel], error) {
+	list, count, err := message.GetSentMessageList(pl, userSN)
+	if err != nil {
+		return nil, err
+	}
+	return &model.PageResult[model.MessageModel]{
+		List:  list,
+		Count: count,
+	}, nil
 }
-func MessageRecord(mySN, recordSN int64) ([]model.MessageModel, error) {
-	return message.MessageRecord(mySN, recordSN)
+
+func GetMessagesAllList(pl *model.ParamList) (*model.PageResult[model.MessageModel], error) {
+	list, count, err := message.GetAllMessagesList(pl)
+	if err != nil {
+		return nil, err
+	}
+	return &model.PageResult[model.MessageModel]{
+		List:  list,
+		Count: count,
+	}, nil
 }

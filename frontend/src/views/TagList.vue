@@ -3,13 +3,13 @@
     <h2 class="text-xl font-semibold mb-6 flex justify-between items-center">
       Tag Management
       <div class="flex gap-2">
-         <el-button v-if="isAdmin" :type="isBatchMode ? 'info' : 'warning'" size="small" @click="toggleBatchMode">
+         <el-button v-if="isAdmin" :type="isBatchMode ? 'info' : 'warning'" @click="toggleBatchMode">
             {{ isBatchMode ? 'Exit Batch' : 'Batch Manage' }}
          </el-button>
-         <el-button v-if="isAdmin && selectedTags.length > 0" type="danger" size="small" @click="batchRemove">
+         <el-button v-if="isAdmin && selectedTags.length > 0" type="danger" @click="batchRemove">
             Delete Selected ({{ selectedTags.length }})
          </el-button>
-         <el-button type="primary" size="small" @click="openDialog">Add Tag</el-button>
+         <el-button type="primary" @click="openDialog">Add Tag</el-button>
       </div>
     </h2>
 
@@ -26,7 +26,7 @@
             class="mr-2"
         />
         <el-tag 
-          class="text-base px-4 py-2 cursor-pointer transition-all select-none"
+          class="text-[16px] px-4 py-2 cursor-pointer transition-all select-none"
           :class="{ 'ring-2 ring-blue-500 ring-offset-1': selectedTags.includes(tag.sn) }"
           :type="selectedTags.includes(tag.sn) ? '' : 'info'"
           effect="plain"
@@ -37,11 +37,11 @@
         </el-tag>
         <!-- Individual delete for Admin (only when not in batch mode) -->
         <div v-if="isAdmin && !isBatchMode" class="absolute -top-2 -right-2 hidden group-hover:block z-10">
-           <el-button type="danger" circle size="small" :icon="Delete" @click.stop="remove(tag.sn)" />
+           <el-button type="danger" circle :icon="Delete" @click.stop="remove(tag.sn)" />
         </div>
       </div>
 
-      <div v-if="tags.length === 0 && !loading" class="text-gray-500 text-sm italic p-4">
+      <div v-if="tags.length === 0 && !loading" class="text-gray-500 text-base italic p-4">
         No tags available.
       </div>
     </div>
@@ -197,3 +197,9 @@ onMounted(() => {
   fetchData()
 })
 </script>
+
+<style scoped>
+:deep(.el-tag) {
+  font-size: 16px !important;
+}
+</style>

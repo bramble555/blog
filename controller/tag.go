@@ -1,6 +1,9 @@
 package controller
 
 import (
+	"errors"
+
+	"github.com/bramble555/blog/dao/mysql/code"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/logic"
 	"github.com/bramble555/blog/model"
@@ -17,7 +20,7 @@ func CreateTagsHandle(c *gin.Context) {
 	}
 	data, err := logic.CreateTags(&tm)
 	if err != nil {
-		if err.Error() == "tag 已存在" {
+		if errors.Is(err, code.ErrorTagExist) {
 			ResponseError(c, CodeTagExist)
 			return
 		}
