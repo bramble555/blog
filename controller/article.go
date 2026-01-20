@@ -219,3 +219,20 @@ func DeleteArticleCollectHandler(c *gin.Context) {
 	}
 	ResponseSucceed(c, data)
 }
+
+func GetArticlesByTagHandler(c *gin.Context) {
+	tag := c.Param("tag")
+	pl, err := validateListParams(c)
+	if err != nil {
+		global.Log.Errorf("controller GetArticlesByTagHandler validateListParams err:%s\n", err.Error())
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+	data, err := logic.GetArticlesByTag(tag, pl)
+	if err != nil {
+		global.Log.Errorf("controller GetArticlesByTagHandler logic.GetArticlesByTag err:%s\n", err.Error())
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	ResponseSucceed(c, data)
+}

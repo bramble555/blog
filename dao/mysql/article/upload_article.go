@@ -3,6 +3,7 @@ package article
 import (
 	"time"
 
+	dao_es "github.com/bramble555/blog/dao/es"
 	"github.com/bramble555/blog/dao/mysql/code"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
@@ -96,6 +97,14 @@ func UploadArticles(am *model.ArticleModel) (string, error) {
 		global.Log.Errorf("article  commit transaction err:%s\n", err.Error())
 		return "", err
 	}
+
+	// 立即同步到 ES（新增）
+	// 不阻塞主流程，ES 同步失败只记录日志
+	go func() {
+		if err := dao_es.UploadIndexSingleArticle(am.SN); err != nil {
+			global.Log.Errorf("IndexSingleArticle failed for SN %d: %v", am.SN, err)
+		}
+	}()
 
 	return code.StrCreateSucceed, nil
 }

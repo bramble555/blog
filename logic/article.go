@@ -179,3 +179,7 @@ func DeleteArticleCollect(uSN int64, pdl *model.ParamDeleteList) (string, error)
 	}
 	return article.DeleteArticleCollect(uSN, snList)
 }
+
+func GetArticlesByTag(tag string, pl *model.ParamList) (*model.ResponseArticleList, error) {
+	return article.GetArticlesByTag(tag, pl)
+}

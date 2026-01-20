@@ -1,14 +1,32 @@
 package article
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
+	dao_es "github.com/bramble555/blog/dao/es"
 	"github.com/bramble555/blog/dao/mysql/code"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
 	"github.com/bramble555/blog/pkg"
 	"gorm.io/gorm"
 )
+
+// buildFieldOrder 构建 FIELD() 函数用于保持 ES 的相关度排序
+func buildFieldOrder(sns []int64) string {
+	if len(sns) == 0 {
+		return "article_models.create_time DESC"
+	}
+
+	// 构建 FIELD(article_models.sn, id1, id2, ...) 语句
+	var snStrs []string
+	for _, sn := range sns {
+		snStrs = append(snStrs, strconv.FormatInt(sn, 10))
+	}
+	return fmt.Sprintf("FIELD(article_models.sn, %s)", strings.Join(snStrs, ","))
+}
 
 // CheckSnListExist 检查文章 SNList 是否存在
 func SNListExist(pdl *model.ParamDeleteList) (bool, error) {
@@ -83,41 +101,78 @@ func GetArticlesListByParam(paq *model.ParamArticleQuery, uSN int64) (*model.Res
 	var count int64
 	db := global.DB.Table("article_models")
 
-	hasTagFilter := false
+	useESSearch := false // 标记是否使用 ES 搜索
+	var esSNs []int64    // ES 搜索返回的文章 SN 列表
 
+	// ===== ES 搜索逻辑 =====
+	// 如果有 title 或 content 搜索关键词，使用 ES 搜索
+	searchKeyword := ""
 	if paq.Title != "" {
-		db = db.Where("article_models.title LIKE ?", "%"+paq.Title+"%")
-	}
-	if paq.Tags != "" {
-		tagList := pkg.ParseTagsStringSlice(paq.Tags)
-		if len(tagList) > 0 {
-			hasTagFilter = true
-			db = db.Joins("JOIN article_tag_models atm ON atm.article_sn = article_models.sn").
-				Where("atm.tag_title IN ?", tagList)
-		}
-	}
-	if paq.Content != "" {
-		db = db.Where("article_models.content LIKE ?", "%"+paq.Content+"%")
+		searchKeyword = paq.Title
+	} else if paq.Content != "" {
+		searchKeyword = paq.Content
 	}
 
-	if hasTagFilter {
-		if err := db.Distinct("article_models.sn").Count(&count).Error; err != nil {
-			global.Log.Errorf("GetArticlesListByParam count failed: %v", err)
-			return nil, err
+	if searchKeyword != "" && global.ES != nil {
+		// 使用 ES 搜索
+		useESSearch = true
+		// 获取匹配的文章 SN 列表
+		var err error
+		esSNs, err = dao_es.GetArticleSNsByKeyword(searchKeyword)
+		if err != nil {
+			global.Log.Errorf("GetArticlesListByParam ES search failed: %v, fallback to MySQL", err)
+			// ES 搜索失败，降级到 MySQL LIKE 查询
+			useESSearch = false
+		} else if len(esSNs) == 0 {
+			// ES 搜索无结果，直接返回空列表
+			return &model.ResponseArticleList{
+				List:      []model.ResponseArticle{},
+				Count:     0,
+				Page:      paq.Page,
+				PageSize:  paq.Size,
+				TotalPage: 0,
+			}, nil
 		}
-	} else if err := db.Count(&count).Error; err != nil {
+
+		// 使用 ES 返回的 SN 列表过滤
+		db = db.Where("article_models.sn IN ?", esSNs)
+	}
+
+	// 当 ES 不可用的时候,用 mysql 搜索
+	if !useESSearch {
+		if paq.Title != "" {
+			db = db.Where("article_models.title LIKE ?", "%"+paq.Title+"%")
+		}
+		if paq.Content != "" {
+			db = db.Where("article_models.content LIKE ?", "%"+paq.Content+"%")
+		}
+	}
+
+	if err := db.Count(&count).Error; err != nil {
 		global.Log.Errorf("GetArticlesListByParam count failed: %v", err)
 		return nil, err
 	}
 
 	offset := (paq.Page - 1) * paq.Size
-	// 默认按创建时间降序排序
 	query := db
-	if hasTagFilter {
-		query = query.Distinct()
+	selectCols := `article_models.sn, article_models.create_time, 
+	article_models.update_time, article_models.title, 
+	article_models.abstract, article_models.look_count, 
+	article_models.comment_count, article_models.digg_count, 
+	article_models.collects_count, article_models.tags, 
+	article_models.banner_sn, article_models.banner_url, 
+	article_models.user_sn, article_models.username, article_models.user_avatar`
+
+	// 如果使用 ES 搜索，按照 ES 返回的顺序排序（相关度）
+	// 否则按创建时间降序排序
+	orderBy := "article_models.create_time DESC"
+	if useESSearch && len(esSNs) > 0 {
+		// 使用 FIELD() 函数保持 ES 的相关度排序
+		// 注意：这里需要构建 FIELD(sn, id1, id2, ...) 语句
+		orderBy = buildFieldOrder(esSNs)
 	}
-	selectCols := "article_models.sn, article_models.create_time, article_models.update_time, article_models.title, article_models.abstract, article_models.look_count, article_models.comment_count, article_models.digg_count, article_models.collects_count, article_models.tags, article_models.banner_sn, article_models.banner_url, article_models.user_sn, article_models.username, article_models.user_avatar"
-	err := query.Select(selectCols).Order("article_models.create_time DESC").
+
+	err := query.Select(selectCols).Order(orderBy).
 		Limit(paq.Size).
 		Offset(offset).
 		Find(&articles).Error

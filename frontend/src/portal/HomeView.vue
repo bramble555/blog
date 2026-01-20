@@ -98,7 +98,7 @@
  * @last_modified 2026-01-14
  */
 import { ref, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { getArticles } from '../api/article'
 import { View, ChatLineSquare, Picture, PictureFilled } from '@element-plus/icons-vue'
 import SidebarAds from '@/components/SidebarAds.vue'
@@ -106,6 +106,7 @@ import { formatDate } from '@/utils/date'
 import { formatUrl } from '@/utils/url'
 
 const route = useRoute()
+const router = useRouter()
 // 文章列表数据
 const articles = ref([])
 // 加载状态
@@ -144,6 +145,8 @@ watch(() => route.query.title, () => fetchData())
 
 // 组件挂载时获取数据
 onMounted(() => {
+  // 前端优化：如果在搜索状态下刷新页面，直接跳转回首页
+  // Refresh logic moved to router/index.js
   fetchData()
 })
 </script>

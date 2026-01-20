@@ -154,12 +154,32 @@ const router = createRouter({
     routes
 })
 
+// Flag to ensure we only check for reload functionality once (on app init)
+let hasCheckedReload = false
+
 // Simple Route Guard
 router.beforeEach((to, from, next) => {
     const title = to.meta?.title ? `${to.meta.title} | GVB Blog` : 'GVB Blog'
     document.title = title
 
-    // TODO: Implement real auth check
+    // Search Refresh Guard: 
+    // Only run this check on the very first navigation (page load)
+    if (!hasCheckedReload) {
+        hasCheckedReload = true
+        // If we are on the Home page with a search query, and the page was reloaded, redirect to '/'
+        if (to.name === 'Home' && to.query.title) {
+            const isReload = (
+                (performance.getEntriesByType("navigation").length > 0 && performance.getEntriesByType("navigation")[0].type === 'reload') ||
+                (window.performance && window.performance.navigation && window.performance.navigation.type === 1)
+            );
+            if (isReload) {
+                next({ path: '/' });
+                return;
+            }
+        }
+    }
+
+    // Auth Guard
     const token = localStorage.getItem('token')
     if (to.meta.requiresAuth && !token) {
         next('/login')

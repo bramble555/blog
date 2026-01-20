@@ -24,47 +24,12 @@ redis:
   password: ""
   pool_size: 100
 
-site_info:
-  created_at: 2023-06
-  bei_an: 湘ICP备2021010654号-1
-  title: 个人博客
-  qq_image: ""
-  version: 6.0.2
-  email: ""
-  wechat_image: ""
-  name: xep
-  job: 后端开发
-  addr: 湖南长沙
-  slogan: ""
-  slogan_en: ""
-  web: ""
-  bilibili_url: ""
-  gitee_url: ""
-  github_url: "1234"
-
-qq:
-  app_id:
-  key:
-  redirect:
-
-qi_niu:
-  enable: false
-  access_key: 
-  secret_key: 
-  bucket: half-white
-  cdn:
-  prefix: "gvb"
-  zone: z2
-  size: 5
-
-
 email:
   host: "smtp.qq.com"
   port: 587
   user: "3478034982@qq.com"
   password: "icjpmfmuesssdbah"
   default_from_eamil: "3478034982@qq.com"
-
 
 jwt:
   secret: xep
@@ -77,3 +42,10 @@ upload:
   path: ./uploads/file  
   # 广告上传路径
   ad_path: ./uploads/ad
+
+elasticsearch:
+  host: 127.0.0.1
+  port: 9200
+  username: ""
+  password: ""
+  enable: true

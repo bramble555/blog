@@ -3,6 +3,7 @@ package global
 import (
 	config "github.com/bramble555/blog/conf"
 	"github.com/bramble555/blog/pkg/snow"
+	"github.com/elastic/go-elasticsearch/v8"
 
 	"github.com/go-redis/redis"
 	"github.com/sirupsen/logrus"
@@ -17,4 +18,5 @@ var (
 	MysqlLog  logger.Interface
 	Redis     *redis.Client
 	Snowflake *snow.Snowflake
+	ES        *elasticsearch.Client // Elasticsearch 客户端
 )

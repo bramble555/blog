@@ -13,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	dao_es "github.com/bramble555/blog/dao/es"
 	dao_mysql "github.com/bramble555/blog/dao/mysql"
 	"github.com/bramble555/blog/dao/redis"
 	"github.com/bramble555/blog/flag"
@@ -91,6 +92,14 @@ func main() {
 		return
 	}
 
+	// 初始化 Elasticsearch
+	global.ES, err = dao_es.InitES()
+	if err != nil {
+		global.Log.Errorf("Init ES failed, err:%v\n", err)
+		// ES 初始化失败只记录日志，不中断程序启动
+		// 搜索功能将无法使用，但其他功能可以正常运行
+	}
+
 	// 初始化雪花算法
 	global.Snowflake = snow.Init()
 
@@ -115,6 +124,14 @@ func startServer() {
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", global.Config.System.Port),
 		Handler: r,
+	}
+
+	// 启动 ES 定时同步任务
+	if global.ES != nil {
+		cronJob := dao_es.StartSyncCronJob()
+		if cronJob != nil {
+			defer cronJob.Stop()
+		}
 	}
 
 	go func() {

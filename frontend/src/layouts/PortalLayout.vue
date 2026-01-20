@@ -19,10 +19,13 @@
              <el-input
                v-model="searchQuery"
                placeholder="Search articles..."
-               prefix-icon="Search"
                class="w-64"
                @keyup.enter="handleSearch"
-             />
+             >
+               <template #append>
+                 <el-button :icon="Search" @click="handleSearch" />
+               </template>
+             </el-input>
           </div>
           
           <template v-if="!isLoggedIn">

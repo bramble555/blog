@@ -19,6 +19,40 @@
       </div>
     </div>
 
+    <!-- Search Bar -->
+    <div class="mb-6 bg-vscode-sidebar border border-vscode-border p-4 rounded-lg flex flex-wrap gap-4 items-center">
+      <div class="flex gap-4 items-center flex-1 min-w-[300px]">
+        <el-input
+          v-model="searchKeyword"
+          placeholder="Search by title..."
+          clearable
+          @keyup.enter="handleSearch"
+          class="!w-64"
+        >
+          <template #prefix>
+            <el-icon><Search /></el-icon>
+          </template>
+        </el-input>
+        <el-input
+          v-model="searchTag"
+          placeholder="Search by tag..."
+          clearable
+          @keyup.enter="handleSearch"
+          class="!w-64"
+        >
+          <template #prefix>
+            <el-icon><PriceTag /></el-icon>
+          </template>
+        </el-input>
+        <button @click="handleSearch" class="px-4 py-2 bg-vscode-primary hover:bg-opacity-90 text-white rounded text-base font-medium transition-colors">
+          Search
+        </button>
+        <button @click="resetSearch" class="px-4 py-2 bg-vscode-sidebar border border-vscode-border hover:bg-vscode-bg rounded text-base transition-colors">
+          Reset
+        </button>
+      </div>
+    </div>
+
     <!-- Error/Loading States -->
     <div v-if="loading" class="text-center py-10 text-gray-500">Loading articles...</div>
     <div v-else-if="error" class="bg-red-900/20 border border-red-900 text-red-300 p-4 rounded mb-6">
@@ -122,10 +156,10 @@
  * @requires element-plus, vue, ../api/article, @/utils/date, @element-plus/icons-vue
  */
 import { ref, reactive, onMounted, computed } from 'vue'
-import { getArticles, deleteArticles } from '../api/article'
+import { getArticles, getArticlesByTag, deleteArticles } from '../api/article'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { formatDateTime } from '@/utils/date'
-import { Edit, Delete, Search } from '@element-plus/icons-vue'
+import { Edit, Delete, Search, PriceTag } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 import { authStore } from '../stores/auth'
 
@@ -134,6 +168,7 @@ const articles = ref([])
 const loading = ref(false)
 const error = ref(null)
 const searchKeyword = ref('')
+const searchTag = ref('')
 const selectedSNList = ref([])
 const pagination = reactive({
   page: 1,
@@ -183,11 +218,19 @@ const fetchArticles = async () => {
   loading.value = true
   error.value = null
   try {
-    const res = await getArticles({ 
-      page: pagination.page, 
-      size: pagination.size,
-      keyword: searchKeyword.value
-    })
+    let res;
+    if (searchTag.value) {
+      res = await getArticlesByTag(searchTag.value, {
+        page: pagination.page,
+        size: pagination.size
+      })
+    } else {
+      res = await getArticles({ 
+        page: pagination.page, 
+        size: pagination.size,
+        keyword: searchKeyword.value
+      })
+    }
     if (res.data.code === 10000) {
        articles.value = res.data.data.list
        pagination.total = res.data.data.count
@@ -208,6 +251,16 @@ const fetchArticles = async () => {
  * 处理搜索
  */
 const handleSearch = () => {
+  pagination.page = 1
+  fetchArticles()
+}
+
+/**
+ * 重置搜索
+ */
+const resetSearch = () => {
+  searchKeyword.value = ''
+  searchTag.value = ''
   pagination.page = 1
   fetchArticles()
 }

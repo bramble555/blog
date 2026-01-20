@@ -112,4 +112,15 @@ export const getCollects = () => {
     return service.get('/articles/collects');
 };
 
+/**
+ * 根据标签获取文章列表
+ * 
+ * @param {string} tag - 标签名称
+ * @param {Object} params - 分页参数 { page, size }
+ * @returns {Promise} Axios 响应 Promise
+ */
+export const getArticlesByTag = (tag, params) => {
+    return service.get(`/articles/tag/${tag}`, { params });
+};
+
 

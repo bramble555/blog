@@ -78,6 +78,5 @@ type CalendarCount struct {
 type ParamArticleQuery struct {
 	ParamList
 	Title   string `json:"title" form:"title"`
-	Tags    string `json:"tags" form:"tags"`
 	Content string `json:"content" form:"content"`
 }
