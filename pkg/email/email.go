@@ -1,4 +1,4 @@
-package pkg
+package email
 
 import (
 	"html/template"

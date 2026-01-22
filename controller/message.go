@@ -4,7 +4,7 @@ import (
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/logic"
 	"github.com/bramble555/blog/model"
-	"github.com/bramble555/blog/pkg"
+	"github.com/bramble555/blog/pkg/jwt"
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,7 +16,7 @@ func SendMessageHandler(c *gin.Context) {
 		return
 	}
 	_claims, _ := c.Get("claims")
-	claims := _claims.(*pkg.MyClaims)
+	claims := _claims.(*jwt.MyClaims)
 	data, err := logic.SendMessage(claims.SN, &p)
 	if err != nil {
 		global.Log.Errorf("controller SendMessageHandler logic.SendMessage err:%s\n", err.Error())
@@ -35,7 +35,7 @@ func GetMyMessagesListHandler(c *gin.Context) {
 		return
 	}
 	_claims, _ := c.Get("claims")
-	claims := _claims.(*pkg.MyClaims)
+	claims := _claims.(*jwt.MyClaims)
 	data, err := logic.GetMyMessagesList(claims.SN, pl)
 	if err != nil {
 		global.Log.Errorf("controller GetMyMessagesHandler logic.GetMyMessages err:%s\n", err.Error())
@@ -54,7 +54,7 @@ func GetSentMessagesListHandler(c *gin.Context) {
 		return
 	}
 	_claims, _ := c.Get("claims")
-	claims := _claims.(*pkg.MyClaims)
+	claims := _claims.(*jwt.MyClaims)
 	data, err := logic.GetSentMessagesList(claims.SN, pl)
 	if err != nil {
 		global.Log.Errorf("controller GetSentMessagesListHandler logic.GetSentMessagesList err:%s\n", err.Error())
@@ -95,7 +95,7 @@ func BroadcastMessageHandler(c *gin.Context) {
 		return
 	}
 	_claims, _ := c.Get("claims")
-	claims := _claims.(*pkg.MyClaims)
+	claims := _claims.(*jwt.MyClaims)
 	data, err := logic.BroadcastMessage(claims.SN, &p)
 	if err != nil {
 		global.Log.Errorf("controller BroadcastMessageHandler logic.BroadcastMessage err:%s\n", err.Error())
@@ -114,7 +114,7 @@ func ReadMessageHandler(c *gin.Context) {
 		return
 	}
 	_claims, _ := c.Get("claims")
-	claims := _claims.(*pkg.MyClaims)
+	claims := _claims.(*jwt.MyClaims)
 	data, err := logic.ReadMessage(claims.SN, p.SN)
 	if err != nil {
 		global.Log.Errorf("controller ReadMessageHandler logic.ReadMessage err:%s\n", err.Error())

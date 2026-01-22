@@ -49,3 +49,15 @@ elasticsearch:
   username: ""
   password: ""
   enable: true
+
+rate_limit:
+  enable: true
+  store: "memory"
+  # 平均速度
+  global_rps: 20
+  # 突发情况,如果有40个请求,也会被允许
+  global_burst: 40
+  ip_rps: 10
+  ip_burst: 20
+  ip_ttl_seconds: 60
+  cleanup_interval_seconds: 30

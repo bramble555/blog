@@ -15,7 +15,8 @@ import (
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
 	"github.com/bramble555/blog/model/ctype"
-	"github.com/bramble555/blog/pkg"
+	"github.com/bramble555/blog/pkg/file"
+	"github.com/bramble555/blog/pkg/jwt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
@@ -261,7 +262,7 @@ func HandleChatGroupWS(c *gin.Context) error {
 	var nickName string
 	var avatar string
 	var userSN int64 = 0
-	claims := _claims.(*pkg.MyClaims)
+	claims := _claims.(*jwt.MyClaims)
 	userSN = claims.SN
 	nickName = claims.Username
 	ud, err := user.GetUserDetailBySN(claims.SN)
@@ -299,11 +300,11 @@ func GetChatGroupRecords(p *model.ParamList) (*model.PageResult[model.ChatModel]
 	}, nil
 }
 
-func UploadChatGroupImage(c *gin.Context, file *multipart.FileHeader) (string, error) {
-	if file == nil {
+func UploadChatGroupImage(c *gin.Context, fh *multipart.FileHeader) (string, error) {
+	if fh == nil {
 		return "", errors.New("image required")
 	}
-	fileExt := strings.Split(file.Filename, ".")
+	fileExt := strings.Split(fh.Filename, ".")
 	if len(fileExt) != 2 {
 		return "", errors.New("invalid image")
 	}
@@ -311,15 +312,15 @@ func UploadChatGroupImage(c *gin.Context, file *multipart.FileHeader) (string, e
 	if _, exists := model.WhiteImageExtList[ext]; !exists {
 		return "", errors.New("invalid image")
 	}
-	size := float64(file.Size) / 1024 / 1024
+	size := float64(fh.Size) / 1024 / 1024
 	if size >= float64(global.Config.Upload.Size) {
 		return "", errors.New("image too large")
 	}
 	chatDir := filepath.Join(global.Config.Upload.Path, "chat")
-	pkg.CreateFolder(chatDir)
-	targetPath := filepath.Join(chatDir, file.Filename)
-	if err := c.SaveUploadedFile(file, targetPath); err != nil {
+	file.CreateFolder(chatDir)
+	targetPath := filepath.Join(chatDir, fh.Filename)
+	if err := c.SaveUploadedFile(fh, targetPath); err != nil {
 		return "", err
 	}
-	return "/uploads/file/chat/" + file.Filename, nil
+	return "/uploads/file/chat/" + fh.Filename, nil
 }

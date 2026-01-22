@@ -8,7 +8,7 @@ import (
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/logic"
 	"github.com/bramble555/blog/model"
-	"github.com/bramble555/blog/pkg"
+	"github.com/bramble555/blog/pkg/jwt"
 	"github.com/gin-gonic/gin"
 )
 
@@ -23,7 +23,7 @@ func UploadArticleHandler(c *gin.Context) {
 		return
 	}
 	_claims, _ := c.Get("claims")
-	claims := _claims.(*pkg.MyClaims)
+	claims := _claims.(*jwt.MyClaims)
 
 	// 获取 banner 列表，用于随机选择封面
 	pl := &model.ParamList{Page: 1, Size: 100}
@@ -82,7 +82,7 @@ func GetArticlesListHandler(c *gin.Context) {
 	var uSN int64
 	_claims, exists := c.Get("claims")
 	if exists {
-		claims := _claims.(*pkg.MyClaims)
+		claims := _claims.(*jwt.MyClaims)
 		uSN = claims.SN
 	}
 
@@ -99,7 +99,7 @@ func GetArticlesDetailHandler(c *gin.Context) {
 	var uSN int64
 	_claims, exists := c.Get("claims")
 	if exists {
-		claims := _claims.(*pkg.MyClaims)
+		claims := _claims.(*jwt.MyClaims)
 		uSN = claims.SN
 	}
 	data, err := logic.GetArticlesDetail(sn, uSN)
@@ -169,7 +169,7 @@ func DeleteArticlesListHandler(c *gin.Context) {
 }
 func PostArticleCollectHandler(c *gin.Context) {
 	_claims, _ := c.Get("claims")
-	claims := _claims.(*pkg.MyClaims)
+	claims := _claims.(*jwt.MyClaims)
 	uSN := claims.SN
 	psn := model.ParamSN{}
 	err := c.ShouldBindJSON(&psn)
@@ -189,7 +189,7 @@ func PostArticleCollectHandler(c *gin.Context) {
 }
 func GetArticleCollectHandler(c *gin.Context) {
 	_claims, _ := c.Get("claims")
-	claims := _claims.(*pkg.MyClaims)
+	claims := _claims.(*jwt.MyClaims)
 	uSN := claims.SN
 	data, err := logic.GetArticleCollect(uSN)
 	if err != nil {
@@ -201,7 +201,7 @@ func GetArticleCollectHandler(c *gin.Context) {
 }
 func DeleteArticleCollectHandler(c *gin.Context) {
 	_claims, _ := c.Get("claims")
-	claims := _claims.(*pkg.MyClaims)
+	claims := _claims.(*jwt.MyClaims)
 	uSN := claims.SN
 	var pdl model.ParamDeleteList
 	err := c.ShouldBindJSON(&pdl)

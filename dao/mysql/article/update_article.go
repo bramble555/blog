@@ -7,7 +7,7 @@ import (
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
 	"github.com/bramble555/blog/model/ctype"
-	"github.com/bramble555/blog/pkg"
+	"github.com/bramble555/blog/pkg/convert"
 )
 
 // UpdateArticles 更新文章信息
@@ -36,7 +36,7 @@ func UpdateArticles(sn int64, uf map[string]any) (string, error) {
 		switch v := tagsInterface.(type) {
 		case string:
 			hasTags = true
-			uniqueTags = pkg.ParseTagsStringSlice(v) // 将标签字符串解析为切片
+			uniqueTags = convert.ParseTagsStringSlice(v) // 将标签字符串解析为切片
 		}
 		if hasTags {
 			uf["tags"] = ctype.ArrayString(uniqueTags) // 将标签赋值为一个字符串数组

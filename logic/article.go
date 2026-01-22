@@ -12,10 +12,12 @@ import (
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
 	"github.com/bramble555/blog/model/ctype"
-	"github.com/bramble555/blog/pkg"
+	"github.com/bramble555/blog/pkg/convert"
+	"github.com/bramble555/blog/pkg/jwt"
+	"github.com/bramble555/blog/pkg/markdown"
 )
 
-func UploadArticles(claims *pkg.MyClaims, pa *model.ParamArticle, bannerList *[]model.BannerModel) (string, error) {
+func UploadArticles(claims *jwt.MyClaims, pa *model.ParamArticle, bannerList *[]model.BannerModel) (string, error) {
 	// 判断标题是否存在
 	ok, err := article.TitleIsExist(pa.Title)
 	if err != nil {
@@ -31,7 +33,7 @@ func UploadArticles(claims *pkg.MyClaims, pa *model.ParamArticle, bannerList *[]
 		return "", err
 	}
 	rawContent := pa.Content
-	safeHTML := pkg.MarkdownToHTML(rawContent)
+	safeHTML := markdown.MarkdownToHTML(rawContent)
 
 	if pa.Abstract == "" {
 		c := []rune(rawContent)
@@ -62,7 +64,7 @@ func UploadArticles(claims *pkg.MyClaims, pa *model.ParamArticle, bannerList *[]
 		global.Log.Warnf("no banner available, article will use default cover")
 	}
 
-	tagList := pkg.ParseTagsStringSlice(pa.Tags)
+	tagList := convert.ParseTagsStringSlice(pa.Tags)
 
 	am := model.ArticleModel{
 		Title:      pa.Title,
@@ -98,7 +100,7 @@ func GetArticlesDetail(sn string, uSN int64) (*model.ArticleModel, error) {
 		return nil, err
 	}
 	// Parse Markdown
-	am.ParsedContent = pkg.MarkdownToHTML(am.Content)
+	am.ParsedContent = markdown.MarkdownToHTML(am.Content)
 
 	// 检查用户是否登录,俩者页面是不一样的
 	if uSN != 0 {
@@ -162,7 +164,7 @@ func GetArticleCollect(uSN int64) ([]model.ResponseArticle, error) {
 }
 func DeleteArticleCollect(uSN int64, pdl *model.ParamDeleteList) (string, error) {
 	// 转换 SNList 为 []int64
-	snList, err := pkg.StringSliceToInt64Slice(pdl.SNList)
+	snList, err := convert.StringSliceToInt64Slice(pdl.SNList)
 	if err != nil {
 		global.Log.Errorf("DeleteArticleCollect StringSliceToInt64Slice err: %s\n", err.Error())
 		return "", err

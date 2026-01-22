@@ -25,6 +25,7 @@ const (
 	CodeTitleExist
 	CodeTagNotExist
 	CodeTagExist
+	CodeTooManyRequests
 )
 
 var codeMsgMap = map[resCode]string{
@@ -41,6 +42,7 @@ var codeMsgMap = map[resCode]string{
 	CodeTitleExist:          "主题已存在",
 	CodeTagNotExist:         "请输入已有的tag",
 	CodeTagExist:            "tag 已存在",
+	CodeTooManyRequests:     "请求过于频繁",
 }
 
 type responseData struct {

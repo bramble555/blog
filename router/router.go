@@ -24,6 +24,7 @@ func InitRouter(mode string, wg *sync.WaitGroup) *gin.Engine {
 	r.Use(middleware.CORS())
 	// 如果强制退出，必须要把正在执行的任务处理完才退出
 	r.Use(middleware.WaitGroupMiddleware(wg))
+	r.Use(middleware.RateLimitMiddleware())
 	if store == nil {
 		store = cookie.NewStore([]byte("bbbbbb"))
 	}

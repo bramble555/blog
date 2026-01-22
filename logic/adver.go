@@ -8,7 +8,7 @@ import (
 	"github.com/bramble555/blog/dao/mysql/advert"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
-	"github.com/bramble555/blog/pkg"
+	"github.com/bramble555/blog/pkg/file"
 	"github.com/gin-gonic/gin"
 )
 
@@ -38,7 +38,7 @@ func UploadAdvertImages(c *gin.Context, fileList []*multipart.FileHeader) (*[]mo
 		return resFileList, nil
 	}
 
-	pkg.CreateFolder(global.Config.Upload.AdPath)
+	file.CreateFolder(global.Config.Upload.AdPath)
 
 	for _, file := range fileList {
 		fileExt := strings.Split(file.Filename, ".")

@@ -10,7 +10,9 @@ import (
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/logic"
 	"github.com/bramble555/blog/model"
-	"github.com/bramble555/blog/pkg"
+	"github.com/bramble555/blog/pkg/email"
+	"github.com/bramble555/blog/pkg/get_ip"
+	"github.com/bramble555/blog/pkg/jwt"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
@@ -19,7 +21,7 @@ func PostBindEmailHandler(c *gin.Context) {
 	var pbe model.ParamBindEmail
 	// 获取 MyClaims
 	_claims, _ := c.Get("claims")
-	claims := _claims.(*pkg.MyClaims)
+	claims := _claims.(*jwt.MyClaims)
 
 	// 参数绑定
 	err := c.ShouldBindJSON(&pbe)
@@ -33,9 +35,9 @@ func PostBindEmailHandler(c *gin.Context) {
 	session := sessions.Default(c)
 	if pbe.Code == nil {
 		// --- 发送验证码流程 ---
-		code, err := pkg.SendEmail(pbe.Email)
+		code, err := email.SendEmail(pbe.Email)
 		if err != nil {
-			global.Log.Errorf("controller PostBindEmailHandler pkg.SendEmail err:%s", err.Error())
+			global.Log.Errorf("controller PostBindEmailHandler email.SendEmail err:%s", err.Error())
 			ResponseError(c, CodeServerBusy)
 			return
 		}
@@ -100,9 +102,9 @@ func RegisterSendCodeHandler(c *gin.Context) {
 	}
 	// 把发送的邮箱和验证码存储到 session
 	session := sessions.Default(c)
-	code, err := pkg.SendEmail(pre.Email)
+	code, err := email.SendEmail(pre.Email)
 	if err != nil {
-		global.Log.Errorf("controller RegisterSendCodeHandler pkg.SendEmail err:%s", err.Error())
+		global.Log.Errorf("controller RegisterSendCodeHandler email.SendEmail err:%s", err.Error())
 		ResponseError(c, CodeServerBusy)
 		return
 	}
@@ -162,9 +164,10 @@ func UsernameLoginHandler(c *gin.Context) {
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
-	global.Log.Infof("login request username=%s ip=%s ua=%s ts=%s", pu.Username, c.ClientIP(), c.GetHeader("User-Agent"), time.Now().Format(time.RFC3339Nano))
+	clientIP := get_ip.GetClientIP(c)
+	global.Log.Infof("login request username=%s ip=%s ua=%s ts=%s", pu.Username, clientIP, c.GetHeader("User-Agent"), time.Now().Format(time.RFC3339Nano))
 	// 业务处理
-	data, err := logic.UsernameLogin(&pu)
+	data, err := logic.UsernameLogin(&pu, clientIP)
 	if err != nil {
 		if errors.Is(err, code.ErrorUserNotExist) {
 			ResponseErrorWithData(c, CodeUserNotExist, err)
@@ -183,7 +186,7 @@ func UsernameLoginHandler(c *gin.Context) {
 func GetUserListHandler(c *gin.Context) {
 	// 根据 token，获取 用户权限
 	_claims, _ := c.Get("claims")
-	claims := _claims.(*pkg.MyClaims)
+	claims := _claims.(*jwt.MyClaims)
 	role := claims.Role
 	// ParamList 默认值
 	pl, err := validateListParams(c)
@@ -237,7 +240,7 @@ func UpdateUserPwdHandler(c *gin.Context) {
 		return
 	}
 	_claims, _ := c.Get("claims")
-	claims := _claims.(*pkg.MyClaims)
+	claims := _claims.(*jwt.MyClaims)
 	var data string
 	data, err = logic.UpdateUserPwd(&puup, claims.SN) // claims.SN is now int64
 	if err != nil {
@@ -255,7 +258,7 @@ func LogoutHandler(c *gin.Context) {
 	token := c.Request.Header.Get("token")
 	// 获取 MyClaims
 	_cliams, _ := c.Get("claims")
-	claims := _cliams.(*pkg.MyClaims)
+	claims := _cliams.(*jwt.MyClaims)
 	exp := time.Unix(claims.ExpiresAt, 0)
 	now := time.Now()
 	diff := exp.Sub(now)
@@ -281,7 +284,7 @@ func SelectUserBannerHandler(c *gin.Context) {
 		ResponseError(c, CodeNeedLogin)
 		return
 	}
-	claims := _claims.(*pkg.MyClaims)
+	claims := _claims.(*jwt.MyClaims)
 	if psb.BannerSN <= 0 {
 		ResponseError(c, CodeInvalidID)
 		return

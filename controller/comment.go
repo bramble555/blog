@@ -6,13 +6,13 @@ import (
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/logic"
 	"github.com/bramble555/blog/model"
-	"github.com/bramble555/blog/pkg"
+	"github.com/bramble555/blog/pkg/jwt"
 	"github.com/gin-gonic/gin"
 )
 
 func PostArticleCommentsHandler(c *gin.Context) {
 	_claims, _ := c.Get("claims")
-	claims := _claims.(*pkg.MyClaims)
+	claims := _claims.(*jwt.MyClaims)
 	uSN := claims.SN
 	pc := model.ParamPostComment{}
 	// 父评论默认为 -1
@@ -45,7 +45,7 @@ func GetArticleCommentsHandler(c *gin.Context) {
 	var uSN int64
 	_claims, exists := c.Get("claims")
 	if exists {
-		claims := _claims.(*pkg.MyClaims)
+		claims := _claims.(*jwt.MyClaims)
 		uSN = claims.SN
 	}
 	data, err := logic.GetArticleComments(&pcl, uSN)
@@ -62,7 +62,7 @@ func GetArticleCommentsHandler(c *gin.Context) {
 // 如果提供了 SN, 则删除该评论下的所有子评论
 func DeleteCommentsHandler(c *gin.Context) {
 	_claims, _ := c.Get("claims")
-	claims := _claims.(*pkg.MyClaims)
+	claims := _claims.(*jwt.MyClaims)
 	uSN := claims.SN
 	role := claims.Role
 	var req model.ParamDeleteComment

@@ -11,14 +11,14 @@ import (
 	"github.com/bramble555/blog/dao/mysql/banner"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
-	"github.com/bramble555/blog/pkg"
+	"github.com/bramble555/blog/pkg/file"
 	"github.com/gin-gonic/gin"
 )
 
 // 上传多个文件
 func UploadImages(c *gin.Context, fileList []*multipart.FileHeader) (*[]model.FileUploadResponse, error) {
 	resFileList := new([]model.FileUploadResponse)
-	pkg.CreateFolder(global.Config.Upload.Path)
+	file.CreateFolder(global.Config.Upload.Path)
 	for _, file := range fileList {
 		fileExt := strings.Split(file.Filename, ".")
 		if len(fileExt) != 2 {

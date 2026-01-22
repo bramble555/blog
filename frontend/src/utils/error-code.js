@@ -11,5 +11,6 @@ export const ErrorCode = {
     10009: 'Invalid ID',
     10010: 'Title already exists',
     10011: 'Tag not found',
-    10012: 'Tag already exists'
+    10012: 'Tag already exists',
+    429: '请慢一点试试'
 }

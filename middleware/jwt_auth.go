@@ -5,7 +5,7 @@ import (
 	"github.com/bramble555/blog/dao/redis"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model/ctype"
-	"github.com/bramble555/blog/pkg"
+	"github.com/bramble555/blog/pkg/jwt"
 	"github.com/gin-gonic/gin"
 )
 
@@ -28,7 +28,7 @@ func JWTAuthorMiddleware() func(c *gin.Context) {
 			return
 		}
 		// 解析 token
-		claims, err := pkg.ParseToken(authHeader)
+		claims, err := jwt.ParseToken(authHeader)
 		if err != nil {
 			global.Log.Errorf("ParseToken failed: %v, token: [%s]", err, authHeader)
 			controller.ResponseError(c, controller.CodeInvalidAuth)
@@ -57,7 +57,7 @@ func JWTAdminMiddleware() func(c *gin.Context) {
 			return
 		}
 		// 解析 token
-		claims, err := pkg.ParseToken(authHeader)
+		claims, err := jwt.ParseToken(authHeader)
 		if err != nil {
 			global.Log.Errorf("Admin ParseToken failed: %v, token: [%s]", err, authHeader)
 			controller.ResponseError(c, controller.CodeInvalidAuth)
@@ -86,7 +86,7 @@ func JWTOptionalMiddleware() func(c *gin.Context) {
 			ok := redis.CheckLogout(authHeader)
 			if !ok {
 				// 解析 token
-				claims, err := pkg.ParseToken(authHeader)
+				claims, err := jwt.ParseToken(authHeader)
 				if err == nil {
 					// 将当前请求的userID信息保存到请求的上下文c上
 					c.Set("claims", claims)

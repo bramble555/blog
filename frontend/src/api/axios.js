@@ -49,6 +49,9 @@ service.interceptors.response.use(
         return response;
     },
     (error) => {
+        if (error.response && error.response.status === 429) {
+            ElMessage.error('请慢一点试试');
+        }
         return Promise.reject(error);
     }
 );

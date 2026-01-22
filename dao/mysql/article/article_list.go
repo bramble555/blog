@@ -10,7 +10,7 @@ import (
 	"github.com/bramble555/blog/dao/mysql/code"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
-	"github.com/bramble555/blog/pkg"
+	"github.com/bramble555/blog/pkg/convert"
 	"gorm.io/gorm"
 )
 
@@ -31,7 +31,7 @@ func buildFieldOrder(sns []int64) string {
 // CheckSnListExist 检查文章 SNList 是否存在
 func SNListExist(pdl *model.ParamDeleteList) (bool, error) {
 	// 转换 SNList 为 []int64
-	snList, err := pkg.StringSliceToInt64Slice(pdl.SNList)
+	snList, err := convert.StringSliceToInt64Slice(pdl.SNList)
 	if err != nil {
 		global.Log.Errorf("SNListExist StringSliceToInt64Slice err: %s\n", err.Error())
 		return false, err
@@ -336,7 +336,7 @@ func GetArticlesCalendar() (map[string]int, error) {
 // DeleteArticlesList 删除文章列表
 func DeleteArticlesList(pdl *model.ParamDeleteList) (string, error) {
 	// 转换 SNList 为 []int64
-	snList, err := pkg.StringSliceToInt64Slice(pdl.SNList)
+	snList, err := convert.StringSliceToInt64Slice(pdl.SNList)
 	if err != nil {
 		global.Log.Errorf("DeleteArticlesList StringSliceToInt64Slice err: %s\n", err.Error())
 		return "", err

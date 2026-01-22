@@ -8,7 +8,8 @@ import (
 	"github.com/bramble555/blog/dao/mysql/code"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
-	"github.com/bramble555/blog/pkg"
+	"github.com/bramble555/blog/pkg/bcrypt"
+	"github.com/bramble555/blog/pkg/jwt"
 	"gorm.io/gorm"
 )
 
@@ -48,7 +49,7 @@ func CheckPwdExistBySN(sn int64, pwd string) (bool, error) {
 	}
 
 	// 比较密码
-	err = pkg.ComparePasswords(encryPassword, pwd)
+	err = bcrypt.ComparePasswords(encryPassword, pwd)
 	if err != nil {
 		return false, errors.New("密码不正确")
 	}
@@ -65,9 +66,9 @@ func QueryPasswordByUsername(peu *model.ParamUsername) (bool, error) {
 		return false, err
 	}
 	// 对比密码是否一致
-	err = pkg.ComparePasswords(encryPassword, peu.Password)
+	err = bcrypt.ComparePasswords(encryPassword, peu.Password)
 	if err != nil {
-		global.Log.Errorf("user pkg.ComparePassword serr: %v\n", err)
+		global.Log.Errorf("user bcrypt.ComparePasswords serr: %v\n", err)
 		return false, code.ErrorPasswordWrong
 	}
 	return true, nil
@@ -108,7 +109,7 @@ func GetUserDetail(peu *model.ParamUsername) (model.ResponseLogin, error) {
 	}
 
 	// 2. 生成 Token
-	token, err = pkg.GenToken(pud.SN, pud.Role, pud.Username)
+	token, err = jwt.GenToken(pud.SN, pud.Role, pud.Username)
 	if err != nil {
 		global.Log.Errorf("GenToken 签名失败: %v", err)
 		return res, err

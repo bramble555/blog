@@ -7,7 +7,7 @@ import (
 	"github.com/bramble555/blog/dao/mysql/code"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
-	"github.com/bramble555/blog/pkg"
+	"github.com/bramble555/blog/pkg/convert"
 	"gorm.io/gorm"
 )
 
@@ -29,7 +29,7 @@ func GetBannerBySN(sn *int64) (*model.ResponseBanner, error) {
 }
 func DeleteBannerList(pdl *model.ParamDeleteList) (string, error) {
 	// 转换 SNList 为 []int64
-	snList, err := pkg.StringSliceToInt64Slice(pdl.SNList)
+	snList, err := convert.StringSliceToInt64Slice(pdl.SNList)
 	if err != nil {
 		global.Log.Errorf("DeleteBannerList StringSliceToInt64Slice err: %s\n", err.Error())
 		return "", err

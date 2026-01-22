@@ -9,7 +9,7 @@ import (
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
 	"github.com/bramble555/blog/model/ctype"
-	"github.com/bramble555/blog/pkg"
+	"github.com/bramble555/blog/pkg/convert"
 )
 
 func PostArticleComments(uSN int64, pc *model.ParamPostComment) (string, error) {
@@ -70,7 +70,7 @@ func DeleteCommentsList(uSN int64, role int64, pdl *model.ParamDeleteList) (stri
 	if role != int64(ctype.PermissionAdmin) {
 		return "", errors.New("无权批量删除评论")
 	}
-	snList, err := pkg.StringSliceToInt64Slice(pdl.SNList)
+	snList, err := convert.StringSliceToInt64Slice(pdl.SNList)
 	if err != nil {
 		return "", err
 	}

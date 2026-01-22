@@ -5,7 +5,7 @@ import (
 
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
-	"github.com/bramble555/blog/pkg"
+	"github.com/bramble555/blog/pkg/bcrypt"
 )
 
 func UpdateUserRole(puur *model.ParamUpdateUserRole) (string, error) {
@@ -20,7 +20,7 @@ func UpdateUserRole(puur *model.ParamUpdateUserRole) (string, error) {
 // UpdateUserPwd 负责更新用户密码
 func UpdateUserPwd(puup *model.ParamUpdateUserPwd, sn int64) (string, error) {
 	// 先把先密码加密
-	pwd, err := pkg.HashPassword(puup.Pwd)
+	pwd, err := bcrypt.HashPassword(puup.Pwd)
 	if err != nil {
 		global.Log.Errorf("HashPassword err:%s\n", err.Error())
 		return "", err
@@ -32,6 +32,18 @@ func UpdateUserPwd(puup *model.ParamUpdateUserPwd, sn int64) (string, error) {
 		return "", err
 	}
 	return fmt.Sprintf("修改用户 %d 密码成功", sn), nil
+}
+
+func UpdateUserIP(sn int64, ip string) error {
+	if ip == "" {
+		ip = "127.0.0.1"
+	}
+	err := global.DB.Table("user_models").Where("sn = ?", sn).Update("ip", ip).Error
+	if err != nil {
+		global.Log.Errorf("user UpdateUserIP err: %s\n", err.Error())
+		return err
+	}
+	return nil
 }
 
 func DeleteUser(sn int64) (string, error) {

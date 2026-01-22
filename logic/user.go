@@ -10,7 +10,7 @@ import (
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
 	"github.com/bramble555/blog/model/ctype"
-	"github.com/bramble555/blog/pkg"
+	"github.com/bramble555/blog/pkg/des"
 )
 
 func PostBindEmail(sn int64, email string) error {
@@ -26,7 +26,7 @@ func PostBindEmail(sn int64, email string) error {
 }
 
 // 用户名或者邮箱登录
-func UsernameLogin(peu *model.ParamUsername) (model.ResponseLogin, error) {
+func UsernameLogin(peu *model.ParamUsername, ip string) (model.ResponseLogin, error) {
 	// 判断用户名是否存在
 	ok, err := user.CheckUserExistByName(peu.Username)
 	resp := model.ResponseLogin{}
@@ -51,7 +51,15 @@ func UsernameLogin(peu *model.ParamUsername) (model.ResponseLogin, error) {
 	if err != nil {
 		return resp, err
 	}
-	return user.GetUserDetail(peu)
+	resp, err = user.GetUserDetail(peu)
+	if err != nil {
+		return resp, err
+	}
+	err = user.UpdateUserIP(resp.SN, ip)
+	if err != nil {
+		return resp, err
+	}
+	return resp, nil
 }
 func RegisterUser(pr *model.ParamRegister) (model.ResponseLogin, error) {
 	resp := model.ResponseLogin{}
@@ -83,8 +91,8 @@ func GetUserList(role int64, pl *model.ParamList) (*model.PageResult[model.UserM
 
 	// 手机号和邮箱脱敏处理
 	for i := range list {
-		list[i].Email = pkg.DesensitizeEmail(list[i].Email)
-		list[i].Phone = pkg.DesensitizePhone(list[i].Phone)
+		list[i].Email = des.DesensitizeEmail(list[i].Email)
+		list[i].Phone = des.DesensitizePhone(list[i].Phone)
 	}
 
 	return &model.PageResult[model.UserModel]{

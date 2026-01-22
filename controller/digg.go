@@ -4,7 +4,7 @@ import (
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/logic"
 	"github.com/bramble555/blog/model"
-	"github.com/bramble555/blog/pkg"
+	"github.com/bramble555/blog/pkg/jwt"
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,7 +18,7 @@ func PostArticleDigHandler(c *gin.Context) {
 		return
 	}
 	_claims, _ := c.Get("claims")
-	claims := _claims.(*pkg.MyClaims)
+	claims := _claims.(*jwt.MyClaims)
 	uSN := claims.SN
 
 	var data string
@@ -41,7 +41,7 @@ func PostArticleCommentsDiggHandler(c *gin.Context) {
 		return
 	}
 	_claims, _ := c.Get("claims")
-	claims := _claims.(*pkg.MyClaims)
+	claims := _claims.(*jwt.MyClaims)
 	uSN := claims.SN
 
 	var ok bool

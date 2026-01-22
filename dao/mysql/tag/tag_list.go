@@ -7,7 +7,7 @@ import (
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
 	"github.com/bramble555/blog/model/ctype"
-	"github.com/bramble555/blog/pkg"
+	"github.com/bramble555/blog/pkg/convert"
 )
 
 // GetTags 获取所有 tags
@@ -18,7 +18,7 @@ func GetTags(pl *model.ParamList) ([]model.TagModel, error) {
 
 // DeleteTagsList 删除 tags 列表，并同步删除文章与标签的关联关系
 func DeleteTagsList(pdl *model.ParamDeleteList) (string, error) {
-	snList, err := pkg.StringSliceToInt64Slice(pdl.SNList)
+	snList, err := convert.StringSliceToInt64Slice(pdl.SNList)
 	if err != nil {
 		global.Log.Errorf("DeleteTagsList err: %s", err.Error())
 		return "", err

@@ -5,7 +5,7 @@ import (
 
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
-	"github.com/bramble555/blog/pkg"
+	"github.com/bramble555/blog/pkg/convert"
 	"gorm.io/gorm"
 )
 
@@ -46,7 +46,7 @@ func GetTableList[T any](tableName string, pl *model.ParamList, where string, ar
 // DeleteTableList 删除列表
 func DeleteTableList[T any](tableName string, pdl *model.ParamDeleteList) (string, error) {
 	// 转换 SNList 为 []int64
-	snList, err := pkg.StringSliceToInt64Slice(pdl.SNList)
+	snList, err := convert.StringSliceToInt64Slice(pdl.SNList)
 	if err != nil {
 		global.Log.Errorf("DeleteTableList StringSliceToInt64Slice err: %s\n", err.Error())
 		return "", err

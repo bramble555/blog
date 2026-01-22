@@ -5,7 +5,7 @@ import (
 
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
-	"github.com/bramble555/blog/pkg"
+	"github.com/bramble555/blog/pkg/bcrypt"
 )
 
 const defaultAvatorPath = "https://i.postimg.cc/nzwnF92j/dog.jpg"
@@ -18,7 +18,7 @@ func CreateUser(role int64, username, password string) error {
 		return errors.New("username 重复了")
 	}
 	// 把密码加密存储
-	ps, err := pkg.HashPassword(password)
+	ps, err := bcrypt.HashPassword(password)
 	if err != nil {
 		global.Log.Errorf("HashPassword err:%s\n", err.Error())
 		return err

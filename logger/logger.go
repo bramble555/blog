@@ -8,7 +8,7 @@ import (
 	"path"
 
 	"github.com/bramble555/blog/global"
-	"github.com/bramble555/blog/pkg"
+	"github.com/bramble555/blog/pkg/file"
 	"github.com/sirupsen/logrus"
 )
 
@@ -70,8 +70,8 @@ func (l *LogFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 func Init() (mLog *logrus.Logger, err error) {
 	mLog = logrus.New()
 	// 设置输出为控制台和文件
-	file := pkg.CreateFile(global.Config.Logger.FilePath, global.Config.Logger.FileName)
-	mLog.SetOutput(io.MultiWriter(os.Stdout, file))
+	logFile := file.CreateFile(global.Config.Logger.FilePath, global.Config.Logger.FileName)
+	mLog.SetOutput(io.MultiWriter(os.Stdout, logFile))
 	mLog.SetReportCaller(global.Config.Logger.ShowLine)
 	// 格式
 	mLog.SetFormatter(&LogFormatter{})
