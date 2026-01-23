@@ -2,6 +2,11 @@ package logic
 
 import (
 	"errors"
+	"html"
+	"os"
+	"path/filepath"
+	"strings"
+	"sync"
 
 	"github.com/bramble555/blog/dao/mysql/article"
 	"github.com/bramble555/blog/dao/mysql/code"
@@ -10,7 +15,67 @@ import (
 	"github.com/bramble555/blog/model"
 	"github.com/bramble555/blog/model/ctype"
 	"github.com/bramble555/blog/pkg/convert"
+	"github.com/bramble555/blog/pkg/filter"
 )
+
+var (
+	commentFilterOnce sync.Once
+	commentFilter     *filter.SensitiveFilter
+	commentFilterErr  error
+)
+
+func resolveFilterPath() (string, error) {
+	candidates := []string{
+		"filter.txt",
+		// 去上个目录寻找
+		filepath.Join("..", "filter.txt"),
+		// 去上上个目录寻找
+		filepath.Join("..", "..", "filter.txt"),
+	}
+	for _, candidate := range candidates {
+		if _, err := os.Stat(candidate); err == nil {
+			return candidate, nil
+		}
+	}
+	return "", errors.New("敏感词词库文件不存在")
+}
+
+func initCommentFilter() (*filter.SensitiveFilter, error) {
+	// 只加载一次过滤文件
+	commentFilterOnce.Do(func() {
+		path, err := resolveFilterPath()
+		if err != nil {
+			commentFilterErr = err
+			return
+		}
+		sf := filter.NewSensitiveFilter()
+		if err := sf.LoadFromFile(path); err != nil {
+			commentFilterErr = err
+			return
+		}
+		commentFilter = sf
+	})
+	if commentFilterErr != nil {
+		return nil, commentFilterErr
+	}
+	if commentFilter == nil {
+		return nil, errors.New("敏感词过滤器初始化失败")
+	}
+	return commentFilter, nil
+}
+
+func ProcessCommentContent(content string) (string, error) {
+	if strings.TrimSpace(content) == "" {
+		return "", errors.New("评论内容不能为空")
+	}
+	sf, err := initCommentFilter()
+	if err != nil {
+		return "", err
+	}
+	_, filtered := sf.Filter(content)
+	escaped := html.EscapeString(filtered)
+	return escaped, nil
+}
 
 func PostArticleComments(uSN int64, pc *model.ParamPostComment) (string, error) {
 	// 判断文章是否存在
@@ -41,6 +106,12 @@ func PostArticleComments(uSN int64, pc *model.ParamPostComment) (string, error) 
 			return "", errors.New("评论的文章 SN 与父评论所属文章 SN 不一致")
 		}
 	}
+	processed, err := ProcessCommentContent(pc.Content)
+	if err != nil {
+		global.Log.Errorf("PostArticleComments ProcessCommentContent err:%s\n", err.Error())
+		return "", err
+	}
+	pc.Content = processed
 	return comment.PostArticleComments(uSN, pc)
 }
 func GetArticleComments(pcl *model.ParamCommentList, uSN int64) (*model.ResponseCommentListWrapper, error) {

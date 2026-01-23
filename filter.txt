@@ -1,0 +1,26 @@
+# 敏感词过滤词库
+# 格式说明：每行一个敏感词，支持中英文
+# 注释行以 # 开头，空行会被忽略
+
+# 色情相关
+色情
+裸体
+porn
+sex
+nude
+
+# 暴力相关
+暴力
+血腥
+violence
+kill
+murder
+
+# 广告相关
+广告
+advertisement
+spam
+promotion
+禁词
+sensitive
+banned
