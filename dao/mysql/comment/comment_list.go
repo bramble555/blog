@@ -5,6 +5,7 @@ import (
 
 	"github.com/bramble555/blog/dao/mysql/digg"
 	"github.com/bramble555/blog/dao/mysql/user"
+	dao_redis "github.com/bramble555/blog/dao/redis"
 
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
@@ -81,6 +82,9 @@ func GetAllComments(pcl *model.ParamCommentList, uSN int64) (*model.ResponseComm
 		})
 	}
 
+	// 成功获取评论后，合并 Redis 实时计数
+	mergeCommentRealtimeCounts(&resp)
+
 	return &model.ResponseCommentListWrapper{List: resp, Count: count}, nil
 }
 func GetArticleComments(pcl *model.ParamCommentList, uSN int64) (*model.ResponseCommentListWrapper, error) {
@@ -128,6 +132,10 @@ func GetArticleComments(pcl *model.ParamCommentList, uSN int64) (*model.Response
 	if err != nil {
 		return nil, err
 	}
+
+	// 合并 Redis 实时计数
+	mergeCommentRealtimeCounts(&rootComments)
+
 	return &model.ResponseCommentListWrapper{
 		List:  rootComments,
 		Count: count,
@@ -236,7 +244,37 @@ func buildSubComments(subComments []model.CommentModel, idx int, articleSN int64
 		UserDetail:      &userDetailCopy,
 	})
 
+	// 每次递归后，合并 Redis 实时点赞数 (不仅根评论，子评论也要最新)
+	mergeCommentRealtimeCounts(&acc)
+
 	return buildSubComments(subComments, idx+1, articleSN, uSN, userMap, acc)
+}
+
+// mergeCommentRealtimeCounts 从 Redis 批量获取评论计数并合并 (大厂标准)
+func mergeCommentRealtimeCounts(comments *[]model.ResponseCommentList) {
+	if len(*comments) == 0 {
+		return
+	}
+
+	sns := make([]int64, len(*comments))
+	for i, c := range *comments {
+		sns[i] = c.SN
+	}
+
+	// 批量获取评论点赞数
+	diggCounts, _ := dao_redis.GetRedisArticlesCounts(sns, dao_redis.FieldCommentDigg)
+
+	// 合并
+	for i := range *comments {
+		sn := (*comments)[i].SN
+		if val, ok := diggCounts[sn]; ok && val != 0 {
+			(*comments)[i].DiggCount += val
+		}
+		// 如果有子评论且不为空，递归合并子评论计数
+		if len((*comments)[i].SubComments) > 0 {
+			mergeCommentRealtimeCounts(&(*comments)[i].SubComments)
+		}
+	}
 }
 
 // DeleteArticleComments 删除文章下的评论（包括子评论）

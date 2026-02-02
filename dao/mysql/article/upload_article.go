@@ -5,6 +5,7 @@ import (
 
 	dao_es "github.com/bramble555/blog/dao/es"
 	"github.com/bramble555/blog/dao/mysql/code"
+	dao_redis "github.com/bramble555/blog/dao/redis"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
 	"gorm.io/gorm"
@@ -106,6 +107,12 @@ func UploadArticles(am *model.ArticleModel) (string, error) {
 		}
 	}()
 
+	// 立即更新 Redis 缓存（首页最新文章列表）
+	// 不阻塞主流程，Redis 更新失败只记录日志
+	if err := dao_redis.AddArticleToLatest(am.SN, now.Unix()); err != nil {
+		global.Log.Warnf("Failed to add article %d to Redis cache: %v", am.SN, err)
+	}
+
 	return code.StrCreateSucceed, nil
 }
 
@@ -145,6 +152,7 @@ func PostArticleCollect(uSN int64, articleSN int64) (string, error) {
 			tx.Rollback()
 			return "", err
 		}
+
 		return "取消收藏成功", nil
 	}
 

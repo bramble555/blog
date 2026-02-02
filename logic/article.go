@@ -94,6 +94,8 @@ func UploadArticles(claims *jwt.MyClaims, pa *model.ParamArticle, bannerList *[]
 func GetArticlesListByParam(paq *model.ParamArticleQuery, uSN int64) (*model.ResponseArticleList, error) {
 	return article.GetArticlesListByParam(paq, uSN)
 }
+
+// GetArticlesDetail 获取文章详情
 func GetArticlesDetail(sn string, uSN int64) (*model.ArticleModel, error) {
 	am, err := article.GetArticlesDetail(sn)
 	if err != nil {

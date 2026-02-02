@@ -15,7 +15,7 @@ import (
 
 	dao_es "github.com/bramble555/blog/dao/es"
 	dao_mysql "github.com/bramble555/blog/dao/mysql"
-	"github.com/bramble555/blog/dao/redis"
+	dao_redis "github.com/bramble555/blog/dao/redis"
 	"github.com/bramble555/blog/flag"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/logger"
@@ -86,7 +86,7 @@ func main() {
 	// }
 
 	// 初始化 redis
-	global.Redis, err = redis.Init()
+	global.Redis, err = dao_redis.Init()
 	if err != nil {
 		global.Log.Printf("Init redis failed, err:%v\n", err)
 		return
@@ -131,6 +131,14 @@ func startServer() {
 		cronJob := dao_es.StartSyncCronJob()
 		if cronJob != nil {
 			defer cronJob.Stop()
+		}
+	}
+
+	// 启动 Redis 定时同步任务（首页最新文章）
+	if global.Redis != nil {
+		redisCronJob := dao_redis.StartSyncCronJob()
+		if redisCronJob != nil {
+			defer redisCronJob.Stop()
 		}
 	}
 

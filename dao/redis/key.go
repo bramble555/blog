@@ -3,11 +3,20 @@ package redis
 // redis key, 注意使用命名，方便查询和拆分
 
 const (
-	KeyPrefix          = "gvb:"
-	KeyZSetArticleDig  = "article:dig" // 帖子及发帖时间
-	KeyZSetCommentDigg = "article:comment"
-	KeyZSetPostVotedPF = "post:voted:" // 记录用户及投票类型；参数是post_sn
-	KeySetToken        = "token"
+	KeyPrefix = "gvb:"
+
+	KeySTrTokenLogoutPF = "token:logout:"
+
+	// 首页最新帖子(只选择最新10个帖子)
+	KeyZSetHomeLatestArticleSN = "home:latest:article:sn"
+
+	// 文章浏览数
+	KeyHashArticleLookCount = "article:look"
+	// 文章点赞数
+	KeyHashArticleDiggCount = "article:digg"
+
+	// 评论点赞数
+	KeyHashCommentDiggCount = "comment:digg"
 )
 
 func getKeyName(key string) string {

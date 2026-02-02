@@ -3,6 +3,7 @@ package digg
 import (
 	"errors"
 
+	dao_redis "github.com/bramble555/blog/dao/redis"
 	"github.com/bramble555/blog/global"
 	"github.com/bramble555/blog/model"
 	"gorm.io/gorm"
@@ -16,7 +17,7 @@ func PostArticleDig(uSN, articleSN int64) (bool, error) {
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		// 未点赞 -> 点赞
-		return true, global.DB.Transaction(func(tx *gorm.DB) error {
+		err := global.DB.Transaction(func(tx *gorm.DB) error {
 			// 1. 创建点赞记录
 			if err := tx.Create(&model.UserDiggModel{UserSN: uSN, ArticleSN: articleSN}).Error; err != nil {
 				return err
@@ -27,9 +28,18 @@ func PostArticleDig(uSN, articleSN int64) (bool, error) {
 			}
 			return nil
 		})
+
+		if err != nil {
+			return false, err
+		}
+
+		// 同时增加文章点赞计数器
+		go dao_redis.IncrArticleCount(articleSN, dao_redis.FieldDigg, 1)
+
+		return true, nil
 	} else if err == nil {
 		// 已点赞 -> 取消点赞
-		return false, global.DB.Transaction(func(tx *gorm.DB) error {
+		err := global.DB.Transaction(func(tx *gorm.DB) error {
 			// 1. 删除点赞记录
 			if err := tx.Where("user_sn = ? AND article_sn = ?", uSN, articleSN).Delete(&model.UserDiggModel{}).Error; err != nil {
 				return err
@@ -40,6 +50,15 @@ func PostArticleDig(uSN, articleSN int64) (bool, error) {
 			}
 			return nil
 		})
+
+		if err != nil {
+			return false, err
+		}
+
+		// 同时减少文章点赞计数器
+		go dao_redis.IncrArticleCount(articleSN, dao_redis.FieldDigg, -1)
+
+		return false, nil
 	} else {
 		return false, err
 	}
@@ -53,7 +72,7 @@ func PostCommentDig(uSN, commentSN int64) (bool, error) {
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		// 未点赞 -> 点赞
-		return true, global.DB.Transaction(func(tx *gorm.DB) error {
+		err := global.DB.Transaction(func(tx *gorm.DB) error {
 			if err := tx.Create(&model.UserCommentDiggModel{UserSN: uSN, CommentSN: commentSN}).Error; err != nil {
 				return err
 			}
@@ -62,9 +81,18 @@ func PostCommentDig(uSN, commentSN int64) (bool, error) {
 			}
 			return nil
 		})
+
+		if err != nil {
+			return false, err
+		}
+
+		// 提交成功后，实时更新 Redis 计数器 (异步)
+		go dao_redis.IncrArticleCount(commentSN, dao_redis.FieldCommentDigg, 1)
+
+		return true, nil
 	} else if err == nil {
 		// 已点赞 -> 取消点赞
-		return false, global.DB.Transaction(func(tx *gorm.DB) error {
+		err := global.DB.Transaction(func(tx *gorm.DB) error {
 			if err := tx.Where("user_sn = ? AND comment_sn = ?", uSN, commentSN).Delete(&model.UserCommentDiggModel{}).Error; err != nil {
 				return err
 			}
@@ -73,6 +101,15 @@ func PostCommentDig(uSN, commentSN int64) (bool, error) {
 			}
 			return nil
 		})
+
+		if err != nil {
+			return false, err
+		}
+
+		// 提交成功后，实时更新 Redis 计数器 (异步)
+		go dao_redis.IncrArticleCount(commentSN, dao_redis.FieldCommentDigg, -1)
+
+		return false, nil
 	} else {
 		return false, err
 	}
@@ -81,13 +118,17 @@ func PostCommentDig(uSN, commentSN int64) (bool, error) {
 // IsUserArticleDigg 是否点赞了文章
 func IsUserArticleDigg(uSN, articleSN int64) (bool, error) {
 	var count int64
-	err := global.DB.Model(&model.UserDiggModel{}).Where("user_sn = ? AND article_sn = ?", uSN, articleSN).Count(&count).Error
+	err := global.DB.Table("user_digg_models").
+		Where("user_sn = ? AND article_sn = ?", uSN, articleSN).
+		Count(&count).Error
 	return count > 0, err
 }
 
 // IsUserCommentDigg 是否点赞了评论
 func IsUserCommentDigg(uSN, commentSN int64) (bool, error) {
 	var count int64
-	err := global.DB.Model(&model.UserCommentDiggModel{}).Where("user_sn = ? AND comment_sn = ?", uSN, commentSN).Count(&count).Error
+	err := global.DB.Table("user_comment_digg_models").
+		Where("user_sn = ? AND comment_sn = ?", uSN, commentSN).
+		Count(&count).Error
 	return count > 0, err
 }

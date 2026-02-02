@@ -8,6 +8,7 @@ import (
 	"github.com/go-redis/redis"
 )
 
+// 初始化redis
 func Init() (*redis.Client, error) {
 	redisConf := global.Config.Redis
 	rdb := redis.NewClient(&redis.Options{

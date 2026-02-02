@@ -123,7 +123,7 @@ const fetchData = async () => {
     // 构建查询参数
     const params = { 
       page: 1, 
-      size: 20,
+      size: 10,
       title: route.query.title || ''
     }
     // 调用 API
