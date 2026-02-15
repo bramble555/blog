@@ -1,86 +1,86 @@
 <template>
   <!-- 
     主页布局容器 
-    - 修改背景为暗色 (bg-vscode-bg)
-    - 去除间距 (gap-0)
+    - 使用语义化背景色
+    - 响应式布局优化
   -->
-  <div class="pt-0 flex flex-col lg:flex-row gap-0 bg-vscode-bg text-vscode-text min-h-screen">
+  <div class="flex flex-col lg:flex-row gap-8 min-h-screen">
     <!-- 侧边栏 (广告) -->
-    <!-- 保持原有逻辑，但在移动端隐藏 -->
-    <aside class="hidden lg:block w-1/4 flex-shrink-0 sticky top-16 h-fit pl-0 border-r border-vscode-border">
+    <aside class="hidden lg:block w-80 flex-shrink-0 sticky top-24 h-fit">
       <SidebarAds />
     </aside>
 
     <!-- 文章列表区域 -->
-    <!-- 
-      修改说明：
-      1. md:grid-cols-2: 桌面端双列显示，实现"每行两篇"
-      2. gap-0: 去除文章之间的间距
-      3. items-stretch: 确保卡片高度一致，避免背景空隙
-    -->
-    <div v-loading="loading" class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-0 p-0 items-stretch content-start">
+    <div v-loading="loading" class="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-6 items-start content-start">
       <!-- 单个文章卡片 -->
       <div 
         v-for="article in articles" 
         :key="article.sn"
-        class="group bg-vscode-bg border-b border-vscode-border md:odd:border-r overflow-hidden hover:bg-vscode-sidebar transition-all cursor-pointer flex flex-col"
+        class="group relative flex flex-col bg-bg-secondary rounded-xl overflow-hidden border border-border-primary/50 hover:border-accent-primary/50 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1 cursor-pointer h-full"
         @click="$router.push(`/article/${article.sn}`)"
       >
         <!-- 文章封面图 -->
-        <!-- 双列布局下改为上图下文 -->
-        <div class="h-48 w-full flex-shrink-0 overflow-hidden relative group">
+        <div class="h-56 w-full flex-shrink-0 overflow-hidden relative">
+          <!-- Image Overlay Gradient -->
+          <div class="absolute inset-0 bg-gradient-to-t from-bg-secondary via-transparent to-transparent opacity-60 z-10"></div>
+          
           <el-image 
             :src="formatUrl(article.banner_url)" 
-            fit="contain" 
-            class="w-full h-full transition-transform duration-700 group-hover:scale-105 bg-black/20"
+            fit="cover" 
+            class="w-full h-full transition-transform duration-700 group-hover:scale-110"
             loading="lazy"
             :alt="article.title"
-            :title="article.title"
           >
             <template #placeholder>
-              <div class="w-full h-full bg-vscode-sidebar animate-pulse flex items-center justify-center">
-                <el-icon class="text-3xl text-gray-500"><Picture /></el-icon>
+              <div class="w-full h-full bg-bg-tertiary animate-pulse flex items-center justify-center">
+                <el-icon class="text-3xl text-text-tertiary"><Picture /></el-icon>
               </div>
             </template>
             <template #error>
-              <div class="w-full h-full bg-vscode-sidebar flex flex-col items-center justify-center text-gray-500">
+              <div class="w-full h-full bg-bg-tertiary flex flex-col items-center justify-center text-text-tertiary">
                 <el-icon class="text-3xl mb-1"><PictureFilled /></el-icon>
-                <span class="text-base">No Preview</span>
+                <span class="text-xs">No Preview</span>
               </div>
             </template>
           </el-image>
+          
+          <!-- Floating Date Badge -->
+          <div class="absolute top-3 right-3 z-20 bg-bg-primary/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-mono text-text-secondary border border-border-primary shadow-sm">
+             {{ formatDate(article.create_time).split(' ')[0] }}
+          </div>
         </div>
         
         <!-- 文章内容区域 -->
-        <div class="p-4 flex-1 flex flex-col justify-between">
-          <div>
-            <div class="flex items-center gap-2 mb-2">
-               <span class="text-base text-gray-400">{{ formatDate(article.create_time) }}</span>
-            </div>
-            <!-- 标题：使用浅色字体 -->
-            <h3 class="text-lg font-bold mb-2 text-gray-200 group-hover:text-blue-400 transition-colors line-clamp-1">
-              {{ article.title }}
-            </h3>
-            <!-- 摘要：使用灰色字体 -->
-            <p class="text-gray-400 text-base line-clamp-2 mb-3 leading-relaxed">
-              {{ article.abstract }}
-            </p>
-          </div>
+        <div class="p-6 flex-1 flex flex-col">
+          <!-- 标题 -->
+          <h3 class="text-xl font-bold mb-3 text-text-primary group-hover:text-accent-primary transition-colors line-clamp-2 leading-tight">
+            {{ article.title }}
+          </h3>
+          
+          <!-- 摘要 -->
+          <p class="text-text-secondary text-base line-clamp-3 mb-6 leading-relaxed flex-1">
+            {{ article.abstract }}
+          </p>
           
           <!-- 底部元数据 -->
-          <div class="flex items-center justify-between text-base text-gray-500 mt-2">
-             <div class="flex items-center gap-3">
-                <span class="flex items-center gap-1 hover:text-blue-400 cursor-pointer"><el-icon><View /></el-icon> {{ article.look_count }}</span>
-                <span class="flex items-center gap-1 hover:text-blue-400 cursor-pointer"><el-icon><ChatLineSquare /></el-icon> {{ article.comment_count }}</span>
+          <div class="flex items-center justify-between text-sm text-text-tertiary pt-4 border-t border-border-primary/50 mt-auto">
+             <div class="flex items-center gap-4">
+                <span class="flex items-center gap-1.5 hover:text-accent-primary transition-colors"><el-icon><View /></el-icon> {{ article.look_count }}</span>
+                <span class="flex items-center gap-1.5 hover:text-accent-primary transition-colors"><el-icon><ChatLineSquare /></el-icon> {{ article.comment_count }}</span>
              </div>
-             <span class="font-medium text-gray-500">By {{ article.username || 'Anonymous' }}</span>
+             
+             <div class="flex items-center gap-2">
+                <span class="text-xs font-medium text-text-secondary">By {{ article.username || 'Admin' }}</span>
+             </div>
           </div>
         </div>
       </div>
     </div>
     
     <!-- 空状态 -->
-    <el-empty v-if="!loading && articles.length === 0" description="暂无文章" />
+    <div v-if="!loading && articles.length === 0" class="flex-1 flex flex-col items-center justify-center min-h-[400px] text-text-tertiary">
+      <el-empty description="暂无文章" :image-size="200" />
+    </div>
   </div>
 </template>
 

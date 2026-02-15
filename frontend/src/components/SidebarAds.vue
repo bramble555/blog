@@ -1,27 +1,27 @@
 <template>
   <div class="sidebar-ads space-y-6">
-    <div v-for="ad in ads" :key="ad.sn" class="ad-item w-full aspect-square overflow-hidden rounded-xl border border-vscode-border shadow-md hover:shadow-vscode-primary/20 transition-all">
+    <div v-for="ad in ads" :key="ad.sn" class="ad-item w-full aspect-square overflow-hidden rounded-xl border border-border-primary/50 shadow-sm hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-300 group">
       <component
         :is="ad.href ? 'a' : 'div'"
         :href="ad.href || undefined"
         target="_blank"
-        class="block w-full h-full relative group"
+        class="block w-full h-full relative"
       >
         <el-image 
           :src="formatUrl(ad.images)" 
           fit="cover" 
-          class="w-full h-full group-hover:scale-105 transition-transform duration-500" 
+          class="w-full h-full group-hover:scale-110 transition-transform duration-700" 
           loading="lazy"
         >
           <template #error>
-            <div class="w-full h-full bg-vscode-sidebar flex items-center justify-center text-[#FF6600] text-base">
+            <div class="w-full h-full bg-bg-secondary flex items-center justify-center text-text-tertiary text-base">
                <el-icon class="mr-1"><PictureFilled /></el-icon> No Image
             </div>
           </template>
         </el-image>
-        <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/80 to-transparent p-3">
-          <p class="text-white text-base font-medium truncate">{{ ad.title }}</p>
-          <span class="text-base text-gray-300 uppercase tracking-wider">Advertisement</span>
+        <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-bg-primary/95 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <p class="text-text-primary text-base font-bold truncate">{{ ad.title }}</p>
+          <span class="text-xs text-text-secondary uppercase tracking-wider font-medium">Advertisement</span>
         </div>
       </component>
     </div>

@@ -9,10 +9,12 @@
              {{ formatDate(scope.row.create_time) }}
           </template>
        </el-table-column>
-       <el-table-column label="Actions" width="120">
+       <el-table-column label="Actions" width="200">
           <template #default="scope">
-             <el-button type="primary" link @click="$router.push(`/article/${scope.row.article_sn || scope.row.sn}`)">View</el-button>
-             <el-button type="danger" link @click="remove(scope.row)">Uncollect</el-button>
+             <div class="flex items-center gap-2">
+                 <el-button type="primary" link @click="$router.push(`/article/${scope.row.article_sn || scope.row.sn}`)">View</el-button>
+                 <el-button type="danger" link @click="remove(scope.row)">Uncollect</el-button>
+             </div>
           </template>
        </el-table-column>
     </el-table>

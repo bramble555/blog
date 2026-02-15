@@ -1,75 +1,122 @@
 @import "tailwindcss";
 
 @theme {
-  --color-vscode-bg: #1a1b26;
-  --color-vscode-text: #a9b1d6;
-  --color-vscode-primary: #7aa2f7;
-  --color-vscode-sidebar: #16161e;
-  --color-vscode-border: #292e42;
-  --color-text-orange: #FFA500;
-  --color-brand-green: #42b883;
+  /* 
+   * MOONLIGHT II PALETTE (Default/Base references if needed, but we use CSS vars mostly)
+   */
+  --color-moon-bg: #222436;
+  --color-moon-bg-alt: #1e2030;
+  --color-moon-fg: #c8d3f5;
+  --color-moon-selection: #444a73;
+  --color-moon-comment: #636da6;
+  --color-moon-red: #ff757f;
+  --color-moon-orange: #ffc777;
+  --color-moon-yellow: #ffc777;
+  --color-moon-green: #c3e88d;
+  --color-moon-cyan: #86e1fc;
+  --color-moon-blue: #82aaff;
+  --color-moon-purple: #c099ff;
+  --color-moon-magenta: #fca7ea;
 
-  /* Global Font Size Adjustment - Tailwind Overrides */
-  --text-2xs: calc(1rem + var(--global-font-size-adjust));
-  --text-xs: calc(1rem + var(--global-font-size-adjust));
-  --text-sm: calc(1rem + var(--global-font-size-adjust));
-  --text-base: calc(1rem + var(--global-font-size-adjust));
-  --text-lg: calc(1.125rem + var(--global-font-size-adjust));
-  --text-xl: calc(1.25rem + var(--global-font-size-adjust));
-  --text-2xl: calc(1.5rem + var(--global-font-size-adjust));
-  --text-3xl: calc(1.875rem + var(--global-font-size-adjust));
-  --text-4xl: calc(2.25rem + var(--global-font-size-adjust));
-  --text-5xl: calc(3rem + var(--global-font-size-adjust));
+  /* Semantic Colors mapped to Tailwind */
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-bg-tertiary: var(--bg-tertiary);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-border-primary: var(--border-primary);
+  --color-border-secondary: var(--border-secondary);
+  --color-accent-primary: var(--accent-primary);
+  --color-accent-secondary: var(--accent-secondary);
+  --color-action-hover: var(--action-hover);
+
+  /* Animation */
+  --animate-fade-in: fade-in 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --animate-slide-up: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-scale-in: scale-in 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-:root {
-  /* Global Font Size Adjustment Variable */
-  --global-font-size-adjust: 5px;
+@layer base {
+  :root {
+    /* 
+     * MOONLIGHT II THEME (Enforced Default)
+     */
+    --bg-primary: #222436;
+    /* Deep Moonlight BG */
+    --bg-secondary: #1e2030;
+    /* Slightly darker/different hue for sidebar */
+    --bg-tertiary: #2f334d;
+    /* Inputs, cards */
 
-  /* Element Plus Font Size Overrides */
-  --el-font-size-extra-large: calc(20px + var(--global-font-size-adjust));
-  --el-font-size-large: calc(18px + var(--global-font-size-adjust));
-  --el-font-size-medium: calc(16px + var(--global-font-size-adjust));
-  --el-font-size-base: calc(16px + var(--global-font-size-adjust));
-  --el-font-size-small: calc(16px + var(--global-font-size-adjust));
-  --el-font-size-extra-small: calc(16px + var(--global-font-size-adjust));
+    --text-primary: #c8d3f5;
+    /* Soft moonlight white */
+    --text-secondary: #828bb8;
+    /* Muted blue-gray */
+    --text-tertiary: #636da6;
+
+    --border-primary: #444a73;
+    /* Low contrast border */
+    --border-secondary: #2f334d;
+
+    --accent-primary: #82aaff;
+    /* Moonlight Blue */
+    --accent-secondary: #c099ff;
+    /* Moonlight Purple */
+    --action-hover: rgba(130, 170, 255, 0.1);
+
+    /* Global Settings */
+    --global-font-size-adjust: 4px;
+    --tree-indent: 16px;
+  }
 }
 
-/* Element Plus Dark Mode Overrides */
-html.dark {
-  --el-bg-color: #1a1b26;
-  --el-bg-color-overlay: #16161e;
-  --el-text-color-primary: #a9b1d6;
-  --el-mask-color: rgba(0, 0, 0, 0.7);
-  --el-border-color-lighter: #292e42;
-}
-
+/* Base Styles with "Pro Max" Quality */
+html,
 body {
-  @apply bg-vscode-bg text-vscode-text;
-  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: var(--color-vscode-bg);
-  color: var(--color-vscode-text);
-  font-size: var(--text-base);
+  @apply bg-bg-primary text-text-primary transition-colors duration-300 ease-in-out;
+  /* Font size 18 equivalent logic */
+  font-size: 18px;
   line-height: 1.6;
-  /* Slightly looser line height for larger text */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* Element Plus Variable Overrides for seamless integration */
+:root {
+  --el-color-primary: var(--accent-primary);
+  --el-bg-color: var(--bg-primary);
+  --el-bg-color-overlay: var(--bg-secondary);
+  --el-text-color-primary: var(--text-primary);
+  --el-text-color-regular: var(--text-secondary);
+  --el-border-color: var(--border-primary);
+  --el-border-color-light: var(--border-secondary);
+  --el-fill-color-blank: var(--bg-primary);
+}
+
+html.dark {
+  /* Re-enforce Element Plus dark variables if needed */
+  --el-bg-color: #222436;
+}
+
+/* Legacy body styles removed - superseded by html, body rule above */
+/* Scrollbar styles moved or handled by new theme if needed */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background-color: var(--color-vscode-bg);
+  background-color: var(--bg-secondary);
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: var(--color-vscode-border);
+  background-color: var(--border-primary);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: var(--color-vscode-primary);
+  background-color: var(--accent-primary);
 }
 
 /* ==========================================================================
